@@ -26,6 +26,37 @@ Second, add a list of `ResizableChildData` containing values for each child:
   * `minSize: double?` (optional) - this value indicates the absolute minimum size this child should take; any adjustments that would reduce the child's size below this value will be rejected
   * `maxSize: double?` (optional) - similar to the [minSize], this indicates the absolute maximum size the child should take; any adjustments that would increase the child's size above this value will be rejected
 
+### Example
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return ResizableContainer(
+    direction: Axis.horizontal,
+    children: [
+      ResizableChildData(
+        startingRatio: 0.75,
+        minSize: 150,
+        child: const Center(
+          child: Text('Left pane'),
+        ),
+      ),
+      ResizableChildData(
+        startingRatio: 0.25,
+        maxSize: 500,
+        child: const Center(
+          child: Text('Right pane'),
+        ),
+      ),
+    ],
+  );
+}
+```
+
+This would give you a two-pane (horizontal layout) container with a divider and grab handle 3/4 of the way across the screen from the left-hand side.
+
+Using this handle, the user could then shrink the left-hand pane down to its minimum size of 150px _or_ until the right-hand pane expands to its maximum size of 500px, whichever comes first.
+
 ## License
 
 Copyright 2023 Andrew Horn
