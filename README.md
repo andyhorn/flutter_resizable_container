@@ -21,7 +21,7 @@ Second, add a list of `ResizableChildData` containing values for each child:
   * `child: Widget` - this is the child widget that will be contained and who's size will be changed
   * `startingRatio: double` - this ratio will be used to determine the child's initial size, based on the available space of the parent `ResizableContainer`. 
     
-    **Note**: this value is required for each child and the total sum of all a containers child ratios must equal `1.0`
+    **Note**: this value is required for each child and the sum of all of a container's child ratios must equal `1.0`
 
   * `minSize: double?` (optional) - this value indicates the absolute minimum size this child should take; any adjustments that would reduce the child's size below this value will be rejected
   * `maxSize: double?` (optional) - similar to the [minSize], this indicates the absolute maximum size the child should take; any adjustments that would increase the child's size above this value will be rejected
