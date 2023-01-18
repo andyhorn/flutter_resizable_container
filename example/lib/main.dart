@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_resizable_container/src/resizable_child_data.dart';
-import 'package:flutter_resizable_container/src/resizable_container.dart';
+import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 
 void main() {
   runApp(const ExampleApp());
