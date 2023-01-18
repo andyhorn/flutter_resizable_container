@@ -24,19 +24,36 @@ class _ResizeCursorState extends State<ResizeCursor> {
       alignment: widget.direction == Axis.horizontal
           ? Alignment.centerRight
           : Alignment.bottomCenter,
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => isGrabbing = true),
-        onTapUp: (_) => setState(() => isGrabbing = false),
-        onVerticalDragUpdate: widget.direction == Axis.vertical
-            ? (details) => widget.onResizeUpdate(details.delta.dy)
-            : null,
-        onHorizontalDragUpdate: widget.direction == Axis.horizontal
-            ? (details) => widget.onResizeUpdate(details.delta.dx)
-            : null,
-        child: widget.direction == Axis.horizontal
-            ? const Icon(MdiIcons.drag)
-            : const Icon(MdiIcons.dragHorizontal),
+      child: MouseRegion(
+        cursor:
+            isGrabbing ? SystemMouseCursors.grabbing : SystemMouseCursors.grab,
+        child: GestureDetector(
+          onVerticalDragStart: _startGrab,
+          onVerticalDragEnd: _endGrab,
+          onVerticalDragCancel: _cancelGrab,
+          onHorizontalDragStart: _startGrab,
+          onHorizontalDragEnd: _endGrab,
+          onHorizontalDragCancel: _cancelGrab,
+          onTapUp: (_) => setState(() => isGrabbing = false),
+          onVerticalDragUpdate: widget.direction == Axis.vertical
+              ? (details) => widget.onResizeUpdate(details.delta.dy)
+              : null,
+          onHorizontalDragUpdate: widget.direction == Axis.horizontal
+              ? (details) => widget.onResizeUpdate(details.delta.dx)
+              : null,
+          child: widget.direction == Axis.horizontal
+              ? const Icon(MdiIcons.drag)
+              : const Icon(MdiIcons.dragHorizontal),
+        ),
       ),
     );
   }
+
+  void _startGrab(DragStartDetails _) => _setGrabbing(true);
+
+  void _endGrab(DragEndDetails _) => _setGrabbing(false);
+
+  void _cancelGrab() => _setGrabbing(false);
+
+  void _setGrabbing(bool grabbing) => setState(() => isGrabbing = grabbing);
 }
