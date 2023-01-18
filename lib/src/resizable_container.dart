@@ -57,6 +57,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                         index: i,
                         direction: Axis.vertical,
                       );
+
                       final width = _getChildSize(
                         index: i,
                         direction: Axis.horizontal,
@@ -102,24 +103,43 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }
 
   void _handleChildResize(int index, double delta) {
-    var newSize = sizes[index] + delta;
+    var newSize = _getConstrainedChildSize(index, sizes[index] + delta);
+    var adjacentChildSize = sizes[index + 1] + (-1 * delta);
 
+    if (_isTooBig(index + 1, adjacentChildSize)) {
+      final maxAdjacentChildSize = _getMaxSize(index + 1)!;
+      final difference = adjacentChildSize - maxAdjacentChildSize;
+      newSize += difference;
+      adjacentChildSize -= difference;
+    } else if (_isTooSmall(index + 1, adjacentChildSize)) {
+      final minAdjacentChildSize = _getMinSize(index + 1)!;
+      final difference = minAdjacentChildSize - adjacentChildSize;
+      newSize -= difference;
+      adjacentChildSize += difference;
+    }
+
+    if (newSize == sizes[index] && adjacentChildSize == sizes[index + 1]) {
+      // if the sizes haven't changed due to their constraints, do not
+      // trigger an unnecessary rebuild
+      return;
+    }
+
+    setState(() {
+      sizes[index] = newSize;
+      sizes[index + 1] = adjacentChildSize;
+    });
+  }
+
+  double _getConstrainedChildSize(int index, double newSize) {
     if (_isTooSmall(index, newSize)) {
-      newSize = _getMinSize(index)!;
-    } else if (_isTooBig(index, newSize)) {
-      newSize = _getMaxSize(index)!;
+      return _getMinSize(index)!;
     }
 
-    if (delta > 0) {
-      final difference = newSize - sizes[index];
-      sizes[index + 1] -= difference;
-    } else {
-      final difference = sizes[index] - newSize;
-      sizes[index + 1] += difference;
+    if (_isTooBig(index, newSize)) {
+      return _getMaxSize(index)!;
     }
 
-    sizes[index] = newSize;
-    setState(() {});
+    return newSize;
   }
 
   bool _isTooSmall(int index, double size) {
