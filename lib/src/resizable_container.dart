@@ -73,7 +73,10 @@ class _ResizableContainerState extends State<ResizableContainer> {
                                   ResizeCursor(
                                     direction: widget.direction,
                                     onResizeUpdate: (delta) =>
-                                        _handleChildResize(i, delta),
+                                        _handleChildResize(
+                                      i,
+                                      delta,
+                                    ),
                                   ),
                                 ],
                               )
@@ -103,30 +106,37 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }
 
   void _handleChildResize(int index, double delta) {
-    var newSize = _getConstrainedChildSize(index, sizes[index] + delta);
-    var adjacentChildSize = sizes[index + 1] + (-1 * delta);
+    var newChildSize = _getConstrainedChildSize(index, sizes[index] + delta);
+    var newAdjacentChildSize = sizes[index + 1] + (-1 * delta);
 
-    if (_isTooBig(index + 1, adjacentChildSize)) {
+    if (_isTooBig(index + 1, newAdjacentChildSize)) {
+      // adjacent child exceeds its maximum size constraint
       final maxAdjacentChildSize = _getMaxSize(index + 1)!;
-      final difference = adjacentChildSize - maxAdjacentChildSize;
-      newSize += difference;
-      adjacentChildSize -= difference;
-    } else if (_isTooSmall(index + 1, adjacentChildSize)) {
+      final difference = newAdjacentChildSize - maxAdjacentChildSize;
+
+      newChildSize += difference;
+      newAdjacentChildSize -= difference;
+    } else if (_isTooSmall(index + 1, newAdjacentChildSize)) {
+      // adjacent child does not meet its minimum size constraint
       final minAdjacentChildSize = _getMinSize(index + 1)!;
-      final difference = minAdjacentChildSize - adjacentChildSize;
-      newSize -= difference;
-      adjacentChildSize += difference;
+      final difference = minAdjacentChildSize - newAdjacentChildSize;
+
+      newChildSize -= difference;
+      newAdjacentChildSize += difference;
     }
 
-    if (newSize == sizes[index] && adjacentChildSize == sizes[index + 1]) {
+    final childChanged = newChildSize != sizes[index];
+    final adjacentChildChanged = newAdjacentChildSize != sizes[index + 1];
+
+    if (!childChanged && !adjacentChildChanged) {
       // if the sizes haven't changed due to their constraints, do not
       // trigger an unnecessary rebuild
       return;
     }
 
     setState(() {
-      sizes[index] = newSize;
-      sizes[index + 1] = adjacentChildSize;
+      sizes[index] = newChildSize;
+      sizes[index + 1] = newAdjacentChildSize;
     });
   }
 
