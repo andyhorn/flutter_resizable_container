@@ -1,3 +1,9 @@
+## 0.0.3
+
+- Add example to README
+- Add example project
+- Fix a bug allowing negative child sizes
+
 ## 0.0.2
 
 - Fix a typo in the README
