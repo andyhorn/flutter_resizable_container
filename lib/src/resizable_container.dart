@@ -153,6 +153,10 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }
 
   bool _isTooSmall(int index, double size) {
+    if (size < 0) {
+      return true;
+    }
+
     if (widget.children[index].minSize == null) {
       return false;
     }
@@ -169,7 +173,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }
 
   double? _getMinSize(int index) {
-    return widget.children[index].minSize;
+    return widget.children[index].minSize ?? 0;
   }
 
   double? _getMaxSize(int index) {
