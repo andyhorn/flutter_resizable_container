@@ -1,3 +1,7 @@
+## 0.0.5
+
+- Fix divider and cursor positioning
+
 ## 0.0.4
 
 - Add optional divider line
