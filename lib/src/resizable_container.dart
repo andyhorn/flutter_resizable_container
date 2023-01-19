@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/src/resizable_child_data.dart';
 import 'package:flutter_resizable_container/src/resize_cursor.dart';
+import 'package:flutter_resizable_container/src/resize_divider.dart';
 
 class ResizableContainer extends StatefulWidget {
   const ResizableContainer._create({
@@ -79,6 +80,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
                             ? Stack(
                                 children: [
                                   widget.children[i].child,
+                                  ResizeDivider(
+                                    direction: widget.direction,
+                                  ),
                                   ResizeCursor(
                                     direction: widget.direction,
                                     onResizeUpdate: (delta) =>
