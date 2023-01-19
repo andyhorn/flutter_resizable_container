@@ -60,6 +60,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
         }
 
         return Stack(
+          fit: StackFit.expand,
           children: [
             Flex(
               direction: widget.direction,
@@ -70,41 +71,42 @@ class _ResizableContainerState extends State<ResizableContainer> {
                       final height = _getChildSize(
                         index: i,
                         direction: Axis.vertical,
+                        constraints: constraints,
                       );
 
                       final width = _getChildSize(
                         index: i,
                         direction: Axis.horizontal,
+                        constraints: constraints,
                       );
 
                       return SizedBox(
                         height: height,
                         width: width,
-                        child: i < widget.children.length - 1
-                            ? Stack(
-                                children: [
-                                  widget.children[i].child,
-                                  if (widget.showDivider)
-                                    ResizeDivider(
-                                      direction: widget.direction,
-                                    ),
-                                  ResizeCursor(
-                                    direction: widget.direction,
-                                    onResizeUpdate: (delta) =>
-                                        _handleChildResize(
-                                      index: i,
-                                      delta: delta,
-                                      availableSpace: availableSpace,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : widget.children[i].child,
+                        child: widget.children[i].child,
                       );
                     },
                   ),
               ],
             ),
+            for (var i = 0; i < widget.children.length - 1; i++) ...[
+              if (widget.showDivider)
+                ResizeDivider(
+                  constraints: constraints,
+                  direction: widget.direction,
+                  position: sizes[i],
+                ),
+              ResizeCursor(
+                constraints: constraints,
+                direction: widget.direction,
+                onResizeUpdate: (delta) => _handleChildResize(
+                  index: i,
+                  delta: delta,
+                  availableSpace: availableSpace,
+                ),
+                position: sizes[i],
+              ),
+            ],
           ],
         );
       },
@@ -120,8 +122,23 @@ class _ResizableContainerState extends State<ResizableContainer> {
   double? _getChildSize({
     required int index,
     required Axis direction,
+    required BoxConstraints constraints,
   }) {
-    return direction != widget.direction ? null : sizes[index];
+    return direction != widget.direction
+        ? _getConstraint(
+            constraint: constraints,
+            direction: widget.direction,
+          )
+        : sizes[index];
+  }
+
+  double _getConstraint({
+    required BoxConstraints constraint,
+    required Axis direction,
+  }) {
+    return direction == Axis.vertical
+        ? constraint.maxHeight
+        : constraint.maxWidth;
   }
 
   void _handleChildResize({

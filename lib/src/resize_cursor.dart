@@ -4,11 +4,15 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 class ResizeCursor extends StatefulWidget {
   const ResizeCursor({
     super.key,
+    required this.constraints,
     required this.direction,
     required this.onResizeUpdate,
+    required this.position,
   });
 
+  final BoxConstraints constraints;
   final Axis direction;
+  final double position;
   final void Function(double) onResizeUpdate;
 
   @override
@@ -20,10 +24,11 @@ class _ResizeCursorState extends State<ResizeCursor> {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: widget.direction == Axis.horizontal
-          ? Alignment.centerRight
-          : Alignment.bottomCenter,
+    return Positioned(
+      left: _getPositionLeft(),
+      top: _getPositionTop(),
+      height: _getPositionHeight(),
+      width: _getPositionWidth(),
       child: MouseRegion(
         cursor:
             isGrabbing ? SystemMouseCursors.grabbing : SystemMouseCursors.grab,
@@ -47,6 +52,26 @@ class _ResizeCursorState extends State<ResizeCursor> {
         ),
       ),
     );
+  }
+
+  double? _getPositionLeft() {
+    return widget.direction == Axis.horizontal ? widget.position - 12 : null;
+  }
+
+  double? _getPositionTop() {
+    return widget.direction == Axis.vertical ? widget.position - 8 : null;
+  }
+
+  double? _getPositionHeight() {
+    return widget.direction == Axis.horizontal
+        ? widget.constraints.maxHeight
+        : null;
+  }
+
+  double? _getPositionWidth() {
+    return widget.direction == Axis.vertical
+        ? widget.constraints.maxWidth
+        : null;
   }
 
   void _startGrab(DragStartDetails _) => _setGrabbing(true);
