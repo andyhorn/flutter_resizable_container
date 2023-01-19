@@ -31,9 +31,14 @@ class _ExampleAppState extends State<ExampleApp> {
 
                 setState(() => direction = newDirection);
               },
-              child: direction == Axis.horizontal
-                  ? const Text('Vertical')
-                  : const Text('Horizontal'),
+              child: DefaultTextStyle(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Colors.white,
+                    ),
+                child: direction == Axis.horizontal
+                    ? const Text('Vertical')
+                    : const Text('Horizontal'),
+              ),
             ),
           ],
         ),
