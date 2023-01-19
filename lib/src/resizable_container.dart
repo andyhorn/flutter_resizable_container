@@ -83,8 +83,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
                                     direction: widget.direction,
                                     onResizeUpdate: (delta) =>
                                         _handleChildResize(
-                                      i,
-                                      delta,
+                                      index: i,
+                                      delta: delta,
+                                      availableSpace: availableSpace,
                                     ),
                                   ),
                                 ],
@@ -114,7 +115,11 @@ class _ResizableContainerState extends State<ResizableContainer> {
     return direction != widget.direction ? null : sizes[index];
   }
 
-  void _handleChildResize(int index, double delta) {
+  void _handleChildResize({
+    required int index,
+    required double delta,
+    required double availableSpace,
+  }) {
     var newChildSize = _getConstrainedChildSize(index, sizes[index] + delta);
     var newAdjacentChildSize = sizes[index + 1] + (-1 * delta);
 
@@ -141,6 +146,12 @@ class _ResizableContainerState extends State<ResizableContainer> {
       // if the sizes haven't changed due to their constraints, do not
       // trigger an unnecessary rebuild
       return;
+    }
+
+    if (newChildSize + newAdjacentChildSize > availableSpace) {
+      final difference = (newChildSize + newAdjacentChildSize) - availableSpace;
+      newChildSize -= (difference / 2);
+      newAdjacentChildSize -= (difference / 2);
     }
 
     setState(() {
