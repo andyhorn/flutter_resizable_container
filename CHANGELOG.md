@@ -1,3 +1,9 @@
+## 0.0.4
+
+- Add optional divider line
+- Fix a bug allowing child sizes to grow beyond available space
+- Improve example with switchable direction and toggle-able divider
+
 ## 0.0.3
 
 - Add example to README
