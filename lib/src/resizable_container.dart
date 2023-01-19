@@ -7,11 +7,13 @@ class ResizableContainer extends StatefulWidget {
   const ResizableContainer._create({
     required this.children,
     required this.direction,
+    required this.showDivider,
   });
 
   factory ResizableContainer({
     required Axis direction,
     required List<ResizableChildData> children,
+    bool showDivider = true,
   }) {
     final totalRatio =
         children.fold<double>(0.0, (sum, child) => sum += child.startingRatio);
@@ -21,11 +23,13 @@ class ResizableContainer extends StatefulWidget {
     return ResizableContainer._create(
       children: children,
       direction: direction,
+      showDivider: showDivider,
     );
   }
 
   final Axis direction;
   final List<ResizableChildData> children;
+  final bool showDivider;
 
   @override
   State<ResizableContainer> createState() => _ResizableContainerState();
@@ -80,9 +84,10 @@ class _ResizableContainerState extends State<ResizableContainer> {
                             ? Stack(
                                 children: [
                                   widget.children[i].child,
-                                  ResizeDivider(
-                                    direction: widget.direction,
-                                  ),
+                                  if (widget.showDivider)
+                                    ResizeDivider(
+                                      direction: widget.direction,
+                                    ),
                                   ResizeCursor(
                                     direction: widget.direction,
                                     onResizeUpdate: (delta) =>
