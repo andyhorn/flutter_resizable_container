@@ -34,6 +34,15 @@ class _ResizableContainerState extends State<ResizableContainer> {
   final List<double> sizes = [];
 
   @override
+  void didUpdateWidget(covariant ResizableContainer oldWidget) {
+    if (oldWidget.direction != widget.direction) {
+      sizes.clear();
+    }
+
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
