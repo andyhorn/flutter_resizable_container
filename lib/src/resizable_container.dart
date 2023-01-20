@@ -54,7 +54,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
         if (sizes.isEmpty) {
           for (var i = 0; i < widget.children.length; i++) {
-            sizes.add(availableSpace * widget.children[i].startingRatio);
+            final ratioSize = widget.children[i].startingRatio * availableSpace;
+            final reducedForDivider = ratioSize - 12;
+            sizes.add(reducedForDivider);
           }
         }
 
@@ -66,25 +68,17 @@ class _ResizableContainerState extends State<ResizableContainer> {
               // build the child
               Builder(
                 builder: (context) {
-                  var height = _getChildSize(
+                  final height = _getChildSize(
                     index: i,
                     direction: Axis.vertical,
                     constraints: constraints,
                   );
 
-                  var width = _getChildSize(
+                  final width = _getChildSize(
                     index: i,
                     direction: Axis.horizontal,
                     constraints: constraints,
                   );
-
-                  switch (widget.direction) {
-                    case Axis.horizontal:
-                      width = width! - 12;
-                      break;
-                    case Axis.vertical:
-                      height = height! - 12;
-                  }
 
                   return SizedBox(
                     height: height,
@@ -111,9 +105,11 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }
 
   double _getAvailableSpace(BoxConstraints constraints) {
-    return widget.direction == Axis.horizontal
+    final totalSpace = widget.direction == Axis.horizontal
         ? constraints.maxWidth
         : constraints.maxHeight;
+    final dividerSpace = (widget.children.length - 1) * 12;
+    return totalSpace - dividerSpace;
   }
 
   double? _getChildSize({
