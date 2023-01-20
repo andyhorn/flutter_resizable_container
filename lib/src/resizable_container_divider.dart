@@ -10,7 +10,7 @@ class ResizableContainerDivider extends StatelessWidget {
   final Axis direction;
   final void Function(double) onResizeUpdate;
 
-  static const dividerWidth = 2.5;
+  static const dividerWidth = 2.0;
 
   @override
   Widget build(BuildContext context) {
