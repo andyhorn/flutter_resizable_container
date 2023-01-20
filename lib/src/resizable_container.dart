@@ -63,6 +63,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
           fit: StackFit.expand,
           children: [
             Flex(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               direction: widget.direction,
               children: [
                 for (var i = 0; i < widget.children.length; i++)
