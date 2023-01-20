@@ -169,6 +169,16 @@ class _ResizableContainerState extends State<ResizableContainer> {
       newAdjacentChildSize -= (difference / 2);
     }
 
+    if (newChildSize < 0) {
+      final difference = -1 * newChildSize;
+      newChildSize = 0;
+      newAdjacentChildSize -= difference;
+    } else if (newAdjacentChildSize < 0) {
+      final difference = -1 * newAdjacentChildSize;
+      newAdjacentChildSize = 0;
+      newChildSize -= difference;
+    }
+
     setState(() {
       sizes[index] = newChildSize;
       sizes[index + 1] = newAdjacentChildSize;
