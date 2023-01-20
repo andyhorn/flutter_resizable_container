@@ -14,7 +14,6 @@ class ExampleApp extends StatefulWidget {
 
 class _ExampleAppState extends State<ExampleApp> {
   Axis direction = Axis.horizontal;
-  bool showDivider = true;
 
   @override
   Widget build(BuildContext context) {
@@ -41,25 +40,11 @@ class _ExampleAppState extends State<ExampleApp> {
                     : const Text('Horizontal'),
               ),
             ),
-            MaterialButton(
-              onPressed: () {
-                setState(() => showDivider = !showDivider);
-              },
-              child: DefaultTextStyle(
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: Colors.white,
-                    ),
-                child: showDivider
-                    ? const Text('Hide divider')
-                    : const Text('Show divider'),
-              ),
-            ),
           ],
         ),
         body: SafeArea(
           child: ResizableContainer(
             direction: direction,
-            showDivider: showDivider,
             children: [
               ResizableChildData(
                 startingRatio: 0.75,
