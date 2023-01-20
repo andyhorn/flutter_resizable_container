@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/src/resizable_child_data.dart';
-import 'package:flutter_resizable_container/src/resize_cursor.dart';
 import 'package:flutter_resizable_container/src/resize_divider.dart';
 
 class ResizableContainer extends StatefulWidget {
@@ -59,54 +58,51 @@ class _ResizableContainerState extends State<ResizableContainer> {
           }
         }
 
-        return Stack(
-          fit: StackFit.expand,
+        return Flex(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          direction: widget.direction,
           children: [
-            Flex(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              direction: widget.direction,
-              children: [
-                for (var i = 0; i < widget.children.length; i++)
-                  Builder(
-                    builder: (context) {
-                      final height = _getChildSize(
-                        index: i,
-                        direction: Axis.vertical,
-                        constraints: constraints,
-                      );
+            for (var i = 0; i < widget.children.length; i++) ...[
+              // build the child
+              Builder(
+                builder: (context) {
+                  var height = _getChildSize(
+                    index: i,
+                    direction: Axis.vertical,
+                    constraints: constraints,
+                  );
 
-                      final width = _getChildSize(
-                        index: i,
-                        direction: Axis.horizontal,
-                        constraints: constraints,
-                      );
+                  var width = _getChildSize(
+                    index: i,
+                    direction: Axis.horizontal,
+                    constraints: constraints,
+                  );
 
-                      return SizedBox(
-                        height: height,
-                        width: width,
-                        child: widget.children[i].child,
-                      );
-                    },
-                  ),
-              ],
-            ),
-            for (var i = 0; i < widget.children.length - 1; i++) ...[
-              if (widget.showDivider)
-                ResizeDivider(
-                  constraints: constraints,
-                  direction: widget.direction,
-                  position: sizes[i],
-                ),
-              ResizeCursor(
-                constraints: constraints,
-                direction: widget.direction,
-                onResizeUpdate: (delta) => _handleChildResize(
-                  index: i,
-                  delta: delta,
-                  availableSpace: availableSpace,
-                ),
-                position: sizes[i],
+                  switch (widget.direction) {
+                    case Axis.horizontal:
+                      width = width! - 12;
+                      break;
+                    case Axis.vertical:
+                      height = height! - 12;
+                  }
+
+                  return SizedBox(
+                    height: height,
+                    width: width,
+                    child: widget.children[i].child,
+                  );
+                },
               ),
+              if (i < widget.children.length - 1) ...[
+                ResizeDivider(
+                  direction: widget.direction,
+                  onResizeUpdate: (delta) => _handleChildResize(
+                    index: i,
+                    delta: delta,
+                    availableSpace: availableSpace,
+                  ),
+                ),
+              ],
             ],
           ],
         );

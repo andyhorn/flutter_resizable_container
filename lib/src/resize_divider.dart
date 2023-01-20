@@ -1,47 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_resizable_container/src/resize_cursor.dart';
 
 class ResizeDivider extends StatelessWidget {
   const ResizeDivider({
     super.key,
-    required this.constraints,
     required this.direction,
-    required this.position,
+    required this.onResizeUpdate,
+    this.showDivider = true,
   });
 
-  final BoxConstraints constraints;
+  final bool showDivider;
   final Axis direction;
-  final double position;
-
-  static const _dividerWidth = 6.0;
+  final void Function(double) onResizeUpdate;
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: _getPositionLeft(),
-      top: _getPositionTop(),
-      height: _getPositionHeight(),
-      width: _getPositionWidth(),
-      child: direction == Axis.horizontal
-          ? const VerticalDivider(
-              width: _dividerWidth,
-            )
-          : const Divider(),
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        if (showDivider)
+          direction == Axis.horizontal
+              ? const VerticalDivider()
+              : const Divider(),
+        ResizeCursor(
+          direction: direction,
+          onResizeUpdate: onResizeUpdate,
+        ),
+      ],
     );
-  }
-
-  double? _getPositionLeft() {
-    return direction == Axis.horizontal ? position - (_dividerWidth / 2) : null;
-  }
-
-  double? _getPositionTop() {
-    return direction == Axis.vertical ? position - (_dividerWidth / 2) : null;
-  }
-
-  double? _getPositionHeight() {
-    return direction == Axis.horizontal ? constraints.maxHeight : null;
-  }
-
-  double? _getPositionWidth() {
-    return direction == Axis.vertical ? constraints.maxWidth : null;
   }
 }
