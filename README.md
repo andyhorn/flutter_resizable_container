@@ -57,10 +57,6 @@ This would give you a two-pane (horizontal layout) container with a divider and 
 
 Using this handle, the user could then shrink the left-hand pane down to its minimum size of 150px _or_ until the right-hand pane expands to its maximum size of 500px, whichever comes first.
 
-## Additional information
-
-In `0.0.4` a divider line was introduced, but this UI element can be hidden by setting the `showDivider` property to `false` (it is set to `true` by default).
-
 ## License
 
 Copyright 2023 Andrew Horn

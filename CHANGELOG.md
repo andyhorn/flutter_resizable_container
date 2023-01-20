@@ -1,3 +1,13 @@
+## 0.1.0
+
+- Rework dividers to lie in-line with child widgets, taking up space 
+  along the primary axis, instead of being placed in a stack and positioned 
+  according to the child sizes
+- Add a custom divider who's width is known and can be controlled to ease 
+  calculating the available space for child widgets
+- Remove the optionality of the divider - this widget is now required to be 
+  visible, as hiding it would disable the resize functionality
+
 ## 0.0.5
 
 - Fix divider and cursor positioning
