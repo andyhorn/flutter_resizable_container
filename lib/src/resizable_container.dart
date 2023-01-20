@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/src/resizable_child_data.dart';
-import 'package:flutter_resizable_container/src/resize_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 
 class ResizableContainer extends StatefulWidget {
   const ResizableContainer._create({
@@ -54,9 +54,8 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
         if (sizes.isEmpty) {
           for (var i = 0; i < widget.children.length; i++) {
-            final ratioSize = widget.children[i].startingRatio * availableSpace;
-            final reducedForDivider = ratioSize - 12;
-            sizes.add(reducedForDivider);
+            final size = widget.children[i].startingRatio * availableSpace;
+            sizes.add(size);
           }
         }
 
@@ -88,7 +87,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                 },
               ),
               if (i < widget.children.length - 1) ...[
-                ResizeDivider(
+                ResizableContainerDivider(
                   direction: widget.direction,
                   onResizeUpdate: (delta) => _handleChildResize(
                     index: i,
@@ -108,7 +107,8 @@ class _ResizableContainerState extends State<ResizableContainer> {
     final totalSpace = widget.direction == Axis.horizontal
         ? constraints.maxWidth
         : constraints.maxHeight;
-    final dividerSpace = (widget.children.length - 1) * 12;
+    final dividerSpace =
+        (widget.children.length - 1) * ResizableContainerDivider.dividerWidth;
     return totalSpace - dividerSpace;
   }
 
