@@ -58,11 +58,30 @@ class _ExampleAppState extends State<ExampleApp> {
               ResizableChildData(
                 startingRatio: 0.25,
                 maxSize: 500,
-                child: Center(
-                  child: direction == Axis.horizontal
-                      ? const Text('Right pane')
-                      : const Text('Bottom pane'),
+                child: ResizableContainer(
+                  direction: direction == Axis.horizontal
+                      ? Axis.vertical
+                      : Axis.horizontal,
+                  children: const [
+                    ResizableChildData(
+                      child: Center(
+                        child: Text('Nested Child A'),
+                      ),
+                      startingRatio: 0.5,
+                    ),
+                    ResizableChildData(
+                      child: Center(
+                        child: Text('Nested Child B'),
+                      ),
+                      startingRatio: 0.5,
+                    ),
+                  ],
                 ),
+                // child: Center(
+                //   child: direction == Axis.horizontal
+                //       ? const Text('Right pane')
+                //       : const Text('Bottom pane'),
+                // ),
               ),
             ],
           ),
