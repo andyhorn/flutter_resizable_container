@@ -108,7 +108,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
     return totalSpace - dividerSpace;
   }
 
-  double? _getChildSize({
+  double _getChildSize({
     required int index,
     required Axis direction,
     required BoxConstraints constraints,
@@ -136,7 +136,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required double availableSpace,
   }) {
     var newChildSize = _getConstrainedChildSize(index, sizes[index] + delta);
-    var newAdjacentChildSize = sizes[index + 1] + (-1 * delta);
+    var newAdjacentChildSize = sizes[index + 1] - delta;
 
     if (_isTooBig(index + 1, newAdjacentChildSize)) {
       // adjacent child exceeds its maximum size constraint
