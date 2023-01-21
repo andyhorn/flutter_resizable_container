@@ -1,3 +1,7 @@
+## 0.1.2
+
+- Remove commented code from the example project
+
 ## 0.1.1
 
 - Improve documentation and comments
