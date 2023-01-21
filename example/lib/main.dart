@@ -77,11 +77,6 @@ class _ExampleAppState extends State<ExampleApp> {
                     ),
                   ],
                 ),
-                // child: Center(
-                //   child: direction == Axis.horizontal
-                //       ? const Text('Right pane')
-                //       : const Text('Bottom pane'),
-                // ),
               ),
             ],
           ),
