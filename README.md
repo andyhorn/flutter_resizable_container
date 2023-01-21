@@ -1,12 +1,16 @@
-Add resizable containers to your Flutter project.
+**ResizableContainer**s add flexibility and personalization to your UI.
+
+Each container is configured to lay out its children along either the horizontal or vertical axis. These children can then be resized within their shared space using a click-and-drag control.
 
 ## Features
 
-Builds a `Flex` container with two or more children and a `direction`, then allows your users to adjust the size of each child with a simple tap/click and drag.
+Build a UI with one or as many `ResizableContainer`s as you want, even nesting them for fully customizable interfaces.
+
+Each child can be given unbounded flexibility (within the available space) _or_ constrained with a _maximum_ and/or _minimum_ size (in logical pixels).
 
 ## Getting started
 
-Simply install the package like you would any other Flutter package:
+Add this package to your `pubspec.yaml` or install using the command line.
 
 ```dart
 flutter pub add flutter_resizable_container
@@ -14,17 +18,17 @@ flutter pub add flutter_resizable_container
 
 ## Usage
 
-First, add a `ResizableContainer` to your widget tree and give it a `direction` of type `Axis`: this is the direction in which the child objects will be laid out and the direction in which the children's size will flex.
+First, add a `ResizableContainer` to your widget tree and give it a `direction` of type `Axis`: this is the direction in which the child objects will be laid out and the direction in which the children's size will be allowed to flex.
 
-Second, add a list of `ResizableChildData` containing values for each child:
+Second, add a list of `ResizableChildData` objects containing configuration data for each child element:
 
-  * `child: Widget` - this is the child widget that will be contained and who's size will be changed
-  * `startingRatio: double` - this ratio will be used to determine the child's initial size, based on the available space of the parent `ResizableContainer`. 
+  * `child: Widget` - the widget to be displayed in the UI and resized by the user
+  * `startingRatio: double` - this ratio will be used to determine the child's initial size upon the first render, based on the available space of the parent `ResizableContainer`. 
     
     **Note**: this value is required for each child and the sum of all of a container's child ratios must equal `1.0`
 
-  * `minSize: double?` (optional) - this value indicates the absolute minimum size this child should take; any adjustments that would reduce the child's size below this value will be rejected
-  * `maxSize: double?` (optional) - similar to the [minSize], this indicates the absolute maximum size the child should take; any adjustments that would increase the child's size above this value will be rejected
+  * `minSize: double?` (optional) - this value indicates the absolute minimum size (in logical pixels) this child can take; any adjustments that would reduce the child's size _below_ this value will be ignored
+  * `maxSize: double?` (optional) - similar to the [minSize], this indicates the absolute maximum size (in logical pixels) this child can take; any adjustments that would increase the child's size _above_ this value will be ignored
 
 ### Example
 
@@ -38,14 +42,30 @@ Widget build(BuildContext context) {
         startingRatio: 0.75,
         minSize: 150,
         child: const Center(
-          child: Text('Left pane'),
+          child: Text('Left 3/4'),
         ),
       ),
       ResizableChildData(
         startingRatio: 0.25,
         maxSize: 500,
         child: const Center(
-          child: Text('Right pane'),
+          child: ResizableContainer(
+            direction: Axis.vertical,
+            children: [
+              ResizableChildData(
+                startingRatio: 0.5,
+                child: const Center(
+                  child: Text('Upper right'),
+                ),
+              ),
+              ResizableChildData(
+                startingRatio: 0.5,
+                child: const Center(
+                  child: Text('Lower right'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     ],
@@ -55,7 +75,9 @@ Widget build(BuildContext context) {
 
 This would give you a two-pane (horizontal layout) container with a divider and grab handle 3/4 of the way across the screen from the left-hand side.
 
-Using this handle, the user could then shrink the left-hand pane down to its minimum size of 150px _or_ until the right-hand pane expands to its maximum size of 500px, whichever comes first.
+Using this handle, the user could then shrink the left-hand pane down to its minimum size of 150px _or_ until the right-hand pane expands to its maximum size of 500px, whichever comes first. 
+
+They can also adjust the height of the two vertically-stacked children on the right side. These right-side children are given unbounded flexibility, which means each one can take the full space (with the other being given 0px height and no longer appearing on the screen).
 
 ## License
 

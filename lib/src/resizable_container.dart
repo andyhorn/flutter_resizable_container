@@ -2,12 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/src/resizable_child_data.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 
+/// A container that holds multiple child [Widget]s that can be resized.
+///
+/// Dividing lines will be added between each child. Tapping/clicking and
+/// dragging the dividers will resize the children along the [direction] axis.
 class ResizableContainer extends StatefulWidget {
   const ResizableContainer._create({
     required this.children,
     required this.direction,
   });
 
+  /// Creates a new [ResizableContainer] with the given [direction] and list
+  /// of [children] Widgets.
+  ///
+  /// The sum of the [children]'s starting ratios must be equal to 1.0.
   factory ResizableContainer({
     required Axis direction,
     required List<ResizableChildData> children,
@@ -23,7 +31,10 @@ class ResizableContainer extends StatefulWidget {
     );
   }
 
+  /// The direction along which the child widgets will be laid and resized.
   final Axis direction;
+
+  /// The list of [Widget]s and their sizing information.
   final List<ResizableChildData> children;
 
   @override
