@@ -1,3 +1,7 @@
+## 0.1.1
+
+- Improve documentation and comments
+
 ## 0.1.0
 
 - Rework dividers to lie in-line with child widgets, taking up space 
