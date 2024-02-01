@@ -18,12 +18,13 @@ class _ExampleAppState extends State<ExampleApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData.light(),
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Example ResizableContainer'),
           actions: [
-            MaterialButton(
+            ElevatedButton(
               onPressed: () {
                 final newDirection = direction == Axis.horizontal
                     ? Axis.vertical
@@ -31,14 +32,9 @@ class _ExampleAppState extends State<ExampleApp> {
 
                 setState(() => direction = newDirection);
               },
-              child: DefaultTextStyle(
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: Colors.white,
-                    ),
-                child: direction == Axis.horizontal
-                    ? const Text('Vertical')
-                    : const Text('Horizontal'),
-              ),
+              child: direction == Axis.horizontal
+                  ? const Text('Vertical')
+                  : const Text('Horizontal'),
             ),
           ],
         ),
