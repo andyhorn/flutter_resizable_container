@@ -4,32 +4,21 @@ import 'package:flutter_resizable_container/src/resizable_container_divider.dart
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///
-/// Dividing lines will be added between each child. Tapping/clicking and
-/// dragging the dividers will resize the children along the [direction] axis.
+/// Dividing lines will be added between each child. Dragging the dividers
+/// will resize the children along the [direction] axis.
 class ResizableContainer extends StatefulWidget {
-  const ResizableContainer._create({
-    required this.children,
-    required this.direction,
-  });
-
   /// Creates a new [ResizableContainer] with the given [direction] and list
   /// of [children] Widgets.
   ///
   /// The sum of the [children]'s starting ratios must be equal to 1.0.
-  factory ResizableContainer({
-    required Axis direction,
-    required List<ResizableChildData> children,
-  }) {
-    final totalRatio =
-        children.fold<double>(0.0, (sum, child) => sum += child.startingRatio);
-
-    assert(totalRatio == 1.0);
-
-    return ResizableContainer._create(
-      children: children,
-      direction: direction,
-    );
-  }
+  ResizableContainer({
+    super.key,
+    required this.children,
+    required this.direction,
+  }) : assert(
+          children.fold(0.0, (sum, child) => sum += child.startingRatio) == 1.0,
+          'The sum of the children\'s starting ratios must be equal to 1.0.',
+        );
 
   /// The direction along which the child widgets will be laid and resized.
   final Axis direction;
@@ -46,8 +35,17 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
+    // If the axis direction has changed, reset and re-calculate the sizes.
     if (oldWidget.direction != widget.direction) {
       sizes.clear();
+      final size = MediaQuery.sizeOf(context);
+      final availableSpace = _getAvailableSpace(
+        BoxConstraints(maxWidth: size.width, maxHeight: size.height),
+      );
+
+      _setSizes(availableSpace);
+
+      setState(() {});
     }
 
     super.didUpdateWidget(oldWidget);
@@ -60,10 +58,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
         final availableSpace = _getAvailableSpace(constraints);
 
         if (sizes.isEmpty) {
-          for (var i = 0; i < widget.children.length; i++) {
-            final size = widget.children[i].startingRatio * availableSpace;
-            sizes.add(size);
-          }
+          _setSizes(availableSpace);
+        } else {
+          _adjustSizes(availableSpace);
         }
 
         return Flex(
@@ -108,6 +105,23 @@ class _ResizableContainerState extends State<ResizableContainer> {
         );
       },
     );
+  }
+
+  void _setSizes(double availableSpace) {
+    for (var i = 0; i < widget.children.length; i++) {
+      final size = widget.children[i].startingRatio * availableSpace;
+      sizes.add(size);
+    }
+  }
+
+  void _adjustSizes(double availableSpace) {
+    final previousSpace = sizes.reduce((total, size) => size + total);
+    for (var i = 0; i < widget.children.length; i++) {
+      final previousSize = sizes[i];
+      final ratio = previousSize / previousSpace;
+      final newSize = ratio * availableSpace;
+      sizes[i] = newSize;
+    }
   }
 
   double _getAvailableSpace(BoxConstraints constraints) {
