@@ -1,3 +1,7 @@
+## 0.2.1
+
+- Fix package description to improve pub.dev score
+
 ## 0.2.0
 
 - Update the Dart SDK constraints to >=3.0.0 <4.0.0
