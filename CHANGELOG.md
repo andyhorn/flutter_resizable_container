@@ -1,3 +1,12 @@
+## 0.2.0
+
+- Update the Dart SDK constraints to >=3.0.0 <4.0.0
+
+## 0.1.3
+
+- Fix a bug causing overflows when the window is resized
+- Remove the factory and add the debug assert directly to the ctor
+
 ## 0.1.2
 
 - Remove commented code from the example project
