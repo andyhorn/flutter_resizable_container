@@ -1,3 +1,7 @@
+## 0.3.0
+
+- Make divider color and width customizable
+
 ## 0.2.1
 
 - Fix package description to improve pub.dev score
