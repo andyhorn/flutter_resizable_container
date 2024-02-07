@@ -1,7 +1,5 @@
 **ResizableContainer**s add flexibility and personalization to your UI.
 
-Each container is configured to lay out its children along either the horizontal or vertical axis. These children can then be resized within their shared space using a click-and-drag control.
-
 ## Features
 
 * Nest as many `ResizableContainer`s as you want
@@ -89,9 +87,11 @@ Widget build(BuildContext context) {
 }
 ```
 
-This would give you a two-pane (horizontal layout) container with a divider and grab handle 3/4 of the way across the screen from the left-hand side.
+![ResizableContainer example](doc/screenshot.png)
 
-Using this handle, the user could then shrink the left-hand pane down to its minimum size of 150px _or_ until the right-hand pane expands to its maximum size of 500px, whichever comes first. 
+In the example, there is a two-pane (horizontal layout) container with a divider and grab-handle 3/4 of the way across the screen from the left-hand side.
+
+Using this handle, a user could shrink the left-hand pane down to its minimum size of 150px _or_ until the right-hand pane expands to its maximum size of 500px, whichever comes first. 
 
 They can also adjust the height of the two vertically-stacked children on the right side. These right-side children are given unbounded flexibility, which means each one can take the full space (with the other being given 0px height and no longer appearing on the screen).
 

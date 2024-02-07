@@ -41,6 +41,8 @@ class _ExampleAppState extends State<ExampleApp> {
         body: SafeArea(
           child: ResizableContainer(
             direction: direction,
+            dividerWidth: 3.0,
+            dividerColor: Colors.blue,
             children: [
               ResizableChildData(
                 startingRatio: 0.75,
@@ -55,8 +57,7 @@ class _ExampleAppState extends State<ExampleApp> {
                 startingRatio: 0.25,
                 maxSize: 500,
                 child: ResizableContainer(
-                  dividerColor: Colors.blue,
-                  dividerWidth: 8.0,
+                  dividerColor: Colors.green,
                   direction: direction == Axis.horizontal
                       ? Axis.vertical
                       : Axis.horizontal,
