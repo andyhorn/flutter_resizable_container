@@ -4,9 +4,9 @@ Each container is configured to lay out its children along either the horizontal
 
 ## Features
 
-Build a UI with one or as many `ResizableContainer`s as you want, even nesting them for fully customizable interfaces.
-
-Each child can be given unbounded flexibility (within the available space) _or_ constrained with a _maximum_ and/or _minimum_ size (in logical pixels).
+* Nest as many `ResizableContainer`s as you want
+* Configure each child's initial size, minimum size, and/or maximum size
+* Customize the width and color of the divider(s) between children
 
 ## Getting started
 
@@ -19,6 +19,19 @@ flutter pub add flutter_resizable_container
 ## Usage
 
 First, add a `ResizableContainer` to your widget tree and give it a `direction` of type `Axis`: this is the direction in which the child objects will be laid out and the direction in which the children's size will be allowed to flex.
+
+You can also provide a `dividerWidth` and/or `dividerColor` to customize the appearance of the dividers between children.
+
+```dart
+ResizableContainer(
+  direction: Axis.horizontal,
+  dividerWidth: 5,
+  dividerColor: Colors.blue,
+  children: [
+    // ...
+  ],
+)
+```
 
 Second, add a list of `ResizableChildData` objects containing configuration data for each child element:
 
@@ -37,6 +50,8 @@ Second, add a list of `ResizableChildData` objects containing configuration data
 Widget build(BuildContext context) {
   return ResizableContainer(
     direction: Axis.horizontal,
+    dividerWidth: 3.0,
+    dividerColor: Colors.blue,
     children: [
       ResizableChildData(
         startingRatio: 0.75,
@@ -51,6 +66,7 @@ Widget build(BuildContext context) {
         child: const Center(
           child: ResizableContainer(
             direction: Axis.vertical,
+            dividerColor: Colors.green,
             children: [
               ResizableChildData(
                 startingRatio: 0.5,
