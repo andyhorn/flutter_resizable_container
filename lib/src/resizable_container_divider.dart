@@ -5,12 +5,14 @@ class ResizableContainerDivider extends StatelessWidget {
     super.key,
     required this.direction,
     required this.onResizeUpdate,
+    required this.dividerWidth,
+    required this.dividerColor,
   });
 
   final Axis direction;
   final void Function(double) onResizeUpdate;
-
-  static const dividerWidth = 2.0;
+  final double dividerWidth;
+  final Color dividerColor;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +27,8 @@ class ResizableContainerDivider extends StatelessWidget {
             : null,
         child: _Divider(
           direction: direction,
+          width: dividerWidth,
+          color: dividerColor,
         ),
       ),
     );
@@ -42,23 +46,23 @@ class ResizableContainerDivider extends StatelessWidget {
 
 class _Divider extends StatelessWidget {
   const _Divider({
+    required this.color,
     required this.direction,
+    required this.width,
   });
 
   final Axis direction;
+  final double width;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: direction == Axis.horizontal
-          ? double.infinity
-          : ResizableContainerDivider.dividerWidth,
-      width: direction == Axis.horizontal
-          ? ResizableContainerDivider.dividerWidth
-          : double.infinity,
+      height: direction == Axis.horizontal ? double.infinity : width,
+      width: direction == Axis.horizontal ? width : double.infinity,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: Theme.of(context).dividerColor,
+          color: color,
         ),
       ),
     );

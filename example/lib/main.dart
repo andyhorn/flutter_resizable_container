@@ -55,6 +55,8 @@ class _ExampleAppState extends State<ExampleApp> {
                 startingRatio: 0.25,
                 maxSize: 500,
                 child: ResizableContainer(
+                  dividerColor: Colors.blue,
+                  dividerWidth: 8.0,
                   direction: direction == Axis.horizontal
                       ? Axis.vertical
                       : Axis.horizontal,

@@ -15,6 +15,8 @@ class ResizableContainer extends StatefulWidget {
     super.key,
     required this.children,
     required this.direction,
+    this.dividerColor,
+    this.dividerWidth = 2.0,
   }) : assert(
           children.fold(0.0, (sum, child) => sum += child.startingRatio) == 1.0,
           'The sum of the children\'s starting ratios must be equal to 1.0.',
@@ -25,6 +27,14 @@ class ResizableContainer extends StatefulWidget {
 
   /// The list of [Widget]s and their sizing information.
   final List<ResizableChildData> children;
+
+  /// The width of the dividers between the children.
+  final double dividerWidth;
+
+  /// The color of the dividers between the children.
+  ///
+  /// If not provided, Theme.of(context).dividerColor will be used.
+  final Color? dividerColor;
 
   @override
   State<ResizableContainer> createState() => _ResizableContainerState();
@@ -92,6 +102,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
               ),
               if (i < widget.children.length - 1) ...[
                 ResizableContainerDivider(
+                  dividerColor:
+                      widget.dividerColor ?? Theme.of(context).dividerColor,
+                  dividerWidth: widget.dividerWidth,
                   direction: widget.direction,
                   onResizeUpdate: (delta) => _handleChildResize(
                     index: i,
@@ -128,8 +141,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
     final totalSpace = widget.direction == Axis.horizontal
         ? constraints.maxWidth
         : constraints.maxHeight;
-    final dividerSpace =
-        (widget.children.length - 1) * ResizableContainerDivider.dividerWidth;
+    final dividerSpace = (widget.children.length - 1) * widget.dividerWidth;
     return totalSpace - dividerSpace;
   }
 
