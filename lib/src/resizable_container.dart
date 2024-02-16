@@ -74,10 +74,8 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    if (oldWidget.controller != controller) {
-      _disposeController();
-      _initController();
-    }
+    _disposeController();
+    _initController();
     // If the axis direction has changed, reset and re-calculate the sizes.
     if (oldWidget.direction != widget.direction) {
       sizes.clear();
@@ -85,12 +83,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
       final availableSpace = _getAvailableSpace(
         BoxConstraints(maxWidth: size.width, maxHeight: size.height),
       );
-
       _setSizes(availableSpace);
-
       setState(() {});
     }
-
     super.didUpdateWidget(oldWidget);
   }
 
