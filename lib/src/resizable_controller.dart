@@ -5,6 +5,10 @@ import "resizable_container.dart";
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
+  /// Whether this controller should be disposed when its container goes out of view.
+  final bool shouldDispose;
+  ResizableController({this.shouldDispose = true});
+  
   /// The sizes in pixels of each child.
   final List<double> sizes = [];
   /// The total available space for this container in the given axis.
