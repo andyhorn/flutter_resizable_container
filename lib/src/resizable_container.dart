@@ -56,7 +56,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   @override
   void dispose() {
-    if (controller.shouldDispose) controller.dispose();
+    _disposeController();
     super.dispose();
   }
 
@@ -65,12 +65,17 @@ class _ResizableContainerState extends State<ResizableContainer> {
     controller.addListener(_listener);
   }
 
+  void _disposeController() {
+    if (controller.shouldDispose) controller.dispose();
+    controller.removeListener(_listener);
+  }
+
   void _listener() => setState(() {});
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
     if (oldWidget.controller != controller) {
-      if (controller.shouldDispose) controller.dispose();
+      _disposeController();
       _initController();
     }
     // If the axis direction has changed, reset and re-calculate the sizes.
