@@ -14,6 +14,8 @@ class ExampleApp extends StatefulWidget {
 
 class _ExampleAppState extends State<ExampleApp> {
   Axis direction = Axis.horizontal;
+  final controller1 = ResizableController();
+  final controller2 = ResizableController();
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +26,13 @@ class _ExampleAppState extends State<ExampleApp> {
         appBar: AppBar(
           title: const Text('Example ResizableContainer'),
           actions: [
+            ElevatedButton(
+              onPressed: () {
+                controller1.setRatios([0.75, 0.25]);
+                controller2.setRatios([0.5, 0.5]);
+              },
+              child: const Text("Reset ratios"),
+            ),
             ElevatedButton(
               onPressed: () {
                 final newDirection = direction == Axis.horizontal
@@ -38,8 +47,18 @@ class _ExampleAppState extends State<ExampleApp> {
             ),
           ],
         ),
+        floatingActionButton: Builder(
+          builder: (context) => FloatingActionButton(
+            child: const Icon(Icons.info),
+            onPressed: () {
+              final message = "Ratios: ${controller1.ratios.join(', ')} and ${controller2.ratios.join(', ')}";
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+            },
+          ),
+        ),
         body: SafeArea(
           child: ResizableContainer(
+            controller: controller1,
             direction: direction,
             dividerWidth: 3.0,
             dividerColor: Colors.blue,
@@ -57,6 +76,7 @@ class _ExampleAppState extends State<ExampleApp> {
                 startingRatio: 0.25,
                 maxSize: 500,
                 child: ResizableContainer(
+                  controller: controller2,
                   dividerColor: Colors.green,
                   direction: direction == Axis.horizontal
                       ? Axis.vertical
