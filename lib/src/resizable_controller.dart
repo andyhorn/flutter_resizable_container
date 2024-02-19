@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 
 import "resizable_child_data.dart";
 import "resizable_container.dart";
+import "utils.dart";
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
-  /// Whether this controller should be disposed when its container goes out of view.
-  final bool shouldDispose;
-  ResizableController({this.shouldDispose = true});
-  
   /// The sizes in pixels of each child.
   final List<double> sizes = [];
   /// The total available space for this container in the given axis.
@@ -32,13 +29,4 @@ class ResizableController with ChangeNotifier {
     }
     notifyListeners();
   }
-}
-
-/// Returns the sum of a list.
-num sum(List<num> list) {
-  num result = 0;
-  for (final element in list) {
-    result += element;
-  }
-  return result;
 }

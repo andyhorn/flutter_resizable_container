@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/src/resizable_child_data.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
+import 'package:flutter_resizable_container/src/utils.dart';
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///
@@ -20,9 +21,9 @@ class ResizableContainer extends StatefulWidget {
     this.controller,
     this.dividerWidth = 2.0,
   }) : assert(
-          children.fold(0.0, (sum, child) => sum += child.startingRatio) == 1.0,
-          'The sum of the children\'s starting ratios must be equal to 1.0.',
-        );
+    sum([for (final child in children) child.startingRatio]) == 1.0,
+    'The sum of the children\'s starting ratios must be equal to 1.0.',
+  );
 
   /// The direction along which the child widgets will be laid and resized.
   final Axis direction;
@@ -66,7 +67,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }
 
   void _disposeController() {
-    if (controller.shouldDispose) controller.dispose();
     controller.removeListener(_listener);
   }
 

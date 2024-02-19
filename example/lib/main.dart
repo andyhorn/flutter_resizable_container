@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 
+const ratio1 = 0.75;
+const ratio2 = 0.25;
+const ratio3 = 0.5;
+const ratio4 = 0.5;
+
 void main() {
   runApp(const ExampleApp());
 }
@@ -18,6 +23,13 @@ class _ExampleAppState extends State<ExampleApp> {
   final controller2 = ResizableController();
 
   @override
+  void dispose() {
+    controller1.dispose();
+    controller2.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -28,8 +40,8 @@ class _ExampleAppState extends State<ExampleApp> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                controller1.setRatios([0.75, 0.25]);
-                controller2.setRatios([0.5, 0.5]);
+                controller1.setRatios([ratio1, ratio2]);
+                controller2.setRatios([ratio3, ratio4]);
               },
               child: const Text("Reset ratios"),
             ),
@@ -64,7 +76,7 @@ class _ExampleAppState extends State<ExampleApp> {
             dividerColor: Colors.blue,
             children: [
               ResizableChildData(
-                startingRatio: 0.75,
+                startingRatio: ratio1,
                 minSize: 150,
                 child: Center(
                   child: direction == Axis.horizontal
@@ -73,7 +85,7 @@ class _ExampleAppState extends State<ExampleApp> {
                 ),
               ),
               ResizableChildData(
-                startingRatio: 0.25,
+                startingRatio: ratio2,
                 maxSize: 500,
                 child: ResizableContainer(
                   controller: controller2,
@@ -83,16 +95,16 @@ class _ExampleAppState extends State<ExampleApp> {
                       : Axis.horizontal,
                   children: const [
                     ResizableChildData(
+                      startingRatio: ratio3,
                       child: Center(
                         child: Text('Nested Child A'),
                       ),
-                      startingRatio: 0.5,
                     ),
                     ResizableChildData(
                       child: Center(
                         child: Text('Nested Child B'),
                       ),
-                      startingRatio: 0.5,
+                      startingRatio: ratio4,
                     ),
                   ],
                 ),
