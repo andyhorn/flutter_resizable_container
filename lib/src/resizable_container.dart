@@ -212,7 +212,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
       newAdjacentChildSize -= difference;
     } else if (_isTooSmall(index + 1, newAdjacentChildSize)) {
       // adjacent child does not meet its minimum size constraint
-      final minAdjacentChildSize = _getMinSize(index + 1)!;
+      final minAdjacentChildSize = _getMinSize(index + 1);
       final difference = minAdjacentChildSize - newAdjacentChildSize;
 
       newChildSize -= difference;
@@ -252,7 +252,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   double _getConstrainedChildSize(int index, double newSize) {
     if (_isTooSmall(index, newSize)) {
-      return _getMinSize(index)!;
+      return _getMinSize(index);
     }
 
     if (_isTooBig(index, newSize)) {
@@ -282,7 +282,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
     return widget.children[index].maxSize! < size;
   }
 
-  double? _getMinSize(int index) {
+  double _getMinSize(int index) {
     return widget.children[index].minSize ?? 0;
   }
 
