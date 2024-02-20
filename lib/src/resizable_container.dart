@@ -203,41 +203,52 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required double delta,
     required double availableSpace,
   }) {
-    final ResizableChildData(
-      minSize: currentMinSize,
-      maxSize: currentMaxSize,
-    ) = widget.children[index];
-    final currentSize = sizes[index];
+    final adjustedDelta = delta < 0
+        ? _getAdjustedReducingDelta(index, delta)
+        : _getAdjustedIncreasingDelta(index, delta, availableSpace);
 
-    final ResizableChildData(
-      minSize: adjacentMinSize,
-      maxSize: adjacentMaxSize,
-    ) = widget.children[index + 1];
-    final adjacentSize = sizes[index + 1];
-
-    if (delta < 0) {
-      final maximumCurrentDelta = currentSize - (currentMinSize ?? 0);
-      final maximumAdjacentDelta =
-          (adjacentMaxSize ?? double.infinity) - adjacentSize;
-
-      final maximumDelta = min(maximumCurrentDelta, maximumAdjacentDelta);
-      if (delta.abs() > maximumDelta) {
-        delta = -maximumDelta;
-      }
-    } else {
-      final maximumCurrentDelta =
-          (currentMaxSize ?? double.infinity) - currentSize;
-      final maximumAdjacentDelta = adjacentSize - (adjacentMinSize ?? 0);
-      final maximumDelta = min(maximumCurrentDelta, maximumAdjacentDelta);
-
-      if (delta > maximumDelta) {
-        delta = maximumDelta;
-      }
-    }
-
-    sizes[index] += delta;
-    sizes[index + 1] -= delta;
+    sizes[index] += adjustedDelta;
+    sizes[index + 1] -= adjustedDelta;
 
     setState(() {});
+  }
+
+  // get the adjusted delta for reducing the size of the child at [index]
+  double _getAdjustedReducingDelta(int index, double delta) {
+    final minSize = widget.children[index].minSize;
+    final currentSize = sizes[index];
+    final maxSize = widget.children[index + 1].maxSize;
+    final adjacentSize = sizes[index + 1];
+    final maxCurrentDelta = currentSize - (minSize ?? 0);
+    final maxAdjacentDelta = (maxSize ?? double.infinity) - adjacentSize;
+    final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
+
+    if (delta.abs() > maxDelta) {
+      delta = -maxDelta;
+    }
+
+    return delta;
+  }
+
+  // get the adjusted delta for increasing the size of the child at [index]
+  double _getAdjustedIncreasingDelta(
+    int index,
+    double delta,
+    double availableSpace,
+  ) {
+    final maxSize = widget.children[index].maxSize;
+    final currentSize = sizes[index];
+    final minSize = widget.children[index + 1].minSize;
+    final adjacentSize = sizes[index + 1];
+    final maxAvailableSpace = min(maxSize ?? double.infinity, availableSpace);
+    final maxCurrentDelta = maxAvailableSpace - currentSize;
+    final maxAdjacentDelta = adjacentSize - (minSize ?? 0);
+    final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
+
+    if (delta > maxDelta) {
+      delta = maxDelta;
+    }
+
+    return delta;
   }
 }
