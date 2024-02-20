@@ -206,7 +206,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
     if (_isTooBig(index + 1, newAdjacentChildSize)) {
       // adjacent child exceeds its maximum size constraint
-      final maxAdjacentChildSize = _getMaxSize(index + 1)!;
+      final maxAdjacentChildSize = _getMaxSize(index + 1);
       final difference = newAdjacentChildSize - maxAdjacentChildSize;
 
       newChildSize += difference;
@@ -257,7 +257,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
     }
 
     if (_isTooBig(index, newSize)) {
-      return _getMaxSize(index)!;
+      return _getMaxSize(index);
     }
 
     return newSize;
@@ -268,26 +268,30 @@ class _ResizableContainerState extends State<ResizableContainer> {
       return true;
     }
 
-    if (widget.children[index].minSize == null) {
+    final minSize = widget.children[index].minSize;
+
+    if (minSize == null) {
       return false;
     }
 
-    return widget.children[index].minSize! > size;
+    return minSize > size;
   }
 
   bool _isTooBig(int index, double size) {
-    if (widget.children[index].maxSize == null) {
+    final maxSize = widget.children[index].maxSize;
+
+    if (maxSize == null) {
       return false;
     }
 
-    return widget.children[index].maxSize! < size;
+    return maxSize < size;
   }
 
   double _getMinSize(int index) {
     return widget.children[index].minSize ?? 0;
   }
 
-  double? _getMaxSize(int index) {
-    return widget.children[index].maxSize;
+  double _getMaxSize(int index) {
+    return widget.children[index].maxSize ?? double.infinity;
   }
 }
