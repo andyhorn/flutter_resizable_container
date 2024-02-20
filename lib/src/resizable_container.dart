@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/src/resizable_child_data.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
@@ -21,9 +23,9 @@ class ResizableContainer extends StatefulWidget {
     this.controller,
     this.dividerWidth = 2.0,
   }) : assert(
-    sum([for (final child in children) child.startingRatio]) == 1.0,
-    'The sum of the children\'s starting ratios must be equal to 1.0.',
-  );
+          sum([for (final child in children) child.startingRatio]) == 1.0,
+          'The sum of the children\'s starting ratios must be equal to 1.0.',
+        );
 
   /// The direction along which the child widgets will be laid and resized.
   final Axis direction;
@@ -201,97 +203,34 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required double delta,
     required double availableSpace,
   }) {
-    var newChildSize = _getConstrainedChildSize(index, sizes[index] + delta);
-    var newAdjacentChildSize = sizes[index + 1] - delta;
-
-    if (_isTooBig(index + 1, newAdjacentChildSize)) {
-      // adjacent child exceeds its maximum size constraint
-      final maxAdjacentChildSize = _getMaxSize(index + 1);
-      final difference = newAdjacentChildSize - maxAdjacentChildSize;
-
-      newChildSize += difference;
-      newAdjacentChildSize -= difference;
-    } else if (_isTooSmall(index + 1, newAdjacentChildSize)) {
-      // adjacent child does not meet its minimum size constraint
-      final minAdjacentChildSize = _getMinSize(index + 1);
-      final difference = minAdjacentChildSize - newAdjacentChildSize;
-
-      newChildSize -= difference;
-      newAdjacentChildSize += difference;
-    }
-
-    final childChanged = newChildSize != sizes[index];
-    final adjacentChildChanged = newAdjacentChildSize != sizes[index + 1];
-
-    if (!childChanged && !adjacentChildChanged) {
-      // if the sizes haven't changed due to their constraints, do not
-      // trigger an unnecessary rebuild
+    final canAdjustChild = _canAdjustChild(index, delta);
+    if (!canAdjustChild) {
       return;
     }
 
-    if (newChildSize + newAdjacentChildSize > availableSpace) {
-      final difference = (newChildSize + newAdjacentChildSize) - availableSpace;
-      newChildSize -= (difference / 2);
-      newAdjacentChildSize -= (difference / 2);
+    final canAdjustAdjacent = _canAdjustChild(index + 1, -delta);
+    if (!canAdjustAdjacent) {
+      return;
     }
 
-    if (newChildSize < 0) {
-      final difference = -1 * newChildSize;
-      newChildSize = 0;
-      newAdjacentChildSize -= difference;
-    } else if (newAdjacentChildSize < 0) {
-      final difference = -1 * newAdjacentChildSize;
-      newAdjacentChildSize = 0;
-      newChildSize -= difference;
-    }
+    sizes[index] += delta;
+    sizes[index + 1] -= delta;
 
-    setState(() {
-      sizes[index] = newChildSize;
-      sizes[index + 1] = newAdjacentChildSize;
-    });
+    setState(() {});
   }
 
-  double _getConstrainedChildSize(int index, double newSize) {
-    if (_isTooSmall(index, newSize)) {
-      return _getMinSize(index);
+  bool _canAdjustChild(int index, double delta) {
+    final ResizableChildData(:minSize, :maxSize) = widget.children[index];
+    final currentSize = sizes[index];
+
+    if (delta < 0) {
+      // if the child is reducing in size, make sure it doesn't go below its
+      // minimum size or 0.
+      return currentSize + delta >= max(0, (minSize ?? 0));
     }
 
-    if (_isTooBig(index, newSize)) {
-      return _getMaxSize(index);
-    }
-
-    return newSize;
-  }
-
-  bool _isTooSmall(int index, double size) {
-    if (size < 0) {
-      return true;
-    }
-
-    final minSize = widget.children[index].minSize;
-
-    if (minSize == null) {
-      return false;
-    }
-
-    return minSize > size;
-  }
-
-  bool _isTooBig(int index, double size) {
-    final maxSize = widget.children[index].maxSize;
-
-    if (maxSize == null) {
-      return false;
-    }
-
-    return maxSize < size;
-  }
-
-  double _getMinSize(int index) {
-    return widget.children[index].minSize ?? 0;
-  }
-
-  double _getMaxSize(int index) {
-    return widget.children[index].maxSize ?? double.infinity;
+    // if the child is increasing in size, make sure it doesn't exceed its
+    // maximum size (if one is set).
+    return maxSize == null || currentSize + delta <= maxSize;
   }
 }
