@@ -156,7 +156,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }
 
   void _adjustSizes(double availableSpace) {
-    final previousSpace = sizes.reduce((total, size) => size + total);
+    final previousSpace = sum(sizes);
     for (var i = 0; i < widget.children.length; i++) {
       final previousSize = sizes[i];
       final ratio = previousSize / previousSpace;
