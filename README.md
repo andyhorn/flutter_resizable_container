@@ -5,6 +5,7 @@
 * Nest as many `ResizableContainer`s as you want
 * Configure each child's initial size, minimum size, and/or maximum size
 * Customize the width and color of the divider(s) between children
+* Programmatically change the ratios of the children at any time
 
 ## Getting started
 
@@ -94,6 +95,47 @@ In the example, there is a two-pane (horizontal layout) container with a divider
 Using this handle, a user could shrink the left-hand pane down to its minimum size of 150px _or_ until the right-hand pane expands to its maximum size of 500px, whichever comes first. 
 
 They can also adjust the height of the two vertically-stacked children on the right side. These right-side children are given unbounded flexibility, which means each one can take the full space (with the other being given 0px height and no longer appearing on the screen).
+
+### Using a controller
+
+When creating a `ResizableChildData`, you provide a `startingRatio` to give it a size relative to the available space. After the frame builds, the user may freely resize it and any other child. To set the ratio programmatically, use a `ResizableController`: 
+
+```dart
+final controller = ResizableController();
+
+// ...
+
+child: ResizableContainer(
+  controller: controller,
+  child: // ...
+```
+
+Then, using `controller.setRatios`, you can set the ratios for all the children at once. This function has the same limitation as `startingRatio` in that all the ratios must add to one, and there must be one ratio per child. 
+
+```dart
+void printControllerInfo() {
+  print("Details about the controller: ");
+  print("  Ratios: ${controller.ratios}");
+  print("  Absolute Sizes: ${controller.sizes}");
+  print("  Available space: ${controller.availableSpace}");
+  print("  Number of children: ${controller.numChildren}");
+}
+
+void resetRatios() {
+  // Assuming this controller only has two children
+  controller.setRatios([0.5, 0.5]);
+}
+```
+
+Be sure to dispose the controller when you're done with it:
+
+```dart
+@override
+void dispose() {
+  controller.dispose();
+  super.dispose();
+}
+```
 
 ## License
 

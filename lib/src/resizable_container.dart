@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/src/resizable_child_data.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_controller.dart';
+import 'package:flutter_resizable_container/src/utils.dart';
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///
@@ -16,11 +18,12 @@ class ResizableContainer extends StatefulWidget {
     required this.children,
     required this.direction,
     this.dividerColor,
+    this.controller,
     this.dividerWidth = 2.0,
   }) : assert(
-          children.fold(0.0, (sum, child) => sum += child.startingRatio) == 1.0,
-          'The sum of the children\'s starting ratios must be equal to 1.0.',
-        );
+    sum([for (final child in children) child.startingRatio]) == 1.0,
+    'The sum of the children\'s starting ratios must be equal to 1.0.',
+  );
 
   /// The direction along which the child widgets will be laid and resized.
   final Axis direction;
@@ -36,15 +39,43 @@ class ResizableContainer extends StatefulWidget {
   /// If not provided, Theme.of(context).dividerColor will be used.
   final Color? dividerColor;
 
+  final ResizableController? controller;
+
   @override
   State<ResizableContainer> createState() => _ResizableContainerState();
 }
 
 class _ResizableContainerState extends State<ResizableContainer> {
-  final List<double> sizes = [];
+  late ResizableController controller;
+  List<double> get sizes => controller.sizes;
+
+  @override
+  void initState() {
+    super.initState();
+    _initController();
+  }
+
+  @override
+  void dispose() {
+    _disposeController();
+    super.dispose();
+  }
+
+  void _initController() {
+    controller = widget.controller ?? ResizableController();
+    controller.addListener(_listener);
+  }
+
+  void _disposeController() {
+    controller.removeListener(_listener);
+  }
+
+  void _listener() => setState(() {});
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
+    _disposeController();
+    _initController();
     // If the axis direction has changed, reset and re-calculate the sizes.
     if (oldWidget.direction != widget.direction) {
       sizes.clear();
@@ -52,12 +83,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
       final availableSpace = _getAvailableSpace(
         BoxConstraints(maxWidth: size.width, maxHeight: size.height),
       );
-
       _setSizes(availableSpace);
-
       setState(() {});
     }
-
     super.didUpdateWidget(oldWidget);
   }
 
@@ -66,7 +94,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableSpace = _getAvailableSpace(constraints);
-
+        controller.availableSpace = availableSpace;
         if (sizes.isEmpty) {
           _setSizes(availableSpace);
         } else {
@@ -184,7 +212,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
       newAdjacentChildSize -= difference;
     } else if (_isTooSmall(index + 1, newAdjacentChildSize)) {
       // adjacent child does not meet its minimum size constraint
-      final minAdjacentChildSize = _getMinSize(index + 1)!;
+      final minAdjacentChildSize = _getMinSize(index + 1);
       final difference = minAdjacentChildSize - newAdjacentChildSize;
 
       newChildSize -= difference;
@@ -224,7 +252,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   double _getConstrainedChildSize(int index, double newSize) {
     if (_isTooSmall(index, newSize)) {
-      return _getMinSize(index)!;
+      return _getMinSize(index);
     }
 
     if (_isTooBig(index, newSize)) {
@@ -254,7 +282,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
     return widget.children[index].maxSize! < size;
   }
 
-  double? _getMinSize(int index) {
+  double _getMinSize(int index) {
     return widget.children[index].minSize ?? 0;
   }
 
