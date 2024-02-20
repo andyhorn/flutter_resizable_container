@@ -203,34 +203,41 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required double delta,
     required double availableSpace,
   }) {
-    final canAdjustChild = _canAdjustChild(index, delta);
-    if (!canAdjustChild) {
-      return;
-    }
+    final ResizableChildData(
+      minSize: currentMinSize,
+      maxSize: currentMaxSize,
+    ) = widget.children[index];
+    final currentSize = sizes[index];
 
-    final canAdjustAdjacent = _canAdjustChild(index + 1, -delta);
-    if (!canAdjustAdjacent) {
-      return;
+    final ResizableChildData(
+      minSize: adjacentMinSize,
+      maxSize: adjacentMaxSize,
+    ) = widget.children[index + 1];
+    final adjacentSize = sizes[index + 1];
+
+    if (delta < 0) {
+      final maximumCurrentDelta = currentSize - (currentMinSize ?? 0);
+      final maximumAdjacentDelta =
+          (adjacentMaxSize ?? double.infinity) - adjacentSize;
+
+      final maximumDelta = min(maximumCurrentDelta, maximumAdjacentDelta);
+      if (delta.abs() > maximumDelta) {
+        delta = -maximumDelta;
+      }
+    } else {
+      final maximumCurrentDelta =
+          (currentMaxSize ?? double.infinity) - currentSize;
+      final maximumAdjacentDelta = adjacentSize - (adjacentMinSize ?? 0);
+      final maximumDelta = min(maximumCurrentDelta, maximumAdjacentDelta);
+
+      if (delta > maximumDelta) {
+        delta = maximumDelta;
+      }
     }
 
     sizes[index] += delta;
     sizes[index + 1] -= delta;
 
     setState(() {});
-  }
-
-  bool _canAdjustChild(int index, double delta) {
-    final ResizableChildData(:minSize, :maxSize) = widget.children[index];
-    final currentSize = sizes[index];
-
-    if (delta < 0) {
-      // if the child is reducing in size, make sure it doesn't go below its
-      // minimum size or 0.
-      return currentSize + delta >= max(0, (minSize ?? 0));
-    }
-
-    // if the child is increasing in size, make sure it doesn't exceed its
-    // maximum size (if one is set).
-    return maxSize == null || currentSize + delta <= maxSize;
   }
 }
