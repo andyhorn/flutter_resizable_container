@@ -1,3 +1,8 @@
+## 0.4.0
+
+- Add `ResizableController` to allow programmatic control of resizable children
+- Fix a bug causing adjacent containers to grow in size when the target container reaches is minimum size
+
 ## 0.3.0
 
 - Make divider color and width customizable
