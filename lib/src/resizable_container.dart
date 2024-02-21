@@ -39,6 +39,7 @@ class ResizableContainer extends StatefulWidget {
   /// If not provided, Theme.of(context).dividerColor will be used.
   final Color? dividerColor;
 
+  /// The controller that will be used to manage programmatic resizing of the children.
   final ResizableController? controller;
 
   @override
