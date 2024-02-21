@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/src/resizable_child_data.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
@@ -21,9 +23,9 @@ class ResizableContainer extends StatefulWidget {
     this.controller,
     this.dividerWidth = 2.0,
   }) : assert(
-    sum([for (final child in children) child.startingRatio]) == 1.0,
-    'The sum of the children\'s starting ratios must be equal to 1.0.',
-  );
+          sum([for (final child in children) child.startingRatio]) == 1.0,
+          'The sum of the children\'s starting ratios must be equal to 1.0.',
+        );
 
   /// The direction along which the child widgets will be laid and resized.
   final Axis direction;
@@ -201,93 +203,64 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required double delta,
     required double availableSpace,
   }) {
-    var newChildSize = _getConstrainedChildSize(index, sizes[index] + delta);
-    var newAdjacentChildSize = sizes[index + 1] - delta;
+    final adjustedDelta = delta < 0
+        ? _getAdjustedReducingDelta(
+            index: index,
+            delta: delta,
+          )
+        : _getAdjustedIncreasingDelta(
+            index: index,
+            delta: delta,
+            availableSpace: availableSpace,
+          );
 
-    if (_isTooBig(index + 1, newAdjacentChildSize)) {
-      // adjacent child exceeds its maximum size constraint
-      final maxAdjacentChildSize = _getMaxSize(index + 1)!;
-      final difference = newAdjacentChildSize - maxAdjacentChildSize;
+    sizes[index] += adjustedDelta;
+    sizes[index + 1] -= adjustedDelta;
 
-      newChildSize += difference;
-      newAdjacentChildSize -= difference;
-    } else if (_isTooSmall(index + 1, newAdjacentChildSize)) {
-      // adjacent child does not meet its minimum size constraint
-      final minAdjacentChildSize = _getMinSize(index + 1);
-      final difference = minAdjacentChildSize - newAdjacentChildSize;
-
-      newChildSize -= difference;
-      newAdjacentChildSize += difference;
-    }
-
-    final childChanged = newChildSize != sizes[index];
-    final adjacentChildChanged = newAdjacentChildSize != sizes[index + 1];
-
-    if (!childChanged && !adjacentChildChanged) {
-      // if the sizes haven't changed due to their constraints, do not
-      // trigger an unnecessary rebuild
-      return;
-    }
-
-    if (newChildSize + newAdjacentChildSize > availableSpace) {
-      final difference = (newChildSize + newAdjacentChildSize) - availableSpace;
-      newChildSize -= (difference / 2);
-      newAdjacentChildSize -= (difference / 2);
-    }
-
-    if (newChildSize < 0) {
-      final difference = -1 * newChildSize;
-      newChildSize = 0;
-      newAdjacentChildSize -= difference;
-    } else if (newAdjacentChildSize < 0) {
-      final difference = -1 * newAdjacentChildSize;
-      newAdjacentChildSize = 0;
-      newChildSize -= difference;
-    }
-
-    setState(() {
-      sizes[index] = newChildSize;
-      sizes[index + 1] = newAdjacentChildSize;
-    });
+    setState(() {});
   }
 
-  double _getConstrainedChildSize(int index, double newSize) {
-    if (_isTooSmall(index, newSize)) {
-      return _getMinSize(index);
+  // get the adjusted delta for reducing the size of the child at [index]
+  double _getAdjustedReducingDelta({
+    required int index,
+    required double delta,
+  }) {
+    final currentSize = sizes[index];
+    final minCurrentSize = widget.children[index].minSize;
+    final adjacentSize = sizes[index + 1];
+    final maxAdjacentSize = widget.children[index + 1].maxSize;
+    final maxCurrentDelta = currentSize - (minCurrentSize ?? 0);
+    final maxAdjacentDelta =
+        (maxAdjacentSize ?? double.infinity) - adjacentSize;
+    final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
+
+    if (delta.abs() > maxDelta) {
+      delta = -maxDelta;
     }
 
-    if (_isTooBig(index, newSize)) {
-      return _getMaxSize(index)!;
-    }
-
-    return newSize;
+    return delta;
   }
 
-  bool _isTooSmall(int index, double size) {
-    if (size < 0) {
-      return true;
+  // get the adjusted delta for increasing the size of the child at [index]
+  double _getAdjustedIncreasingDelta({
+    required int index,
+    required double delta,
+    required double availableSpace,
+  }) {
+    final currentSize = sizes[index];
+    final maxCurrentSize = widget.children[index].maxSize;
+    final adjacentSize = sizes[index + 1];
+    final minAdjacentSize = widget.children[index + 1].minSize;
+    final maxAvailableSpace =
+        min(maxCurrentSize ?? double.infinity, availableSpace);
+    final maxCurrentDelta = maxAvailableSpace - currentSize;
+    final maxAdjacentDelta = adjacentSize - (minAdjacentSize ?? 0);
+    final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
+
+    if (delta > maxDelta) {
+      delta = maxDelta;
     }
 
-    if (widget.children[index].minSize == null) {
-      return false;
-    }
-
-    return widget.children[index].minSize! > size;
-  }
-
-  bool _isTooBig(int index, double size) {
-    if (widget.children[index].maxSize == null) {
-      return false;
-    }
-
-    return widget.children[index].maxSize! < size;
-  }
-
-  double _getMinSize(int index) {
-    return widget.children[index].minSize ?? 0;
-  }
-
-  double? _getMaxSize(int index) {
-    return widget.children[index].maxSize;
+    return delta;
   }
 }
