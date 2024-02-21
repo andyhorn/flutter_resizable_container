@@ -204,8 +204,12 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required double availableSpace,
   }) {
     final adjustedDelta = delta < 0
-        ? _getAdjustedReducingDelta(index, delta)
-        : _getAdjustedIncreasingDelta(index, delta, availableSpace);
+        ? _getAdjustedReducingDelta(index: index, delta: delta)
+        : _getAdjustedIncreasingDelta(
+            index: index,
+            delta: delta,
+            availableSpace: availableSpace,
+          );
 
     sizes[index] += adjustedDelta;
     sizes[index + 1] -= adjustedDelta;
@@ -214,7 +218,10 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }
 
   // get the adjusted delta for reducing the size of the child at [index]
-  double _getAdjustedReducingDelta(int index, double delta) {
+  double _getAdjustedReducingDelta({
+    required int index,
+    required double delta,
+  }) {
     final minSize = widget.children[index].minSize;
     final currentSize = sizes[index];
     final maxSize = widget.children[index + 1].maxSize;
@@ -231,11 +238,11 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }
 
   // get the adjusted delta for increasing the size of the child at [index]
-  double _getAdjustedIncreasingDelta(
-    int index,
-    double delta,
-    double availableSpace,
-  ) {
+  double _getAdjustedIncreasingDelta({
+    required int index,
+    required double delta,
+    required double availableSpace,
+  }) {
     final maxSize = widget.children[index].maxSize;
     final currentSize = sizes[index];
     final minSize = widget.children[index + 1].minSize;
