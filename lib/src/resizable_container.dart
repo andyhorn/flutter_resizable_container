@@ -225,12 +225,13 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required int index,
     required double delta,
   }) {
-    final minSize = widget.children[index].minSize;
     final currentSize = sizes[index];
-    final maxSize = widget.children[index + 1].maxSize;
+    final minCurrentSize = widget.children[index].minSize;
     final adjacentSize = sizes[index + 1];
-    final maxCurrentDelta = currentSize - (minSize ?? 0);
-    final maxAdjacentDelta = (maxSize ?? double.infinity) - adjacentSize;
+    final maxAdjacentSize = widget.children[index + 1].maxSize;
+    final maxCurrentDelta = currentSize - (minCurrentSize ?? 0);
+    final maxAdjacentDelta =
+        (maxAdjacentSize ?? double.infinity) - adjacentSize;
     final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
 
     if (delta.abs() > maxDelta) {
@@ -246,13 +247,14 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required double delta,
     required double availableSpace,
   }) {
-    final maxSize = widget.children[index].maxSize;
     final currentSize = sizes[index];
-    final minSize = widget.children[index + 1].minSize;
+    final maxCurrentSize = widget.children[index].maxSize;
     final adjacentSize = sizes[index + 1];
-    final maxAvailableSpace = min(maxSize ?? double.infinity, availableSpace);
+    final minAdjacentSize = widget.children[index + 1].minSize;
+    final maxAvailableSpace =
+        min(maxCurrentSize ?? double.infinity, availableSpace);
     final maxCurrentDelta = maxAvailableSpace - currentSize;
-    final maxAdjacentDelta = adjacentSize - (minSize ?? 0);
+    final maxAdjacentDelta = adjacentSize - (minAdjacentSize ?? 0);
     final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
 
     if (delta > maxDelta) {
