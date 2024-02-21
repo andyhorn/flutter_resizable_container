@@ -204,7 +204,10 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required double availableSpace,
   }) {
     final adjustedDelta = delta < 0
-        ? _getAdjustedReducingDelta(index: index, delta: delta)
+        ? _getAdjustedReducingDelta(
+            index: index,
+            delta: delta,
+          )
         : _getAdjustedIncreasingDelta(
             index: index,
             delta: delta,
