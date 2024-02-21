@@ -49,12 +49,21 @@ class ResizableContainer extends StatefulWidget {
 }
 
 class _ResizableContainerState extends State<ResizableContainer> {
-  late ResizableController controller;
+  ResizableController? _defaultController;
+
+  ResizableController get controller =>
+      widget.controller ?? _defaultController!;
+
   List<double> get sizes => controller.sizes;
 
   @override
   void initState() {
     super.initState();
+
+    if (widget.controller == null) {
+      _defaultController = ResizableController();
+    }
+
     _initController();
   }
 
@@ -65,7 +74,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }
 
   void _initController() {
-    controller = widget.controller ?? ResizableController();
     controller.addListener(_listener);
   }
 
@@ -79,16 +87,20 @@ class _ResizableContainerState extends State<ResizableContainer> {
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
     _disposeController();
     _initController();
+
     // If the axis direction has changed, reset and re-calculate the sizes.
     if (oldWidget.direction != widget.direction) {
       sizes.clear();
+
       final size = MediaQuery.sizeOf(context);
       final availableSpace = _getAvailableSpace(
         BoxConstraints(maxWidth: size.width, maxHeight: size.height),
       );
+
       _setSizes(availableSpace);
       setState(() {});
     }
+
     super.didUpdateWidget(oldWidget);
   }
 
@@ -98,6 +110,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
       builder: (context, constraints) {
         final availableSpace = _getAvailableSpace(constraints);
         controller.availableSpace = availableSpace;
+
         if (sizes.isEmpty) {
           _setSizes(availableSpace);
         } else {
