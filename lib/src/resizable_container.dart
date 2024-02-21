@@ -60,25 +60,27 @@ class _ResizableContainerState extends State<ResizableContainer> {
   void initState() {
     super.initState();
 
-    if (widget.controller == null) {
-      _defaultController = ResizableController();
-    }
-
     _initController();
   }
 
   @override
   void dispose() {
     _disposeController();
+
     super.dispose();
   }
 
   void _initController() {
+    if (widget.controller == null) {
+      _defaultController = ResizableController();
+    }
+
     controller.addListener(_listener);
   }
 
   void _disposeController() {
     controller.removeListener(_listener);
+    _defaultController?.dispose();
   }
 
   void _listener() => setState(() {});
