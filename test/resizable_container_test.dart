@@ -180,5 +180,124 @@ void main() {
       expect(boxASize, const Size(availableSpace * 0.6, 1000));
       expect(boxBSize, const Size(availableSpace * 0.4, 1000));
     });
+
+    testWidgets('container respects min size', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 1000));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResizableContainer(
+              direction: Axis.horizontal,
+              children: const [
+                ResizableChildData(
+                  child: SizedBox.expand(
+                    key: Key('BoxA'),
+                  ),
+                  startingRatio: 0.5,
+                  minSize: 200,
+                ),
+                ResizableChildData(
+                  child: SizedBox.expand(),
+                  startingRatio: 0.5,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      await tester.drag(
+        find.byType(ResizableContainerDivider),
+        const Offset(-600, 0),
+      );
+      await tester.pump();
+
+      final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
+      expect(boxASize, const Size(200, 1000));
+    });
+
+    testWidgets('container respects max size', (tester) async {
+      const dividerWidth = 2.0;
+      await tester.binding.setSurfaceSize(const Size(1000, 1000));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResizableContainer(
+              dividerWidth: dividerWidth,
+              direction: Axis.horizontal,
+              children: const [
+                ResizableChildData(
+                  child: SizedBox.expand(
+                    key: Key('BoxA'),
+                  ),
+                  startingRatio: 0.5,
+                  maxSize: 700,
+                ),
+                ResizableChildData(
+                  child: SizedBox.expand(
+                    key: Key('BoxB'),
+                  ),
+                  startingRatio: 0.5,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      await tester.drag(
+        find.byType(ResizableContainerDivider),
+        const Offset(600, 0),
+      );
+      await tester.pump();
+
+      final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
+      expect(boxASize, const Size(700, 1000));
+
+      final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
+      expect(boxBSize, const Size(300 - dividerWidth, 1000));
+    });
+
+    testWidgets('adjacent containers resize correctly', (tester) async {
+      const dividerWidth = 2.0;
+      await tester.binding.setSurfaceSize(const Size(1000, 1000));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResizableContainer(
+              dividerWidth: dividerWidth,
+              direction: Axis.horizontal,
+              children: const [
+                ResizableChildData(
+                  child: SizedBox.expand(
+                    key: Key('BoxA'),
+                  ),
+                  startingRatio: 0.5,
+                  minSize: 200,
+                ),
+                ResizableChildData(
+                  child: SizedBox.expand(
+                    key: Key('BoxB'),
+                  ),
+                  startingRatio: 0.5,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      await tester.drag(
+        find.byType(ResizableContainerDivider),
+        const Offset(-600, 0),
+      );
+      await tester.pump();
+
+      final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
+      expect(boxASize, const Size(200, 1000));
+
+      final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
+      expect(boxBSize, const Size(800 - dividerWidth, 1000));
+    });
   });
 }
