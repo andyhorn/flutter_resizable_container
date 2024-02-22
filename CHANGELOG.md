@@ -1,3 +1,9 @@
+## 0.4.1
+
+- Add tests for `ResizableController`
+- Add tests for `ResizableContainer`
+- Add GitHub Actions workflow
+
 ## 0.4.0
 
 - Add `ResizableController` to allow programmatic control of resizable children
