@@ -1,3 +1,7 @@
+## 0.4.2
+
+- Fixes an issue with the `didUpdateWidget` lifecycle hook causing errors to be thrown during hot-reloads
+
 ## 0.4.1
 
 - Add tests for `ResizableController`
