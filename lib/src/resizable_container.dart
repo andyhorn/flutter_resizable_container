@@ -87,11 +87,10 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    _disposeController();
-    _initController();
-
     // If the axis direction has changed, reset and re-calculate the sizes.
     if (oldWidget.direction != widget.direction) {
+      _disposeController();
+      _initController();
       sizes.clear();
 
       final size = MediaQuery.sizeOf(context);
