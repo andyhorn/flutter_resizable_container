@@ -4,7 +4,7 @@
 
 * Nest as many `ResizableContainer`s as you want
 * Configure each child's initial size, minimum size, and/or maximum size
-* Customize the width and color of the divider(s) between children
+* Customize the width, color, and indentation of the divider(s) between children
 * Programmatically change the ratios of the children at any time
 
 ## Getting started
@@ -19,13 +19,15 @@ flutter pub add flutter_resizable_container
 
 First, add a `ResizableContainer` to your widget tree and give it a `direction` of type `Axis`: this is the direction in which the child objects will be laid out and the direction in which the children's size will be allowed to flex.
 
-You can also provide a `dividerWidth` and/or `dividerColor` to customize the appearance of the dividers between children.
+You can also provide a `dividerWidth`, `dividerIndent`, `dividerEndIntent`, and/or `dividerColor` to customize the appearance of the dividers between children.
 
 ```dart
 ResizableContainer(
   direction: Axis.horizontal,
   dividerWidth: 5,
   dividerColor: Colors.blue,
+  dividerIndent: 5,
+  dividerEndIndent: 5,
   children: [
     // ...
   ],
@@ -139,7 +141,7 @@ void dispose() {
 
 ## License
 
-Copyright 2023 Andrew Horn
+Copyright 2023-2024 Andrew Horn
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

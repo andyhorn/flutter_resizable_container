@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_resizable_container/src/divider_painter.dart';
 
 class ResizableContainerDivider extends StatelessWidget {
   const ResizableContainerDivider({
@@ -7,12 +8,16 @@ class ResizableContainerDivider extends StatelessWidget {
     required this.onResizeUpdate,
     required this.dividerWidth,
     required this.dividerColor,
+    this.indent,
+    this.endIndent,
   });
 
   final Axis direction;
   final void Function(double) onResizeUpdate;
   final double dividerWidth;
   final Color dividerColor;
+  final double? indent;
+  final double? endIndent;
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +30,18 @@ class ResizableContainerDivider extends StatelessWidget {
         onHorizontalDragUpdate: direction == Axis.horizontal
             ? (details) => onResizeUpdate(details.delta.dx)
             : null,
-        child: _Divider(
-          direction: direction,
-          width: dividerWidth,
-          color: dividerColor,
+        child: SizedBox(
+          height: direction == Axis.horizontal ? double.infinity : dividerWidth,
+          width: direction == Axis.horizontal ? dividerWidth : double.infinity,
+          child: CustomPaint(
+            painter: DividerPainter(
+              direction: direction,
+              width: dividerWidth,
+              color: dividerColor,
+              indent: indent,
+              endIndent: endIndent,
+            ),
+          ),
         ),
       ),
     );
@@ -41,30 +54,5 @@ class ResizableContainerDivider extends StatelessWidget {
       case Axis.vertical:
         return SystemMouseCursors.resizeUpDown;
     }
-  }
-}
-
-class _Divider extends StatelessWidget {
-  const _Divider({
-    required this.color,
-    required this.direction,
-    required this.width,
-  });
-
-  final Axis direction;
-  final double width;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: direction == Axis.horizontal ? double.infinity : width,
-      width: direction == Axis.horizontal ? width : double.infinity,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: color,
-        ),
-      ),
-    );
   }
 }

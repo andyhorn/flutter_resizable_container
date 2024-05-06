@@ -22,6 +22,8 @@ class ResizableContainer extends StatefulWidget {
     this.dividerColor,
     this.controller,
     this.dividerWidth = 2.0,
+    this.dividerIndent,
+    this.dividerEndIndent,
   }) : assert(
           sum([for (final child in children) child.startingRatio]) == 1.0,
           'The sum of the children\'s starting ratios must be equal to 1.0.',
@@ -40,6 +42,18 @@ class ResizableContainer extends StatefulWidget {
   ///
   /// If not provided, Theme.of(context).dividerColor will be used.
   final Color? dividerColor;
+
+  /// The indent of the divider at its start.
+  ///
+  /// For dividers running from top-to-bottom, this indents the top.
+  /// For dividers running from left-to-right, this indents the left.
+  final double? dividerIndent;
+
+  /// The indent of the divider at its end.
+  ///
+  /// For dividers running from top-to-bottom, this indents the bottom.
+  /// For dividers running from left-to-right, this indents the right.
+  final double? dividerEndIndent;
 
   /// The controller that will be used to manage programmatic resizing of the children.
   final ResizableController? controller;
@@ -150,6 +164,8 @@ class _ResizableContainerState extends State<ResizableContainer> {
                   dividerColor:
                       widget.dividerColor ?? Theme.of(context).dividerColor,
                   dividerWidth: widget.dividerWidth,
+                  indent: widget.dividerIndent,
+                  endIndent: widget.dividerEndIndent,
                   direction: widget.direction,
                   onResizeUpdate: (delta) => _handleChildResize(
                     index: i,

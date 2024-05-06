@@ -63,8 +63,10 @@ class _ExampleAppState extends State<ExampleApp> {
           builder: (context) => FloatingActionButton(
             child: const Icon(Icons.info),
             onPressed: () {
-              final message = "Ratios: ${controller1.ratios.join(', ')} and ${controller2.ratios.join(', ')}";
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+              final message =
+                  "Ratios: ${controller1.ratios.join(', ')} and ${controller2.ratios.join(', ')}";
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text(message)));
             },
           ),
         ),
@@ -74,6 +76,8 @@ class _ExampleAppState extends State<ExampleApp> {
             direction: direction,
             dividerWidth: 3.0,
             dividerColor: Colors.blue,
+            dividerIndent: 12,
+            dividerEndIndent: 12,
             children: [
               ResizableChildData(
                 startingRatio: ratio1,
