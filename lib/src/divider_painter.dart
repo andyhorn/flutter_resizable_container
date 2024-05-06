@@ -54,7 +54,7 @@ class DividerPainter extends CustomPainter {
       //
       // The indent should be the lesser of the available height, the specified
       // indent, or 0.
-      final indentAmount = min(size.height, indent ?? 0);
+      final indentAmount = min(size.height, indent ?? 0.0);
       return Point(width / 2, indentAmount);
     }
 
@@ -63,7 +63,7 @@ class DividerPainter extends CustomPainter {
     //
     // The indent should be the lesser of the available width, the specified
     // indent, or 0.
-    final indentAmount = min(size.width, indent ?? 0);
+    final indentAmount = min(size.width, indent ?? 0.0);
     return Point(indentAmount, width / 2);
   }
 
@@ -74,8 +74,8 @@ class DividerPainter extends CustomPainter {
       //
       // The indent should be the available height minus the indent amount,
       // capped at a minimum of 0.
-      final indentAmount = size.height - (endIndent ?? 0);
-      return Point(width / 2, max(0, indentAmount));
+      final indentAmount = max(0.0, size.height - (endIndent ?? 0));
+      return Point(width / 2, indentAmount);
     }
 
     // If the direction is vertical, the divider is a horizontal line and the
@@ -83,7 +83,7 @@ class DividerPainter extends CustomPainter {
     //
     // The indent should be the available width minus the indent amount, capped
     // at a minimum of 0.
-    final indentAmount = size.width - (endIndent ?? 0);
-    return Point(max(0, indentAmount), width / 2);
+    final indentAmount = max(0.0, size.width - (endIndent ?? 0));
+    return Point(indentAmount, width / 2);
   }
 }
