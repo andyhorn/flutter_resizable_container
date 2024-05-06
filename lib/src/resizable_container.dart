@@ -164,6 +164,8 @@ class _ResizableContainerState extends State<ResizableContainer> {
                   dividerColor:
                       widget.dividerColor ?? Theme.of(context).dividerColor,
                   dividerWidth: widget.dividerWidth,
+                  indent: widget.dividerIndent,
+                  endIndent: widget.dividerEndIndent,
                   direction: widget.direction,
                   onResizeUpdate: (delta) => _handleChildResize(
                     index: i,

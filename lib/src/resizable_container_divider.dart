@@ -7,12 +7,16 @@ class ResizableContainerDivider extends StatelessWidget {
     required this.onResizeUpdate,
     required this.dividerWidth,
     required this.dividerColor,
+    this.indent,
+    this.endIndent,
   });
 
   final Axis direction;
   final void Function(double) onResizeUpdate;
   final double dividerWidth;
   final Color dividerColor;
+  final double? indent;
+  final double? endIndent;
 
   @override
   Widget build(BuildContext context) {
