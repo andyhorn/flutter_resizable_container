@@ -1,3 +1,7 @@
+## 0.5.0
+
+- Adds `dividerIndent` and `dividerEndIndent` properties to the resizable container
+
 ## 0.4.2
 
 - Fixes an issue with the `didUpdateWidget` lifecycle hook causing errors to be thrown during hot-reloads
