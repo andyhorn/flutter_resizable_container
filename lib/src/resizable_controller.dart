@@ -25,22 +25,25 @@ class ResizableController with ChangeNotifier {
     }
   }
 
+  double _availableSpace = -1;
+  double _nullRatioSpace = 0;
+  List<double> _sizes = [];
+
   /// A list of [ResizableChildData] objects that control the sizing parameters
   /// for the list of children of a [ResizableContainer].
   final List<ResizableChildData> data;
 
   /// The sizes in pixels of each child.
   List<double> get sizes => _sizes;
-  List<double> _sizes = [];
 
   /// The amount of space (as a ratio of the total available space) alloted to
   /// children with `null` [startingRatio]s.
   double get nullRatioSpace => _nullRatioSpace;
-  double _nullRatioSpace = 0;
 
   /// The total available space for this container in the given axis.
   double get availableSpace => _availableSpace;
-  double _availableSpace = -1;
+
+  /// Set the total available space.
   set availableSpace(double value) {
     if (value == _availableSpace) {
       return;
@@ -48,25 +51,15 @@ class ResizableController with ChangeNotifier {
 
     if (_availableSpace == -1) {
       _nullRatioSpace = _calculateSpaceForNullStartingRatios(value);
-      _sizes = [
-        for (final datum in data) ...[
-          (datum.startingRatio ?? _nullRatioSpace) * value,
-        ],
-      ];
-
-      _availableSpace = value;
+      _sizes = _calculateSizesBasedOnStartingRatios(value).toList();
     } else {
-      _sizes = [
-        for (final size in _sizes) ...[
-          (size / _availableSpace) * value,
-        ],
-      ];
-
-      _availableSpace = value;
-      notifyListeners();
+      _sizes = _calculateSizesBasedOnCurrentRatios(value).toList();
     }
+
+    _availableSpace = value;
   }
 
+  /// Adjust the size of the child widget at [index] by the [delta] amount.
   void adjustChildSize({
     required int index,
     required double delta,
@@ -83,6 +76,50 @@ class ResizableController with ChangeNotifier {
 
     _sizes[index] += adjustedDelta;
     _sizes[index + 1] -= adjustedDelta;
+    notifyListeners();
+  }
+
+  /// The number of resizable children this container has.
+  int get numChildren => sizes.length;
+
+  /// The ratios of all the children, like [ResizableChildData.startingRatio].
+  List<double> get ratios => [
+        for (final size in sizes) size / availableSpace,
+      ];
+
+  /// Programmatically set the ratios on the children. See [ratios] to get their current ratios.
+  set ratios(List<double> values) {
+    if (values.length != numChildren) {
+      throw ArgumentError(
+        "Ratios list must be equal to the number of children",
+      );
+    }
+
+    if (sum(values) != 1) {
+      throw ArgumentError("The sum of the ratios must equal 1");
+    }
+
+    for (var i = 0; i < numChildren; i++) {
+      sizes[i] = values[i] * availableSpace;
+    }
+
+    notifyListeners();
+  }
+
+  Iterable<double> _calculateSizesBasedOnStartingRatios(
+    double availableSpace,
+  ) sync* {
+    for (final datum in data) {
+      yield (datum.startingRatio ?? _nullRatioSpace) * availableSpace;
+    }
+  }
+
+  Iterable<double> _calculateSizesBasedOnCurrentRatios(
+    double availableSpace,
+  ) sync* {
+    for (final size in _sizes) {
+      yield (size / _availableSpace) * availableSpace;
+    }
   }
 
   // get the adjusted delta for reducing the size of the child at [index]
@@ -128,6 +165,8 @@ class ResizableController with ChangeNotifier {
     return delta;
   }
 
+  // calculate the ratio of available space alloted to children without a
+  // specified starting ratio.
   double _calculateSpaceForNullStartingRatios(double availableSpace) {
     final ratios = data.map((datum) => datum.startingRatio);
     final nonNullRatios = ratios.whereType<double>().toList();
@@ -142,32 +181,5 @@ class ResizableController with ChangeNotifier {
     final dividedSpace = remainingRatioSpace / nullRatiosCount;
 
     return dividedSpace;
-  }
-
-  /// The number of resizable children this container has.
-  int get numChildren => sizes.length;
-
-  /// The ratios of all the children, like [ResizableChildData.startingRatio].
-  List<double> get ratios => [
-        for (final size in sizes) size / availableSpace,
-      ];
-
-  /// Programmatically set the ratios on the children. See [ratios] to get their current ratios.
-  set ratios(List<double> values) {
-    if (values.length != numChildren) {
-      throw ArgumentError(
-        "Ratios list must be equal to the number of children",
-      );
-    }
-
-    if (sum(values) != 1) {
-      throw ArgumentError("The sum of the ratios must equal 1");
-    }
-
-    for (var i = 0; i < numChildren; i++) {
-      sizes[i] = values[i] * availableSpace;
-    }
-
-    notifyListeners();
   }
 }
