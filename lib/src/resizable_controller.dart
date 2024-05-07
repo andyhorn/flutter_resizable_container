@@ -88,19 +88,39 @@ class ResizableController with ChangeNotifier {
       ];
 
   /// Programmatically set the ratios on the children. See [ratios] to get their current ratios.
-  set ratios(List<double> values) {
+  set ratios(List<double?> values) {
     if (values.length != numChildren) {
-      throw ArgumentError(
-        "Ratios list must be equal to the number of children",
-      );
+      throw ArgumentError('Must contain a ratio for every child');
     }
 
-    if (sum(values) != 1) {
-      throw ArgumentError("The sum of the ratios must equal 1");
+    if (values.any((value) => value != null && value < 0)) {
+      throw ArgumentError.value(values, 'Ratio values cannot be less than 0.');
     }
 
-    for (var i = 0; i < numChildren; i++) {
-      sizes[i] = values[i] * availableSpace;
+    if (values.any((value) => value != null && value > 1)) {
+      throw ArgumentError.value(values, 'Ratio values cannot exceed 1.0');
+    }
+
+    final ratioTotal = values.whereType<double>().fold(
+          0.0,
+          (sum, current) => sum + current,
+        );
+
+    if (ratioTotal > 1.0) {
+      throw ArgumentError('The sum of all ratios cannot not exceed 1.0');
+    }
+
+    final remaining = 1.0 - ratioTotal;
+
+    if (remaining == 0) {
+      _nullRatioSpace = 0;
+    } else {
+      final nullRatioCount = values.where((value) => value == null).length;
+      _nullRatioSpace = remaining / nullRatioCount;
+    }
+
+    for (var i = 0; i < values.length; i++) {
+      _sizes[i] = (values[i] ?? _nullRatioSpace) * availableSpace;
     }
 
     notifyListeners();
