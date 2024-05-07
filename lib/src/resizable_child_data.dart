@@ -21,6 +21,8 @@ class ResizableChildData {
   final double? minSize;
 
   @override
-  String toString() =>
-      'ResizableChildData(startingRatio: $startingRatio, maxSize: $maxSize, minSize: $minSize)';
+  String toString() => 'ResizableChildData('
+      'startingRatio: $startingRatio, '
+      'maxSize: $maxSize, '
+      'minSize: $minSize)';
 }
