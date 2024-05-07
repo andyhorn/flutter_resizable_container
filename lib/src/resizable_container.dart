@@ -6,7 +6,7 @@ import 'package:flutter_resizable_container/src/resizable_controller.dart';
 ///
 /// Dividing lines will be added between each child. Dragging the dividers
 /// will resize the children along the [direction] axis.
-class ResizableContainer extends StatefulWidget {
+class ResizableContainer extends StatelessWidget {
   /// Creates a new [ResizableContainer] with the given [direction] and list
   /// of [children] Widgets.
   ///
@@ -52,95 +52,68 @@ class ResizableContainer extends StatefulWidget {
   final double? dividerEndIndent;
 
   @override
-  State<ResizableContainer> createState() => _ResizableContainerState();
-}
-
-class _ResizableContainerState extends State<ResizableContainer> {
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.addListener(_listener);
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_listener);
-    super.dispose();
-  }
-
-  void _listener() => setState(() {});
-
-  @override
-  void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    final size = MediaQuery.sizeOf(context);
-    final availableSpace = _getAvailableSpace(
-      BoxConstraints(maxWidth: size.width, maxHeight: size.height),
-    );
-
-    widget.controller.availableSpace = availableSpace;
-
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        widget.controller.availableSpace = _getAvailableSpace(constraints);
+        controller.availableSpace = _getAvailableSpace(constraints);
 
-        return Flex(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          direction: widget.direction,
-          children: [
-            for (var i = 0; i < widget.children.length; i++) ...[
-              // build the child
-              Builder(
-                builder: (context) {
-                  final height = _getChildSize(
-                    index: i,
-                    direction: Axis.vertical,
-                    constraints: constraints,
-                  );
+        return AnimatedBuilder(
+            animation: controller,
+            builder: (context, _) {
+              return Flex(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                direction: direction,
+                children: [
+                  for (var i = 0; i < children.length; i++) ...[
+                    // build the child
+                    Builder(
+                      builder: (context) {
+                        final height = _getChildSize(
+                          index: i,
+                          direction: Axis.vertical,
+                          constraints: constraints,
+                        );
 
-                  final width = _getChildSize(
-                    index: i,
-                    direction: Axis.horizontal,
-                    constraints: constraints,
-                  );
+                        final width = _getChildSize(
+                          index: i,
+                          direction: Axis.horizontal,
+                          constraints: constraints,
+                        );
 
-                  return SizedBox(
-                    height: height,
-                    width: width,
-                    child: widget.children[i],
-                  );
-                },
-              ),
-              if (i < widget.children.length - 1) ...[
-                ResizableContainerDivider(
-                  dividerColor:
-                      widget.dividerColor ?? Theme.of(context).dividerColor,
-                  dividerWidth: widget.dividerWidth,
-                  indent: widget.dividerIndent,
-                  endIndent: widget.dividerEndIndent,
-                  direction: widget.direction,
-                  onResizeUpdate: (delta) => widget.controller.adjustChildSize(
-                    index: i,
-                    delta: delta,
-                  ),
-                ),
-              ],
-            ],
-          ],
-        );
+                        return SizedBox(
+                          height: height,
+                          width: width,
+                          child: children[i],
+                        );
+                      },
+                    ),
+                    if (i < children.length - 1) ...[
+                      ResizableContainerDivider(
+                        dividerColor:
+                            dividerColor ?? Theme.of(context).dividerColor,
+                        dividerWidth: dividerWidth,
+                        indent: dividerIndent,
+                        endIndent: dividerEndIndent,
+                        direction: direction,
+                        onResizeUpdate: (delta) => controller.adjustChildSize(
+                          index: i,
+                          delta: delta,
+                        ),
+                      ),
+                    ],
+                  ],
+                ],
+              );
+            });
       },
     );
   }
 
   double _getAvailableSpace(BoxConstraints constraints) {
-    final totalSpace = widget.direction == Axis.horizontal
+    final totalSpace = direction == Axis.horizontal
         ? constraints.maxWidth
         : constraints.maxHeight;
-    final dividerSpace = (widget.children.length - 1) * widget.dividerWidth;
+    final dividerSpace = (children.length - 1) * dividerWidth;
     return totalSpace - dividerSpace;
   }
 
@@ -149,12 +122,12 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required Axis direction,
     required BoxConstraints constraints,
   }) {
-    return direction != widget.direction
+    return direction != direction
         ? _getConstraint(
             constraint: constraints,
-            direction: widget.direction,
+            direction: direction,
           )
-        : widget.controller.sizes[index];
+        : controller.sizes[index];
   }
 
   double _getConstraint({
