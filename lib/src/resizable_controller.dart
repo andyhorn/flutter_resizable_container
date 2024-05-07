@@ -1,6 +1,7 @@
 import "dart:math";
 
 import 'package:flutter/material.dart';
+import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
 
 import "resizable_child_data.dart";
 import "resizable_container.dart";
@@ -66,14 +67,8 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     final adjustedDelta = delta < 0
-        ? _getAdjustedReducingDelta(
-            index: index,
-            delta: delta,
-          )
-        : _getAdjustedIncreasingDelta(
-            index: index,
-            delta: delta,
-          );
+        ? _getAdjustedReducingDelta(index: index, delta: delta)
+        : _getAdjustedIncreasingDelta(index: index, delta: delta);
 
     _sizes[index] += adjustedDelta;
     _sizes[index + 1] -= adjustedDelta;
@@ -102,21 +97,18 @@ class ResizableController with ChangeNotifier {
       throw ArgumentError.value(values, 'Ratio values cannot exceed 1.0');
     }
 
-    final ratioTotal = values.whereType<double>().fold(
-          0.0,
-          (sum, current) => sum + current,
-        );
+    final ratioTotal = values.whereType<double>().sum();
 
     if (ratioTotal > 1.0) {
       throw ArgumentError('The sum of all ratios cannot not exceed 1.0');
     }
 
     final remaining = 1.0 - ratioTotal;
+    final nullRatioCount = values.nullCount();
 
-    if (remaining == 0) {
+    if (remaining == 0 || nullRatioCount == 0) {
       _nullRatioSpace = 0;
     } else {
-      final nullRatioCount = values.where((value) => value == null).length;
       _nullRatioSpace = remaining / nullRatioCount;
     }
 
@@ -149,12 +141,11 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     final currentSize = sizes[index];
-    final minCurrentSize = data[index].minSize;
+    final minCurrentSize = data[index].minSize ?? 0;
     final adjacentSize = sizes[index + 1];
-    final maxAdjacentSize = data[index + 1].maxSize;
-    final maxCurrentDelta = currentSize - (minCurrentSize ?? 0);
-    final maxAdjacentDelta =
-        (maxAdjacentSize ?? double.infinity) - adjacentSize;
+    final maxAdjacentSize = data[index + 1].maxSize ?? double.infinity;
+    final maxCurrentDelta = currentSize - minCurrentSize;
+    final maxAdjacentDelta = maxAdjacentSize - adjacentSize;
     final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
 
     if (delta.abs() > maxDelta) {
@@ -170,13 +161,12 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     final currentSize = sizes[index];
-    final maxCurrentSize = data[index].maxSize;
+    final maxCurrentSize = data[index].maxSize ?? double.infinity;
     final adjacentSize = sizes[index + 1];
-    final minAdjacentSize = data[index + 1].minSize;
-    final maxAvailableSpace =
-        min(maxCurrentSize ?? double.infinity, availableSpace);
+    final minAdjacentSize = data[index + 1].minSize ?? 0;
+    final maxAvailableSpace = min(maxCurrentSize, availableSpace);
     final maxCurrentDelta = maxAvailableSpace - currentSize;
-    final maxAdjacentDelta = adjacentSize - (minAdjacentSize ?? 0);
+    final maxAdjacentDelta = adjacentSize - minAdjacentSize;
     final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
 
     if (delta > maxDelta) {
@@ -199,8 +189,6 @@ class ResizableController with ChangeNotifier {
       return 0.0;
     }
 
-    final dividedSpace = remainingRatioSpace / nullRatiosCount;
-
-    return dividedSpace;
+    return remainingRatioSpace / nullRatiosCount;
   }
 }
