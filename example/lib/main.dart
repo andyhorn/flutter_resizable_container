@@ -19,8 +19,28 @@ class ExampleApp extends StatefulWidget {
 
 class _ExampleAppState extends State<ExampleApp> {
   Axis direction = Axis.horizontal;
-  final controller1 = ResizableController();
-  final controller2 = ResizableController();
+  final controller1 = ResizableController(
+    data: const [
+      ResizableChildData(
+        startingRatio: ratio1,
+        minSize: 150,
+      ),
+      ResizableChildData(
+        startingRatio: ratio2,
+        maxSize: 500,
+      ),
+    ],
+  );
+  final controller2 = ResizableController(
+    data: const [
+      ResizableChildData(
+        startingRatio: ratio3,
+      ),
+      ResizableChildData(
+        startingRatio: ratio4,
+      ),
+    ],
+  );
 
   @override
   void dispose() {
@@ -40,8 +60,8 @@ class _ExampleAppState extends State<ExampleApp> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                controller1.setRatios([ratio1, ratio2]);
-                controller2.setRatios([ratio3, ratio4]);
+                controller1.ratios = [ratio1, ratio2];
+                controller2.ratios = [ratio3, ratio4];
               },
               child: const Text("Reset ratios"),
             ),
@@ -79,39 +99,25 @@ class _ExampleAppState extends State<ExampleApp> {
             dividerIndent: 12,
             dividerEndIndent: 12,
             children: [
-              ResizableChildData(
-                startingRatio: ratio1,
-                minSize: 150,
-                child: Center(
-                  child: direction == Axis.horizontal
-                      ? const Text('Left pane')
-                      : const Text('Top pane'),
-                ),
+              Center(
+                child: direction == Axis.horizontal
+                    ? const Text('Left pane')
+                    : const Text('Top pane'),
               ),
-              ResizableChildData(
-                startingRatio: ratio2,
-                maxSize: 500,
-                child: ResizableContainer(
-                  controller: controller2,
-                  dividerColor: Colors.green,
-                  direction: direction == Axis.horizontal
-                      ? Axis.vertical
-                      : Axis.horizontal,
-                  children: const [
-                    ResizableChildData(
-                      startingRatio: ratio3,
-                      child: Center(
-                        child: Text('Nested Child A'),
-                      ),
-                    ),
-                    ResizableChildData(
-                      child: Center(
-                        child: Text('Nested Child B'),
-                      ),
-                      startingRatio: ratio4,
-                    ),
-                  ],
-                ),
+              ResizableContainer(
+                controller: controller2,
+                dividerColor: Colors.green,
+                direction: direction == Axis.horizontal
+                    ? Axis.vertical
+                    : Axis.horizontal,
+                children: const [
+                  Center(
+                    child: Text('Nested Child A'),
+                  ),
+                  Center(
+                    child: Text('Nested Child B'),
+                  ),
+                ],
               ),
             ],
           ),

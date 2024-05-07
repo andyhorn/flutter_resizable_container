@@ -1,10 +1,6 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_resizable_container/src/resizable_child_data.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
-import 'package:flutter_resizable_container/src/utils.dart';
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///
@@ -15,25 +11,25 @@ class ResizableContainer extends StatefulWidget {
   /// of [children] Widgets.
   ///
   /// The sum of the [children]'s starting ratios must be equal to 1.0.
-  ResizableContainer({
+  const ResizableContainer({
     super.key,
     required this.children,
+    required this.controller,
     required this.direction,
     this.dividerColor,
-    this.controller,
     this.dividerWidth = 2.0,
     this.dividerIndent,
     this.dividerEndIndent,
-  }) : assert(
-          sum([for (final child in children) child.startingRatio]) == 1.0,
-          'The sum of the children\'s starting ratios must be equal to 1.0.',
-        );
+  });
+
+  /// A list of resizable [Widget]s.
+  final List<Widget> children;
+
+  /// The controller that will be used to manage programmatic resizing of the children.
+  final ResizableController controller;
 
   /// The direction along which the child widgets will be laid and resized.
   final Axis direction;
-
-  /// The list of [Widget]s and their sizing information.
-  final List<ResizableChildData> children;
 
   /// The width of the dividers between the children.
   final double dividerWidth;
@@ -55,66 +51,33 @@ class ResizableContainer extends StatefulWidget {
   /// For dividers running from left-to-right, this indents the right.
   final double? dividerEndIndent;
 
-  /// The controller that will be used to manage programmatic resizing of the children.
-  final ResizableController? controller;
-
   @override
   State<ResizableContainer> createState() => _ResizableContainerState();
 }
 
 class _ResizableContainerState extends State<ResizableContainer> {
-  ResizableController? _defaultController;
-
-  ResizableController get controller =>
-      widget.controller ?? _defaultController!;
-
-  List<double> get sizes => controller.sizes;
-
   @override
   void initState() {
     super.initState();
-
-    _initController();
+    widget.controller.addListener(_listener);
   }
 
   @override
   void dispose() {
-    _disposeController();
-
+    widget.controller.removeListener(_listener);
     super.dispose();
-  }
-
-  void _initController() {
-    if (widget.controller == null) {
-      _defaultController = ResizableController();
-    }
-
-    controller.addListener(_listener);
-  }
-
-  void _disposeController() {
-    controller.removeListener(_listener);
-    _defaultController?.dispose();
   }
 
   void _listener() => setState(() {});
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    // If the axis direction has changed, reset and re-calculate the sizes.
-    if (oldWidget.direction != widget.direction) {
-      _disposeController();
-      _initController();
-      sizes.clear();
+    final size = MediaQuery.sizeOf(context);
+    final availableSpace = _getAvailableSpace(
+      BoxConstraints(maxWidth: size.width, maxHeight: size.height),
+    );
 
-      final size = MediaQuery.sizeOf(context);
-      final availableSpace = _getAvailableSpace(
-        BoxConstraints(maxWidth: size.width, maxHeight: size.height),
-      );
-
-      _setSizes(availableSpace);
-      setState(() {});
-    }
+    widget.controller.availableSpace = availableSpace;
 
     super.didUpdateWidget(oldWidget);
   }
@@ -123,14 +86,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final availableSpace = _getAvailableSpace(constraints);
-        controller.availableSpace = availableSpace;
-
-        if (sizes.isEmpty) {
-          _setSizes(availableSpace);
-        } else {
-          _adjustSizes(availableSpace);
-        }
+        widget.controller.availableSpace = _getAvailableSpace(constraints);
 
         return Flex(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -155,7 +111,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                   return SizedBox(
                     height: height,
                     width: width,
-                    child: widget.children[i].child,
+                    child: widget.children[i],
                   );
                 },
               ),
@@ -167,10 +123,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
                   indent: widget.dividerIndent,
                   endIndent: widget.dividerEndIndent,
                   direction: widget.direction,
-                  onResizeUpdate: (delta) => _handleChildResize(
+                  onResizeUpdate: (delta) => widget.controller.adjustChildSize(
                     index: i,
                     delta: delta,
-                    availableSpace: availableSpace,
                   ),
                 ),
               ],
@@ -179,23 +134,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
         );
       },
     );
-  }
-
-  void _setSizes(double availableSpace) {
-    for (var i = 0; i < widget.children.length; i++) {
-      final size = widget.children[i].startingRatio * availableSpace;
-      sizes.add(size);
-    }
-  }
-
-  void _adjustSizes(double availableSpace) {
-    final previousSpace = sum(sizes);
-    for (var i = 0; i < widget.children.length; i++) {
-      final previousSize = sizes[i];
-      final ratio = previousSize / previousSpace;
-      final newSize = ratio * availableSpace;
-      sizes[i] = newSize;
-    }
   }
 
   double _getAvailableSpace(BoxConstraints constraints) {
@@ -216,7 +154,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
             constraint: constraints,
             direction: widget.direction,
           )
-        : sizes[index];
+        : widget.controller.sizes[index];
   }
 
   double _getConstraint({
@@ -226,71 +164,5 @@ class _ResizableContainerState extends State<ResizableContainer> {
     return direction == Axis.vertical
         ? constraint.maxHeight
         : constraint.maxWidth;
-  }
-
-  void _handleChildResize({
-    required int index,
-    required double delta,
-    required double availableSpace,
-  }) {
-    final adjustedDelta = delta < 0
-        ? _getAdjustedReducingDelta(
-            index: index,
-            delta: delta,
-          )
-        : _getAdjustedIncreasingDelta(
-            index: index,
-            delta: delta,
-            availableSpace: availableSpace,
-          );
-
-    sizes[index] += adjustedDelta;
-    sizes[index + 1] -= adjustedDelta;
-
-    setState(() {});
-  }
-
-  // get the adjusted delta for reducing the size of the child at [index]
-  double _getAdjustedReducingDelta({
-    required int index,
-    required double delta,
-  }) {
-    final currentSize = sizes[index];
-    final minCurrentSize = widget.children[index].minSize;
-    final adjacentSize = sizes[index + 1];
-    final maxAdjacentSize = widget.children[index + 1].maxSize;
-    final maxCurrentDelta = currentSize - (minCurrentSize ?? 0);
-    final maxAdjacentDelta =
-        (maxAdjacentSize ?? double.infinity) - adjacentSize;
-    final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
-
-    if (delta.abs() > maxDelta) {
-      delta = -maxDelta;
-    }
-
-    return delta;
-  }
-
-  // get the adjusted delta for increasing the size of the child at [index]
-  double _getAdjustedIncreasingDelta({
-    required int index,
-    required double delta,
-    required double availableSpace,
-  }) {
-    final currentSize = sizes[index];
-    final maxCurrentSize = widget.children[index].maxSize;
-    final adjacentSize = sizes[index + 1];
-    final minAdjacentSize = widget.children[index + 1].minSize;
-    final maxAvailableSpace =
-        min(maxCurrentSize ?? double.infinity, availableSpace);
-    final maxCurrentDelta = maxAvailableSpace - currentSize;
-    final maxAdjacentDelta = adjacentSize - (minAdjacentSize ?? 0);
-    final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
-
-    if (delta > maxDelta) {
-      delta = maxDelta;
-    }
-
-    return delta;
   }
 }
