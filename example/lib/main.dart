@@ -79,17 +79,6 @@ class _ExampleAppState extends State<ExampleApp> {
             ),
           ],
         ),
-        floatingActionButton: Builder(
-          builder: (context) => FloatingActionButton(
-            child: const Icon(Icons.info),
-            onPressed: () {
-              final message =
-                  "Ratios: ${controller1.ratios.join(', ')} and ${controller2.ratios.join(', ')}";
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(message)));
-            },
-          ),
-        ),
         body: SafeArea(
           child: ResizableContainer(
             controller: controller1,
@@ -99,10 +88,18 @@ class _ExampleAppState extends State<ExampleApp> {
             dividerIndent: 12,
             dividerEndIndent: 12,
             children: [
-              Center(
-                child: direction == Axis.horizontal
-                    ? const Text('Left pane')
-                    : const Text('Top pane'),
+              LayoutBuilder(
+                builder: (context, constraints) => Center(
+                  child: direction == Axis.horizontal
+                      ? Text(
+                          'Left pane: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
+                          textAlign: TextAlign.center,
+                        )
+                      : Text(
+                          'Top pane: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
+                          textAlign: TextAlign.center,
+                        ),
+                ),
               ),
               ResizableContainer(
                 controller: controller2,
@@ -110,12 +107,22 @@ class _ExampleAppState extends State<ExampleApp> {
                 direction: direction == Axis.horizontal
                     ? Axis.vertical
                     : Axis.horizontal,
-                children: const [
-                  Center(
-                    child: Text('Nested Child A'),
+                children: [
+                  LayoutBuilder(
+                    builder: (context, constraints) => Center(
+                      child: Text(
+                        'Nested Child A: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
-                  Center(
-                    child: Text('Nested Child B'),
+                  LayoutBuilder(
+                    builder: (context, constraints) => Center(
+                      child: Text(
+                        'Nested Child B: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
                 ],
               ),
