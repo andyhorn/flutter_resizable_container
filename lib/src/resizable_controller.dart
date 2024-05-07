@@ -57,6 +57,7 @@ class ResizableController with ChangeNotifier {
     }
 
     _availableSpace = value;
+    notifyListeners();
   }
 
   /// Adjust the size of the child widget at [index] by the [delta] amount.
