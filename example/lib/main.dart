@@ -18,7 +18,6 @@ class ExampleApp extends StatefulWidget {
 }
 
 class _ExampleAppState extends State<ExampleApp> {
-  Axis direction = Axis.horizontal;
   final controller1 = ResizableController(
     data: const [
       ResizableChildData(
@@ -41,6 +40,25 @@ class _ExampleAppState extends State<ExampleApp> {
       ),
     ],
   );
+
+  Axis direction = Axis.horizontal;
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller1.addListener(() {
+      final sizes = controller1.sizes.map((size) => size.toStringAsFixed(2));
+
+      debugPrint('Controller 1 sizes: ${sizes.join(', ')}');
+    });
+
+    controller2.addListener(() {
+      final sizes = controller2.sizes.map((size) => size.toStringAsFixed(2));
+
+      debugPrint('Controller 2 sizes: ${sizes.join(', ')}');
+    });
+  }
 
   @override
   void dispose() {
