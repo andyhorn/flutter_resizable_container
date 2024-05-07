@@ -6,7 +6,7 @@ class ResizableChildData {
     this.maxSize,
     this.minSize,
   }) : assert(
-          startingRatio == null || startingRatio >= 0 && startingRatio <= 1,
+          startingRatio == null || (startingRatio >= 0 && startingRatio <= 1),
           'The starting ratio must be null or between 0 and 1, inclusive',
         );
 
