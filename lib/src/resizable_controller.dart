@@ -65,9 +65,6 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  /// The number of resizable children this container has.
-  int get numChildren => data.length;
-
   /// The ratios of all the children, like [ResizableChildData.startingRatio].
   List<double> get ratios => [
         for (final size in sizes) size / _availableSpace,
@@ -75,7 +72,7 @@ class ResizableController with ChangeNotifier {
 
   /// Programmatically set the ratios on the children. See [ratios] to get their current ratios.
   set ratios(List<double?> values) {
-    if (values.length != numChildren) {
+    if (values.length != data.length) {
       throw ArgumentError('Must contain a ratio for every child');
     }
 
