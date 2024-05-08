@@ -33,13 +33,14 @@ class ResizableContainerDivider extends StatelessWidget {
         child: SizedBox(
           height: height,
           width: width,
-          child: CustomPaint(
-            painter: DividerPainter(
-              direction: direction,
-              thickness: config.thickness,
-              color: config.color ?? Theme.of(context).dividerColor,
-              indent: config.indent,
-              endIndent: config.endIndent,
+          child: Center(
+            child: CustomPaint(
+              size: Size(width, height),
+              painter: DividerPainter(
+                direction: direction,
+                color: config.color ?? Theme.of(context).dividerColor,
+                thickness: config.thickness,
+              ),
             ),
           ),
         ),
