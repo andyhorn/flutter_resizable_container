@@ -34,10 +34,6 @@ class ResizableController with ChangeNotifier {
   /// The sizes in pixels of each child.
   List<double> get sizes => _sizes;
 
-  /// The amount of space (as a ratio of the total available space) alloted to
-  /// children with `null` [startingRatio]s.
-  double get nullRatioSpace => _nullRatioSpace;
-
   /// The total available space for this container in the given axis.
   double get availableSpace => _availableSpace;
 
