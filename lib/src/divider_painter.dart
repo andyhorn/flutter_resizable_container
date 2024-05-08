@@ -6,13 +6,13 @@ class DividerPainter extends CustomPainter {
   const DividerPainter({
     required this.color,
     required this.direction,
-    required this.width,
+    required this.thickness,
     this.indent,
     this.endIndent,
   });
 
   final Axis direction;
-  final double width;
+  final double thickness;
   final Color color;
   final double? indent;
   final double? endIndent;
@@ -34,7 +34,7 @@ class DividerPainter extends CustomPainter {
     return Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = width;
+      ..strokeWidth = thickness;
   }
 
   Path _getPath(Size size) {
@@ -55,7 +55,7 @@ class DividerPainter extends CustomPainter {
       // The indent should be the lesser of the available height, the specified
       // indent, or 0.
       final indentAmount = min(size.height, indent ?? 0.0);
-      return Point(width / 2, indentAmount);
+      return Point(thickness / 2, indentAmount);
     }
 
     // If the direction is vertical, the divider is a horizontal line and the
@@ -64,7 +64,7 @@ class DividerPainter extends CustomPainter {
     // The indent should be the lesser of the available width, the specified
     // indent, or 0.
     final indentAmount = min(size.width, indent ?? 0.0);
-    return Point(indentAmount, width / 2);
+    return Point(indentAmount, thickness / 2);
   }
 
   Point<double> _getEndingPoint(Size size) {
@@ -75,7 +75,7 @@ class DividerPainter extends CustomPainter {
       // The indent should be the available height minus the indent amount,
       // capped at a minimum of 0.
       final indentAmount = max(0.0, size.height - (endIndent ?? 0));
-      return Point(width / 2, indentAmount);
+      return Point(thickness / 2, indentAmount);
     }
 
     // If the direction is vertical, the divider is a horizontal line and the
@@ -84,6 +84,6 @@ class DividerPainter extends CustomPainter {
     // The indent should be the available width minus the indent amount, capped
     // at a minimum of 0.
     final indentAmount = max(0.0, size.width - (endIndent ?? 0));
-    return Point(indentAmount, width / 2);
+    return Point(indentAmount, thickness / 2);
   }
 }

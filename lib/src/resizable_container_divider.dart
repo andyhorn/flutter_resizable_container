@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/src/divider_painter.dart';
+import 'package:flutter_resizable_container/src/resizable_divider.dart';
 
 class ResizableContainerDivider extends StatelessWidget {
   const ResizableContainerDivider({
     super.key,
     required this.direction,
     required this.onResizeUpdate,
-    required this.dividerWidth,
-    required this.dividerColor,
-    this.indent,
-    this.endIndent,
+    required this.config,
   });
 
   final Axis direction;
   final void Function(double) onResizeUpdate;
-  final double dividerWidth;
-  final Color dividerColor;
-  final double? indent;
-  final double? endIndent;
+  final ResizableDivider config;
+
+  double get height =>
+      direction == Axis.horizontal ? double.infinity : config.height;
+  double get width =>
+      direction == Axis.horizontal ? config.height : double.infinity;
 
   @override
   Widget build(BuildContext context) {
@@ -31,15 +31,15 @@ class ResizableContainerDivider extends StatelessWidget {
             ? (details) => onResizeUpdate(details.delta.dx)
             : null,
         child: SizedBox(
-          height: direction == Axis.horizontal ? double.infinity : dividerWidth,
-          width: direction == Axis.horizontal ? dividerWidth : double.infinity,
+          height: height,
+          width: width,
           child: CustomPaint(
             painter: DividerPainter(
               direction: direction,
-              width: dividerWidth,
-              color: dividerColor,
-              indent: indent,
-              endIndent: endIndent,
+              thickness: config.thickness,
+              color: config.color ?? Theme.of(context).dividerColor,
+              indent: config.indent,
+              endIndent: config.endIndent,
             ),
           ),
         ),

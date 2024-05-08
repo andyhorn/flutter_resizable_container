@@ -101,10 +101,13 @@ class _ExampleAppState extends State<ExampleApp> {
           child: ResizableContainer(
             controller: controller1,
             direction: direction,
-            dividerWidth: 3.0,
-            dividerColor: Colors.blue,
-            dividerIndent: 12,
-            dividerEndIndent: 12,
+            divider: const ResizableDivider(
+              thickness: 3.0,
+              height: 5.0,
+              color: Colors.blue,
+              indent: 12,
+              endIndent: 12,
+            ),
             children: [
               LayoutBuilder(
                 builder: (context, constraints) => Center(
@@ -121,7 +124,9 @@ class _ExampleAppState extends State<ExampleApp> {
               ),
               ResizableContainer(
                 controller: controller2,
-                dividerColor: Colors.green,
+                divider: const ResizableDivider(
+                  color: Colors.green,
+                ),
                 direction: direction == Axis.horizontal
                     ? Axis.vertical
                     : Axis.horizontal,
