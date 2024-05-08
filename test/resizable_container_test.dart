@@ -307,11 +307,8 @@ void main() {
     testWidgets(
       'null starting ratios are allotted space evenly',
       (widgetTester) async {
-        const dividerWidth = 2.0;
-        const containerWidth = 1000.0;
-
         await widgetTester.binding.setSurfaceSize(
-          const Size(containerWidth, 1000),
+          const Size(1000, 1000),
         );
 
         final controller = ResizableController(
@@ -327,7 +324,7 @@ void main() {
         final container = ResizableContainer(
           controller: controller,
           direction: Axis.horizontal,
-          dividerWidth: dividerWidth,
+          dividerWidth: 2.0,
           children: const [
             SizedBox.expand(
               key: Key('Box A'),
@@ -349,9 +346,6 @@ void main() {
           ),
         );
 
-        final dividerSpace = dividerWidth * (controller.numChildren - 1);
-        final availableWidth = containerWidth - dividerSpace;
-
         final boxAFinder = find.byKey(const Key('Box A'));
         final boxBFinder = find.byKey(const Key('Box B'));
         final boxCFinder = find.byKey(const Key('Box C'));
@@ -360,9 +354,11 @@ void main() {
         final boxBSize = widgetTester.getSize(boxBFinder);
         final boxCSize = widgetTester.getSize(boxCFinder);
 
-        expect(boxASize, equals(Size(availableWidth * 0.5, 1000)));
-        expect(boxBSize, equals(Size(availableWidth * 0.25, 1000)));
-        expect(boxCSize, equals(Size(availableWidth * 0.25, 1000)));
+        // slightly less than 500, 250, and 250 because of the space
+        // used by the dividers.
+        expect(boxASize, equals(const Size(498, 1000)));
+        expect(boxBSize, equals(const Size(249, 1000)));
+        expect(boxCSize, equals(const Size(249, 1000)));
       },
     );
   });
