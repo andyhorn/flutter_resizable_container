@@ -40,6 +40,8 @@ class ResizableContainerDivider extends StatelessWidget {
                 direction: direction,
                 color: config.color ?? Theme.of(context).dividerColor,
                 thickness: config.thickness,
+                indent: config.indent,
+                endIndent: config.endIndent,
               ),
             ),
           ),
