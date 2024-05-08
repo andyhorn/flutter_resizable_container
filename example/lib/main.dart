@@ -103,7 +103,7 @@ class _ExampleAppState extends State<ExampleApp> {
             direction: direction,
             divider: const ResizableDivider(
               thickness: 3.0,
-              height: 5.0,
+              size: 5.0,
               color: Colors.blue,
               indent: 12,
               endIndent: 12,

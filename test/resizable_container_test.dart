@@ -90,7 +90,7 @@ void main() {
               controller: controller,
               direction: Axis.horizontal,
               divider: const ResizableDivider(
-                height: dividerWidth,
+                size: dividerWidth,
               ),
               children: const [
                 SizedBox.expand(
@@ -146,7 +146,7 @@ void main() {
               controller: controller,
               direction: Axis.horizontal,
               divider: const ResizableDivider(
-                height: dividerWidth,
+                size: dividerWidth,
               ),
               children: const [
                 SizedBox.expand(
@@ -236,7 +236,7 @@ void main() {
                 ],
               ),
               divider: const ResizableDivider(
-                height: dividerWidth,
+                size: dividerWidth,
               ),
               direction: Axis.horizontal,
               children: const [
@@ -284,7 +284,7 @@ void main() {
                 ],
               ),
               divider: const ResizableDivider(
-                height: dividerWidth,
+                size: dividerWidth,
               ),
               direction: Axis.horizontal,
               children: const [
@@ -334,7 +334,7 @@ void main() {
           controller: controller,
           direction: Axis.horizontal,
           divider: const ResizableDivider(
-            height: 2.0,
+            size: 2.0,
           ),
           children: const [
             SizedBox.expand(

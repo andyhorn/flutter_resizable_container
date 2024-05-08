@@ -58,13 +58,13 @@ class ResizableContainerDivider extends StatelessWidget {
   double _getHeight() {
     return switch (direction) {
       Axis.horizontal => double.infinity,
-      Axis.vertical => config.height,
+      Axis.vertical => config.size,
     };
   }
 
   double _getWidth() {
     return switch (direction) {
-      Axis.horizontal => config.height,
+      Axis.horizontal => config.size,
       Axis.vertical => double.infinity,
     };
   }

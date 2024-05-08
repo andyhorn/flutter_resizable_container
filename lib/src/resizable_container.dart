@@ -93,7 +93,7 @@ class ResizableContainer extends StatelessWidget {
 
   double _getAvailableSpace(BoxConstraints constraints) {
     final totalSpace = constraints.maxForDirection(direction);
-    final dividerSpace = (children.length - 1) * divider.height;
+    final dividerSpace = (children.length - 1) * divider.size;
     return totalSpace - dividerSpace;
   }
 
