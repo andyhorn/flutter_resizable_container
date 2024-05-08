@@ -34,9 +34,6 @@ class ResizableController with ChangeNotifier {
   /// The sizes in pixels of each child.
   List<double> get sizes => _sizes;
 
-  /// The total available space for this container in the given axis.
-  double get availableSpace => _availableSpace;
-
   /// Set the total available space.
   set availableSpace(double value) {
     if (value == _availableSpace) {
@@ -73,7 +70,7 @@ class ResizableController with ChangeNotifier {
 
   /// The ratios of all the children, like [ResizableChildData.startingRatio].
   List<double> get ratios => [
-        for (final size in sizes) size / availableSpace,
+        for (final size in sizes) size / _availableSpace,
       ];
 
   /// Programmatically set the ratios on the children. See [ratios] to get their current ratios.
@@ -106,7 +103,7 @@ class ResizableController with ChangeNotifier {
     }
 
     for (var i = 0; i < values.length; i++) {
-      _sizes[i] = (values[i] ?? _nullRatioSpace) * availableSpace;
+      _sizes[i] = (values[i] ?? _nullRatioSpace) * _availableSpace;
     }
 
     notifyListeners();
@@ -157,7 +154,7 @@ class ResizableController with ChangeNotifier {
     final maxCurrentSize = data[index].maxSize ?? double.infinity;
     final adjacentSize = sizes[index + 1];
     final minAdjacentSize = data[index + 1].minSize ?? 0;
-    final maxAvailableSpace = min(maxCurrentSize, availableSpace);
+    final maxAvailableSpace = min(maxCurrentSize, _availableSpace);
     final maxCurrentDelta = maxAvailableSpace - currentSize;
     final maxAdjacentDelta = adjacentSize - minAdjacentSize;
     final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
