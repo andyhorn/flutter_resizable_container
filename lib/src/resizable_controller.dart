@@ -12,15 +12,12 @@ class ResizableController with ChangeNotifier {
   ResizableController({
     required this.data,
   }) {
-    final ratioSum = data.fold<double>(
-      0.0,
-      (sum, datum) => sum + (datum.startingRatio ?? 0),
-    );
+    final ratioSum = data.map((datum) => datum.startingRatio ?? 0).sum();
 
     if (ratioSum > 1) {
       throw ArgumentError.value(
         ratioSum,
-        'ratios',
+        'startingRatio',
         'The sum of all startingRatios must be less than or equal to 1.0',
       );
     }
