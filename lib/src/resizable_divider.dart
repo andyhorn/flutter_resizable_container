@@ -8,8 +8,7 @@ class ResizableDivider {
     this.indent,
     this.endIndent,
   })  : assert(size >= thickness, '[size] must be >= [thickness].'),
-        assert(thickness > 0, '[thickness] must be > 0.'),
-        assert(size > 0, '[size] must be > 0.');
+        assert(thickness > 0, '[thickness] must be > 0.');
 
   /// The thickness of the line drawn within the divider.
   ///
