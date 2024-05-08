@@ -76,7 +76,7 @@ class ResizableController with ChangeNotifier {
   }
 
   /// The number of resizable children this container has.
-  int get numChildren => sizes.length;
+  int get numChildren => data.length;
 
   /// The ratios of all the children, like [ResizableChildData.startingRatio].
   List<double> get ratios => [

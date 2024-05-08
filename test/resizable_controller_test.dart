@@ -6,62 +6,79 @@ void main() {
     late ResizableController controller;
 
     setUp(() {
-      controller = ResizableController();
+      controller = ResizableController(
+        data: const [
+          ResizableChildData(
+            startingRatio: 0.1,
+          ),
+          ResizableChildData(
+            startingRatio: 0.1,
+          ),
+          ResizableChildData(
+            startingRatio: 0.25,
+          ),
+          ResizableChildData(
+            startingRatio: 0.25,
+          ),
+          ResizableChildData(
+            startingRatio: 0.3,
+          ),
+        ],
+      );
     });
 
     tearDown(() => controller.dispose());
 
     group('ratios', () {
       setUp(() {
-        controller.availableSpace = 100;
-        controller.sizes.addAll([10, 10, 25, 25, 30]);
+        controller.availableSpace = 1000.0;
       });
 
       test('returns the ratios of all the children', () {
         expect(controller.ratios, [0.1, 0.1, 0.25, 0.25, 0.3]);
       });
-    });
 
-    group('setRatios', () {
-      setUp(() {
-        controller.availableSpace = 100;
-        controller.sizes.addAll([10, 10, 25, 25, 30]);
+      test('changes the ratios', () {
+        controller.ratios = [0.2, 0.2, 0.2, 0.2, 0.2];
+        expect(controller.sizes, equals([200, 200, 200, 200, 200]));
       });
 
-      test('a list with the wrong length throws an error', () {
+      test('throws an error if the list is the wrong length', () {
         expect(
-          () => controller.setRatios([0.1, 0.1, 0.25, 0.25]),
-          throwsA(isA<ArgumentError>().having(
-            (error) => error.message,
-            'Message',
-            'Ratios list must be equal to the number of children',
-          )),
+          () => controller.ratios = [0.2, 0.2, 0.2],
+          throwsArgumentError,
         );
       });
 
-      test('a list that does not add up to 1.0 throws an error', () {
+      test('throws an error if any ratio is less than 0', () {
         expect(
-          () => controller.setRatios([0.1, 0.1, 0.25, 0.3, 0.3]),
-          throwsA(isA<ArgumentError>().having(
-            (error) => error.message,
-            'Message',
-            'The sum of the ratios must equal 1',
-          )),
+          () => controller.ratios = [0.2, 0.2, -0.2, 0.2, 0.2],
+          throwsArgumentError,
         );
       });
 
-      test('setting the ratios updates the sizes', () {
-        expect(controller.sizes, [10, 10, 25, 25, 30]);
-        controller.setRatios([0.2, 0.2, 0.2, 0.2, 0.2]);
-        expect(controller.sizes, [20, 20, 20, 20, 20]);
+      test('throws an error if any ratio is greater than 1', () {
+        expect(
+          () => controller.ratios = [0.2, 0.2, 1.2, 0.2, 0.2],
+          throwsArgumentError,
+        );
       });
 
-      test('setting the ratios updates listeners', () {
-        var didUpdate = false;
+      test('throws an error if the sum of all ratios is greater than 1.0', () {
+        expect(
+          () => controller.ratios = [0.2, 0.5, 0.2, 0.2, 0.2],
+          throwsArgumentError,
+        );
+      });
+
+      test('updates listeners', () {
+        bool didUpdate = false;
         controller.addListener(() {
           didUpdate = true;
         });
-        controller.setRatios([0.2, 0.2, 0.2, 0.2, 0.2]);
+
+        controller.ratios = [0.2, 0.2, 0.2, 0.2, 0.2];
+
         expect(didUpdate, isTrue);
       });
     });
