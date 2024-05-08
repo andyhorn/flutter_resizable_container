@@ -14,13 +14,11 @@ class ResizableContainerDivider extends StatelessWidget {
   final void Function(double) onResizeUpdate;
   final ResizableDivider config;
 
-  double get height =>
-      direction == Axis.horizontal ? double.infinity : config.height;
-  double get width =>
-      direction == Axis.horizontal ? config.height : double.infinity;
-
   @override
   Widget build(BuildContext context) {
+    final width = _getWidth();
+    final height = _getHeight();
+
     return MouseRegion(
       cursor: _getCursor(),
       child: GestureDetector(
@@ -51,11 +49,23 @@ class ResizableContainerDivider extends StatelessWidget {
   }
 
   MouseCursor _getCursor() {
-    switch (direction) {
-      case Axis.horizontal:
-        return SystemMouseCursors.resizeLeftRight;
-      case Axis.vertical:
-        return SystemMouseCursors.resizeUpDown;
-    }
+    return switch (direction) {
+      Axis.horizontal => SystemMouseCursors.resizeLeftRight,
+      Axis.vertical => SystemMouseCursors.resizeUpDown,
+    };
+  }
+
+  double _getHeight() {
+    return switch (direction) {
+      Axis.horizontal => double.infinity,
+      Axis.vertical => config.height,
+    };
+  }
+
+  double _getWidth() {
+    return switch (direction) {
+      Axis.horizontal => config.height,
+      Axis.vertical => double.infinity,
+    };
   }
 }
