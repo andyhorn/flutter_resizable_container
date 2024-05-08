@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
-import 'package:flutter_resizable_container/src/resizable_controller.dart';
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///
@@ -17,11 +17,9 @@ class ResizableContainer extends StatelessWidget {
     required this.children,
     required this.controller,
     required this.direction,
-    this.dividerColor,
-    this.dividerWidth = 2.0,
-    this.dividerIndent,
-    this.dividerEndIndent,
-  }) : assert(
+    ResizableDivider? divider,
+  })  : divider = divider ?? const ResizableDivider(),
+        assert(
           children.length == controller.data.length,
           'Controller must have as many data items as there are children.',
         );
@@ -35,25 +33,8 @@ class ResizableContainer extends StatelessWidget {
   /// The direction along which the child widgets will be laid and resized.
   final Axis direction;
 
-  /// The width of the dividers between the children.
-  final double dividerWidth;
-
-  /// The color of the dividers between the children.
-  ///
-  /// If not provided, Theme.of(context).dividerColor will be used.
-  final Color? dividerColor;
-
-  /// The indent of the divider at its start.
-  ///
-  /// For dividers running from top-to-bottom, this indents the top.
-  /// For dividers running from left-to-right, this indents the left.
-  final double? dividerIndent;
-
-  /// The indent of the divider at its end.
-  ///
-  /// For dividers running from top-to-bottom, this indents the bottom.
-  /// For dividers running from left-to-right, this indents the right.
-  final double? dividerEndIndent;
+  /// Configuration values for the dividing space/line between this container's [children].
+  final ResizableDivider divider;
 
   @override
   Widget build(BuildContext context) {
@@ -93,11 +74,7 @@ class ResizableContainer extends StatelessWidget {
                   ),
                   if (i < children.length - 1) ...[
                     ResizableContainerDivider(
-                      dividerColor:
-                          dividerColor ?? Theme.of(context).dividerColor,
-                      dividerWidth: dividerWidth,
-                      indent: dividerIndent,
-                      endIndent: dividerEndIndent,
+                      config: divider,
                       direction: direction,
                       onResizeUpdate: (delta) => controller.adjustChildSize(
                         index: i,
@@ -116,7 +93,7 @@ class ResizableContainer extends StatelessWidget {
 
   double _getAvailableSpace(BoxConstraints constraints) {
     final totalSpace = constraints.maxForDirection(direction);
-    final dividerSpace = (children.length - 1) * dividerWidth;
+    final dividerSpace = (children.length - 1) * divider.size;
     return totalSpace - dividerSpace;
   }
 

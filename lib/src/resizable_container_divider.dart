@@ -1,26 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/src/divider_painter.dart';
+import 'package:flutter_resizable_container/src/resizable_divider.dart';
 
 class ResizableContainerDivider extends StatelessWidget {
   const ResizableContainerDivider({
     super.key,
     required this.direction,
     required this.onResizeUpdate,
-    required this.dividerWidth,
-    required this.dividerColor,
-    this.indent,
-    this.endIndent,
+    required this.config,
   });
 
   final Axis direction;
   final void Function(double) onResizeUpdate;
-  final double dividerWidth;
-  final Color dividerColor;
-  final double? indent;
-  final double? endIndent;
+  final ResizableDivider config;
 
   @override
   Widget build(BuildContext context) {
+    final width = _getWidth();
+    final height = _getHeight();
+
     return MouseRegion(
       cursor: _getCursor(),
       child: GestureDetector(
@@ -31,15 +29,18 @@ class ResizableContainerDivider extends StatelessWidget {
             ? (details) => onResizeUpdate(details.delta.dx)
             : null,
         child: SizedBox(
-          height: direction == Axis.horizontal ? double.infinity : dividerWidth,
-          width: direction == Axis.horizontal ? dividerWidth : double.infinity,
-          child: CustomPaint(
-            painter: DividerPainter(
-              direction: direction,
-              width: dividerWidth,
-              color: dividerColor,
-              indent: indent,
-              endIndent: endIndent,
+          height: height,
+          width: width,
+          child: Center(
+            child: CustomPaint(
+              size: Size(width, height),
+              painter: DividerPainter(
+                direction: direction,
+                color: config.color ?? Theme.of(context).dividerColor,
+                thickness: config.thickness,
+                indent: config.indent,
+                endIndent: config.endIndent,
+              ),
             ),
           ),
         ),
@@ -48,11 +49,23 @@ class ResizableContainerDivider extends StatelessWidget {
   }
 
   MouseCursor _getCursor() {
-    switch (direction) {
-      case Axis.horizontal:
-        return SystemMouseCursors.resizeLeftRight;
-      case Axis.vertical:
-        return SystemMouseCursors.resizeUpDown;
-    }
+    return switch (direction) {
+      Axis.horizontal => SystemMouseCursors.resizeLeftRight,
+      Axis.vertical => SystemMouseCursors.resizeUpDown,
+    };
+  }
+
+  double _getHeight() {
+    return switch (direction) {
+      Axis.horizontal => double.infinity,
+      Axis.vertical => config.size,
+    };
+  }
+
+  double _getWidth() {
+    return switch (direction) {
+      Axis.horizontal => config.size,
+      Axis.vertical => double.infinity,
+    };
   }
 }
