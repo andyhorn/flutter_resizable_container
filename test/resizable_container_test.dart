@@ -303,5 +303,67 @@ void main() {
       final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
       expect(boxBSize, const Size(800 - dividerWidth, 1000));
     });
+
+    testWidgets(
+      'null starting ratios are allotted space evenly',
+      (widgetTester) async {
+        const dividerWidth = 2.0;
+        const containerWidth = 1000.0;
+
+        await widgetTester.binding.setSurfaceSize(
+          const Size(containerWidth, 1000),
+        );
+
+        final controller = ResizableController(
+          data: const [
+            ResizableChildData(
+              startingRatio: 0.5,
+            ),
+            ResizableChildData(),
+            ResizableChildData(),
+          ],
+        );
+
+        final container = ResizableContainer(
+          controller: controller,
+          direction: Axis.horizontal,
+          dividerWidth: dividerWidth,
+          children: const [
+            SizedBox.expand(
+              key: Key('Box A'),
+            ),
+            SizedBox.expand(
+              key: Key('Box B'),
+            ),
+            SizedBox.expand(
+              key: Key('Box C'),
+            ),
+          ],
+        );
+
+        await widgetTester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: container,
+            ),
+          ),
+        );
+
+        final dividerSpace = dividerWidth * (controller.numChildren - 1);
+        final availableWidth = containerWidth - dividerSpace;
+
+        final boxAFinder = find.byKey(const Key('Box A'));
+        final boxBFinder = find.byKey(const Key('Box B'));
+        final boxCFinder = find.byKey(const Key('Box C'));
+
+        final boxASize = widgetTester.getSize(boxAFinder);
+        final boxBSize = widgetTester.getSize(boxBFinder);
+        final boxCSize = widgetTester.getSize(boxCFinder);
+
+        expect(boxASize, equals(Size(availableWidth * 0.5, 1000)));
+        expect(boxBSize, equals(Size(availableWidth * 0.25, 1000)));
+        expect(boxCSize, equals(Size(availableWidth * 0.25, 1000)));
+      },
+    );
   });
 }
