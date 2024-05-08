@@ -1,17 +1,18 @@
-import 'package:flutter/material.dart';
-
 /// Controls the sizing parameters for the [child] Widget.
 class ResizableChildData {
   /// Create a new instance of the [ResizableChildData] class.
   const ResizableChildData({
-    required this.child,
-    required this.startingRatio,
+    this.startingRatio,
     this.maxSize,
     this.minSize,
-  });
+  }) : assert(
+          startingRatio == null || (startingRatio >= 0 && startingRatio <= 1),
+          'The starting ratio must be null or between 0 and 1, inclusive',
+        );
 
-  /// The Widget to be displayed.
-  final Widget child;
+  /// The starting size (as a ratio of available space) of the
+  /// corresponding widget.
+  final double? startingRatio;
 
   /// The (optional) maximum size (in px) of this child Widget.
   final double? maxSize;
@@ -19,10 +20,9 @@ class ResizableChildData {
   /// The (optional) minimum size (in px) of this child Widget.
   final double? minSize;
 
-  /// The initial ratio of this child Widget, where 0 <= x <= 1.
-  ///
-  /// This ratio will be used to determine the child's size (in px)
-  /// when the container is first rendered and is based on the total
-  /// available space.
-  final double startingRatio;
+  @override
+  String toString() => 'ResizableChildData('
+      'startingRatio: $startingRatio, '
+      'maxSize: $maxSize, '
+      'minSize: $minSize)';
 }

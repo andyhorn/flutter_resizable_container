@@ -18,9 +18,47 @@ class ExampleApp extends StatefulWidget {
 }
 
 class _ExampleAppState extends State<ExampleApp> {
+  final controller1 = ResizableController(
+    data: const [
+      ResizableChildData(
+        startingRatio: ratio1,
+        minSize: 150,
+      ),
+      ResizableChildData(
+        startingRatio: ratio2,
+        maxSize: 500,
+      ),
+    ],
+  );
+  final controller2 = ResizableController(
+    data: const [
+      ResizableChildData(
+        startingRatio: ratio3,
+      ),
+      ResizableChildData(
+        startingRatio: ratio4,
+      ),
+    ],
+  );
+
   Axis direction = Axis.horizontal;
-  final controller1 = ResizableController();
-  final controller2 = ResizableController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller1.addListener(() {
+      final sizes = controller1.sizes.map((size) => size.toStringAsFixed(2));
+
+      debugPrint('Controller 1 sizes: ${sizes.join(', ')}');
+    });
+
+    controller2.addListener(() {
+      final sizes = controller2.sizes.map((size) => size.toStringAsFixed(2));
+
+      debugPrint('Controller 2 sizes: ${sizes.join(', ')}');
+    });
+  }
 
   @override
   void dispose() {
@@ -40,8 +78,8 @@ class _ExampleAppState extends State<ExampleApp> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                controller1.setRatios([ratio1, ratio2]);
-                controller2.setRatios([ratio3, ratio4]);
+                controller1.ratios = [ratio1, ratio2];
+                controller2.ratios = [ratio3, ratio4];
               },
               child: const Text("Reset ratios"),
             ),
@@ -59,17 +97,6 @@ class _ExampleAppState extends State<ExampleApp> {
             ),
           ],
         ),
-        floatingActionButton: Builder(
-          builder: (context) => FloatingActionButton(
-            child: const Icon(Icons.info),
-            onPressed: () {
-              final message =
-                  "Ratios: ${controller1.ratios.join(', ')} and ${controller2.ratios.join(', ')}";
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(message)));
-            },
-          ),
-        ),
         body: SafeArea(
           child: ResizableContainer(
             controller: controller1,
@@ -79,39 +106,43 @@ class _ExampleAppState extends State<ExampleApp> {
             dividerIndent: 12,
             dividerEndIndent: 12,
             children: [
-              ResizableChildData(
-                startingRatio: ratio1,
-                minSize: 150,
-                child: Center(
+              LayoutBuilder(
+                builder: (context, constraints) => Center(
                   child: direction == Axis.horizontal
-                      ? const Text('Left pane')
-                      : const Text('Top pane'),
+                      ? Text(
+                          'Left pane: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
+                          textAlign: TextAlign.center,
+                        )
+                      : Text(
+                          'Top pane: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
+                          textAlign: TextAlign.center,
+                        ),
                 ),
               ),
-              ResizableChildData(
-                startingRatio: ratio2,
-                maxSize: 500,
-                child: ResizableContainer(
-                  controller: controller2,
-                  dividerColor: Colors.green,
-                  direction: direction == Axis.horizontal
-                      ? Axis.vertical
-                      : Axis.horizontal,
-                  children: const [
-                    ResizableChildData(
-                      startingRatio: ratio3,
-                      child: Center(
-                        child: Text('Nested Child A'),
+              ResizableContainer(
+                controller: controller2,
+                dividerColor: Colors.green,
+                direction: direction == Axis.horizontal
+                    ? Axis.vertical
+                    : Axis.horizontal,
+                children: [
+                  LayoutBuilder(
+                    builder: (context, constraints) => Center(
+                      child: Text(
+                        'Nested Child A: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                    ResizableChildData(
-                      child: Center(
-                        child: Text('Nested Child B'),
+                  ),
+                  LayoutBuilder(
+                    builder: (context, constraints) => Center(
+                      child: Text(
+                        'Nested Child B: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
+                        textAlign: TextAlign.center,
                       ),
-                      startingRatio: ratio4,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),

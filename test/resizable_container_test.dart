@@ -5,110 +5,99 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group(ResizableContainer, () {
-    testWidgets('throws an error if the child ratios do not equal 1',
-        (tester) async {
-      expect(
-        () async => await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: ResizableContainer(
-                children: const [
-                  ResizableChildData(
-                    startingRatio: 0.5,
-                    child: SizedBox.shrink(),
+    testWidgets(
+      'throws an error if the child ratios are greater than 1',
+      (tester) async {
+        expect(
+          () async => await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  controller: ResizableController(
+                    data: const [
+                      ResizableChildData(
+                        startingRatio: 0.5,
+                      ),
+                      ResizableChildData(
+                        startingRatio: 0.6,
+                      ),
+                    ],
                   ),
-                  ResizableChildData(
-                    startingRatio: 0.6,
-                    child: SizedBox.shrink(),
-                  ),
-                ],
-                direction: Axis.horizontal,
+                  direction: Axis.horizontal,
+                  children: const [
+                    SizedBox.shrink(),
+                    SizedBox.shrink(),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        throwsA(isA<AssertionError>()),
-      );
-    });
+          throwsArgumentError,
+        );
+      },
+    );
 
-    testWidgets('can be created with a controller', (tester) async {
-      final controller = ResizableController();
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ResizableContainer(
-              children: const [
-                ResizableChildData(
-                  startingRatio: 0.5,
-                  child: SizedBox.shrink(),
+    testWidgets(
+      'throws an error if the children and data are of different lengths',
+      (widgetTester) async {
+        final controller = ResizableController(
+          data: const [
+            ResizableChildData(),
+            ResizableChildData(),
+            ResizableChildData(),
+          ],
+        );
+
+        expect(
+          () async => await widgetTester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  controller: controller,
+                  direction: Axis.horizontal,
+                  children: const [
+                    SizedBox.shrink(),
+                    SizedBox.shrink(),
+                  ],
                 ),
-                ResizableChildData(
-                  startingRatio: 0.5,
-                  child: SizedBox.shrink(),
-                ),
-              ],
-              direction: Axis.horizontal,
-              controller: controller,
+              ),
             ),
           ),
-        ),
-      );
-
-      final resizableContainer = tester.widget(find.byType(ResizableContainer));
-      expect(resizableContainer, isNotNull);
-    });
-
-    testWidgets('can be created without a controller', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ResizableContainer(
-              children: const [
-                ResizableChildData(
-                  startingRatio: 0.5,
-                  child: SizedBox.shrink(),
-                ),
-                ResizableChildData(
-                  startingRatio: 0.5,
-                  child: SizedBox.shrink(),
-                ),
-              ],
-              direction: Axis.horizontal,
-            ),
-          ),
-        ),
-      );
-
-      final resizableContainer = tester.widget(find.byType(ResizableContainer));
-      expect(resizableContainer, isNotNull);
-    });
+          throwsAssertionError,
+        );
+      },
+    );
 
     testWidgets('can resize by dragging divider', (tester) async {
       const dividerWidth = 2.0;
-      final controller = ResizableController();
+      final controller = ResizableController(
+        data: const [
+          ResizableChildData(
+            startingRatio: 0.5,
+          ),
+          ResizableChildData(
+            startingRatio: 0.5,
+          ),
+        ],
+      );
+
       await tester.binding.setSurfaceSize(const Size(1000, 1000));
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
+              controller: controller,
+              direction: Axis.horizontal,
               dividerWidth: dividerWidth,
               children: const [
-                ResizableChildData(
-                  startingRatio: 0.5,
-                  child: SizedBox.expand(
-                    key: Key('BoxA'),
-                  ),
+                SizedBox.expand(
+                  key: Key('BoxA'),
                 ),
-                ResizableChildData(
-                  startingRatio: 0.5,
-                  child: SizedBox.expand(
-                    key: Key('BoxB'),
-                  ),
+                SizedBox.expand(
+                  key: Key('BoxB'),
                 ),
               ],
-              direction: Axis.horizontal,
-              controller: controller,
             ),
           ),
         ),
@@ -135,42 +124,46 @@ void main() {
 
     testWidgets('can resize using the controller', (tester) async {
       const dividerWidth = 2.0;
-      final controller = ResizableController();
+      final controller = ResizableController(
+        data: const [
+          ResizableChildData(
+            startingRatio: 0.5,
+          ),
+          ResizableChildData(
+            startingRatio: 0.5,
+          ),
+        ],
+      );
+
       await tester.binding.setSurfaceSize(const Size(1000, 1000));
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
+              controller: controller,
+              direction: Axis.horizontal,
               dividerWidth: dividerWidth,
               children: const [
-                ResizableChildData(
-                  startingRatio: 0.5,
-                  child: SizedBox.expand(
-                    key: Key('BoxA'),
-                  ),
+                SizedBox.expand(
+                  key: Key('BoxA'),
                 ),
-                ResizableChildData(
-                  startingRatio: 0.5,
-                  child: SizedBox.expand(
-                    key: Key('BoxB'),
-                  ),
+                SizedBox.expand(
+                  key: Key('BoxB'),
                 ),
               ],
-              direction: Axis.horizontal,
-              controller: controller,
             ),
           ),
         ),
       );
 
       const availableSpace = 1000 - dividerWidth;
-      expect(controller.availableSpace, availableSpace);
+      // expect(controller.availableSpace, availableSpace);
 
       final resizableContainer = tester.widget(find.byType(ResizableContainer));
       expect(resizableContainer, isNotNull);
 
-      controller.setRatios([0.6, 0.4]);
+      controller.ratios = [0.6, 0.4];
       await tester.pump();
 
       final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
@@ -187,19 +180,23 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
+              controller: ResizableController(
+                data: const [
+                  ResizableChildData(
+                    startingRatio: 0.5,
+                    minSize: 200,
+                  ),
+                  ResizableChildData(
+                    startingRatio: 0.5,
+                  ),
+                ],
+              ),
               direction: Axis.horizontal,
               children: const [
-                ResizableChildData(
-                  child: SizedBox.expand(
-                    key: Key('BoxA'),
-                  ),
-                  startingRatio: 0.5,
-                  minSize: 200,
+                SizedBox.expand(
+                  key: Key('BoxA'),
                 ),
-                ResizableChildData(
-                  child: SizedBox.expand(),
-                  startingRatio: 0.5,
-                ),
+                SizedBox.expand(),
               ],
             ),
           ),
@@ -223,21 +220,25 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
+              controller: ResizableController(
+                data: const [
+                  ResizableChildData(
+                    startingRatio: 0.5,
+                    maxSize: 700,
+                  ),
+                  ResizableChildData(
+                    startingRatio: 0.5,
+                  ),
+                ],
+              ),
               dividerWidth: dividerWidth,
               direction: Axis.horizontal,
               children: const [
-                ResizableChildData(
-                  child: SizedBox.expand(
-                    key: Key('BoxA'),
-                  ),
-                  startingRatio: 0.5,
-                  maxSize: 700,
+                SizedBox.expand(
+                  key: Key('BoxA'),
                 ),
-                ResizableChildData(
-                  child: SizedBox.expand(
-                    key: Key('BoxB'),
-                  ),
-                  startingRatio: 0.5,
+                SizedBox.expand(
+                  key: Key('BoxB'),
                 ),
               ],
             ),
@@ -265,21 +266,25 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
+              controller: ResizableController(
+                data: const [
+                  ResizableChildData(
+                    startingRatio: 0.5,
+                    minSize: 200,
+                  ),
+                  ResizableChildData(
+                    startingRatio: 0.5,
+                  ),
+                ],
+              ),
               dividerWidth: dividerWidth,
               direction: Axis.horizontal,
               children: const [
-                ResizableChildData(
-                  child: SizedBox.expand(
-                    key: Key('BoxA'),
-                  ),
-                  startingRatio: 0.5,
-                  minSize: 200,
+                SizedBox.expand(
+                  key: Key('BoxA'),
                 ),
-                ResizableChildData(
-                  child: SizedBox.expand(
-                    key: Key('BoxB'),
-                  ),
-                  startingRatio: 0.5,
+                SizedBox.expand(
+                  key: Key('BoxB'),
                 ),
               ],
             ),
@@ -299,5 +304,63 @@ void main() {
       final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
       expect(boxBSize, const Size(800 - dividerWidth, 1000));
     });
+
+    testWidgets(
+      'null starting ratios are allotted space evenly',
+      (widgetTester) async {
+        await widgetTester.binding.setSurfaceSize(
+          const Size(1000, 1000),
+        );
+
+        final controller = ResizableController(
+          data: const [
+            ResizableChildData(
+              startingRatio: 0.5,
+            ),
+            ResizableChildData(),
+            ResizableChildData(),
+          ],
+        );
+
+        final container = ResizableContainer(
+          controller: controller,
+          direction: Axis.horizontal,
+          dividerWidth: 2.0,
+          children: const [
+            SizedBox.expand(
+              key: Key('Box A'),
+            ),
+            SizedBox.expand(
+              key: Key('Box B'),
+            ),
+            SizedBox.expand(
+              key: Key('Box C'),
+            ),
+          ],
+        );
+
+        await widgetTester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: container,
+            ),
+          ),
+        );
+
+        final boxAFinder = find.byKey(const Key('Box A'));
+        final boxBFinder = find.byKey(const Key('Box B'));
+        final boxCFinder = find.byKey(const Key('Box C'));
+
+        final boxASize = widgetTester.getSize(boxAFinder);
+        final boxBSize = widgetTester.getSize(boxBFinder);
+        final boxCSize = widgetTester.getSize(boxCFinder);
+
+        // slightly less than 500, 250, and 250 because of the space
+        // used by the dividers.
+        expect(boxASize, equals(const Size(498, 1000)));
+        expect(boxBSize, equals(const Size(249, 1000)));
+        expect(boxCSize, equals(const Size(249, 1000)));
+      },
+    );
   });
 }
