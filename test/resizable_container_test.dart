@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group(ResizableContainer, () {
     testWidgets(
-      'throws an error if the child ratios do not equal 1',
+      'throws an error if the child ratios are greater than 1',
       (tester) async {
         expect(
           () async => await tester.pumpWidget(
@@ -33,6 +33,37 @@ void main() {
             ),
           ),
           throwsArgumentError,
+        );
+      },
+    );
+
+    testWidgets(
+      'throws an error if the children and data are of different lengths',
+      (widgetTester) async {
+        final controller = ResizableController(
+          data: const [
+            ResizableChildData(),
+            ResizableChildData(),
+            ResizableChildData(),
+          ],
+        );
+
+        expect(
+          () async => await widgetTester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  controller: controller,
+                  direction: Axis.horizontal,
+                  children: const [
+                    SizedBox.shrink(),
+                    SizedBox.shrink(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          throwsAssertionError,
         );
       },
     );

@@ -12,7 +12,7 @@ class ResizableContainer extends StatelessWidget {
   /// of [children] Widgets.
   ///
   /// The sum of the [children]'s starting ratios must be equal to 1.0.
-  const ResizableContainer({
+  ResizableContainer({
     super.key,
     required this.children,
     required this.controller,
@@ -21,7 +21,10 @@ class ResizableContainer extends StatelessWidget {
     this.dividerWidth = 2.0,
     this.dividerIndent,
     this.dividerEndIndent,
-  });
+  }) : assert(
+          children.length == controller.data.length,
+          'Controller must have as many data items as there are children.',
+        );
 
   /// A list of resizable [Widget]s.
   final List<Widget> children;
