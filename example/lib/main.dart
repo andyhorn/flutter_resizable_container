@@ -135,7 +135,7 @@ class _ExampleAppState extends State<ExampleApp> {
                       : Axis.horizontal,
                   children: [
                     ResizableChild(
-                      startingRatio: ratio3,
+                      startingRatio: hidden ? null : ratio3,
                       child: LayoutBuilder(
                         builder: (context, constraints) => Center(
                           child: Text(
