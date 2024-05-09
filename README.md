@@ -1,11 +1,17 @@
-**ResizableContainer**s add flexibility and personalization to your UI.
+# Flutter Resizable Container
+
+Add flexibility and interaction to your UI with ease.
+
+View the interactive example app at [andyhorn.github.io/flutter_resizable_container](https://andyhorn.github.io/flutter_resizable_container)
+
+![Flutter Resizable Container](./doc/screenshot.png)
 
 ## Features
 
-* Nest as many `ResizableContainer`s as you want
-* Configure each child's initial size, minimum size, and/or maximum size
-* Customize the width, color, and indentation of the divider(s) between children
-* Programmatically change the ratios of the children at any time
+* `ResizableContainer`s are fully nestable
+* Customize the size/thickness, indentation, and color of the dividers between children
+* Respond to user interactions with `onHoverEnter` and `onHoverExit` callbacks on dividers
+* Programmatically set the ratios of the children
 
 ## Getting started
 
@@ -17,126 +23,104 @@ flutter pub add flutter_resizable_container
 
 ## Usage
 
-First, add a `ResizableContainer` to your widget tree and give it a `direction` of type `Axis`: this is the direction in which the child objects will be laid out and the direction in which the children's size will be allowed to flex.
+### Direction and Children
 
-You can also provide a `dividerWidth`, `dividerIndent`, `dividerEndIntent`, and/or `dividerColor` to customize the appearance of the dividers between children.
+Add a `ResizableContainer` to your widget tree and give it a `direction` of type `Axis` - this is the direction in which the `children` will be laid out and the direction in which their size will be allowed to flex.
 
 ```dart
 ResizableContainer(
   direction: Axis.horizontal,
-  dividerWidth: 5,
-  dividerColor: Colors.blue,
-  dividerIndent: 5,
-  dividerEndIndent: 5,
   children: [
-    // ...
+    MyCoolWidget(),
+    MyOtherCoolWidget(),
   ],
 )
 ```
 
-Second, add a list of `ResizableChildData` objects containing configuration data for each child element:
+In the example above, the two children will take up the maximum available height while being allowed to flex their width.
 
-  * `child: Widget` - the widget to be displayed in the UI and resized by the user
-  * `startingRatio: double` - this ratio will be used to determine the child's initial size upon the first render, based on the available space of the parent `ResizableContainer`. 
-    
-    **Note**: this value is required for each child and the sum of all of a container's child ratios must equal `1.0`
+### ResizableController
 
-  * `minSize: double?` (optional) - this value indicates the absolute minimum size (in logical pixels) this child can take; any adjustments that would reduce the child's size _below_ this value will be ignored
-  * `maxSize: double?` (optional) - similar to the [minSize], this indicates the absolute maximum size (in logical pixels) this child can take; any adjustments that would increase the child's size _above_ this value will be ignored
+#### Setup
 
-### Example
+Second, add a `ResizableController`. This controller is used to respond to resize events and calculate the size of each child widget. When creating a controller, you must provide a list of `ResizableChildData` objects. These configuration objects control the `startingRatio`, `minSize`, and `maxSize` of their corresponding `Widget` (based on their respective indices).
+
+For example:
 
 ```dart
-@override
-Widget build(BuildContext context) {
-  return ResizableContainer(
-    direction: Axis.horizontal,
-    dividerWidth: 3.0,
-    dividerColor: Colors.blue,
-    children: [
-      ResizableChildData(
-        startingRatio: 0.75,
-        minSize: 150,
-        child: const Center(
-          child: Text('Left 3/4'),
-        ),
-      ),
-      ResizableChildData(
-        startingRatio: 0.25,
-        maxSize: 500,
-        child: const Center(
-          child: ResizableContainer(
-            direction: Axis.vertical,
-            dividerColor: Colors.green,
-            children: [
-              ResizableChildData(
-                startingRatio: 0.5,
-                child: const Center(
-                  child: Text('Upper right'),
-                ),
-              ),
-              ResizableChildData(
-                startingRatio: 0.5,
-                child: const Center(
-                  child: Text('Lower right'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+ResizableContainer(
+    controller: ResizableController(
+        data: const [
+            ResizableChildData(
+                minSize: 100,
+            ),
+            ResizableChildData(
+                maxSize: 500,
+            ),
+            ResizableChildData(
+                startingRatio: 0.25,
+            ),
+        ],
+    ),
+),
+```
+
+In the first configuration objects, a `minSize` of `100` was supplied - this means that the corresponding child `Widget` will not be allowed to shrink below 100 logical pixels.
+
+In the second object, a `maxSize` of `500` was supplied - this means that the corresponding child `Widget` will not be allowed to grow beyond 500 logical pixels.
+
+In the first object, a `startingRatio` of `0.5` was supplied. When the container is initially laid out, the corresponding child `Widget` will be sized to 1/2 of the available space. Since the other two configuration objects were not supplied with a `startingRatio`, the remaining available space will be evenly distributed between them.
+
+#### Using a ResizableController
+
+If you retain a reference to the `ResizableController`, you can listen to its changes as well as programmatically set/reset the `ratios` of the container's children.
+
+```dart
+final controller = ResizableController(
+    data: const [
+        ResizableChildData(),
+        ResizableChildData(),
+        ResizableChildData(),
     ],
-  );
-}
-```
+);
 
-![ResizableContainer example](doc/screenshot.png)
+@override
+void initState() {
+    super.initState();
 
-In the example, there is a two-pane (horizontal layout) container with a divider and grab-handle 3/4 of the way across the screen from the left-hand side.
-
-Using this handle, a user could shrink the left-hand pane down to its minimum size of 150px _or_ until the right-hand pane expands to its maximum size of 500px, whichever comes first. 
-
-They can also adjust the height of the two vertically-stacked children on the right side. These right-side children are given unbounded flexibility, which means each one can take the full space (with the other being given 0px height and no longer appearing on the screen).
-
-### Using a controller
-
-When creating a `ResizableChildData`, you provide a `startingRatio` to give it a size relative to the available space. After the frame builds, the user may freely resize it and any other child. To set the ratio programmatically, use a `ResizableController`: 
-
-```dart
-final controller = ResizableController();
-
-// ...
-
-child: ResizableContainer(
-  controller: controller,
-  child: // ...
-```
-
-Then, using `controller.setRatios`, you can set the ratios for all the children at once. This function has the same limitation as `startingRatio` in that all the ratios must add to one, and there must be one ratio per child. 
-
-```dart
-void printControllerInfo() {
-  print("Details about the controller: ");
-  print("  Ratios: ${controller.ratios}");
-  print("  Absolute Sizes: ${controller.sizes}");
-  print("  Available space: ${controller.availableSpace}");
-  print("  Number of children: ${controller.numChildren}");
+    controller.addListener(() {
+        // ... react to size change events
+    });
 }
 
-void resetRatios() {
-  // Assuming this controller only has two children
-  controller.setRatios([0.5, 0.5]);
-}
-```
-
-Be sure to dispose the controller when you're done with it:
-
-```dart
 @override
 void dispose() {
-  controller.dispose();
-  super.dispose();
+    controller.dispose(); // don't forget to dispose your controller
+    super.dispose();
 }
+
+// (somewhere else in your code)
+// use the ratios setter to programmatically set the ratios of the 
+// container's children.
+onTap: () => controller.ratios = [0.25, 0.25, 0.5];
+```
+
+### ResizableDivider
+
+Use the `ResizableDivider` class to customize the look and feel of the dividers between each of a container's children.
+
+You can customize the `thickness`, `size`, `indent`, `endIndent`, and `color` of the divider. You can also provide callbacks for the `onHoverEnter` and `onHoverExit` events to respond to user interactions.
+
+```dart
+divider: ResizableDivider(
+    thickness: 2,
+    size: 5,
+    indent: 5,
+    endIndent: 5,
+    onHoverEnter: () => setState(() => hovered = true),
+    onHoverExit: () => setState(() => hovered = false),
+    color: hovered ? Colors.blue : Colors.black,
+),
 ```
 
 ## License
