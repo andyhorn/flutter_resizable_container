@@ -1,3 +1,16 @@
+## 1.0.0
+
+First stable version!
+
+- Encapsulation of divider configuration in a new `ResizableDivider` class
+    - Divider `thickness` and `size` properties, mirroring the Flutter Divider's `thickness` and `width` properties, have been added
+    - `onHoverEnter` and `onHoverExit` callbacks allow you to react to the user's interactions with the divider
+- All size tracking and calculations have been moved out of the `ResizableContainer` widget and into the `ResizableController`
+    - This fixed several bugs and improves performance by converting the `ResizableContainer` to a `StatelessWidget` (from stateful)
+- `ResizableContainer` now requires a `List<Widget>` as its `children` property, as the `List<ResizableChildData>` have been moved into the `ResizableController`
+- Added and improved tests
+- Added a GH workflow to deploy the example app to GH Pages 
+
 ## 0.5.0
 
 - Adds `dividerIndent` and `dividerEndIndent` properties to the resizable container
