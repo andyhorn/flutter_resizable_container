@@ -8,19 +8,19 @@ void main() {
     setUp(() {
       controller = ResizableController(
         data: const [
-          ResizableChildData(
+          ResizableChild(
             startingRatio: 0.1,
           ),
-          ResizableChildData(
+          ResizableChild(
             startingRatio: 0.1,
           ),
-          ResizableChildData(
+          ResizableChild(
             startingRatio: 0.25,
           ),
-          ResizableChildData(
+          ResizableChild(
             startingRatio: 0.25,
           ),
-          ResizableChildData(
+          ResizableChild(
             startingRatio: 0.3,
           ),
         ],

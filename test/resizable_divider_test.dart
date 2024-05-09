@@ -53,8 +53,8 @@ void main() {
               body: ResizableContainer(
                 controller: ResizableController(
                   data: const [
-                    ResizableChildData(),
-                    ResizableChildData(),
+                    ResizableChild(),
+                    ResizableChild(),
                   ],
                 ),
                 direction: Axis.horizontal,
@@ -99,8 +99,8 @@ void main() {
               body: ResizableContainer(
                 controller: ResizableController(
                   data: const [
-                    ResizableChildData(),
-                    ResizableChildData(),
+                    ResizableChild(),
+                    ResizableChild(),
                   ],
                 ),
                 direction: Axis.horizontal,

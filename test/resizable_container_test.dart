@@ -15,10 +15,10 @@ void main() {
                 body: ResizableContainer(
                   controller: ResizableController(
                     data: const [
-                      ResizableChildData(
+                      ResizableChild(
                         startingRatio: 0.5,
                       ),
-                      ResizableChildData(
+                      ResizableChild(
                         startingRatio: 0.6,
                       ),
                     ],
@@ -42,9 +42,9 @@ void main() {
       (widgetTester) async {
         final controller = ResizableController(
           data: const [
-            ResizableChildData(),
-            ResizableChildData(),
-            ResizableChildData(),
+            ResizableChild(),
+            ResizableChild(),
+            ResizableChild(),
           ],
         );
 
@@ -72,10 +72,10 @@ void main() {
       const dividerWidth = 2.0;
       final controller = ResizableController(
         data: const [
-          ResizableChildData(
+          ResizableChild(
             startingRatio: 0.5,
           ),
-          ResizableChildData(
+          ResizableChild(
             startingRatio: 0.5,
           ),
         ],
@@ -127,10 +127,10 @@ void main() {
       const dividerWidth = 2.0;
       final controller = ResizableController(
         data: const [
-          ResizableChildData(
+          ResizableChild(
             startingRatio: 0.5,
           ),
-          ResizableChildData(
+          ResizableChild(
             startingRatio: 0.5,
           ),
         ],
@@ -184,11 +184,11 @@ void main() {
             body: ResizableContainer(
               controller: ResizableController(
                 data: const [
-                  ResizableChildData(
+                  ResizableChild(
                     startingRatio: 0.5,
                     minSize: 200,
                   ),
-                  ResizableChildData(
+                  ResizableChild(
                     startingRatio: 0.5,
                   ),
                 ],
@@ -224,11 +224,11 @@ void main() {
             body: ResizableContainer(
               controller: ResizableController(
                 data: const [
-                  ResizableChildData(
+                  ResizableChild(
                     startingRatio: 0.5,
                     maxSize: 700,
                   ),
-                  ResizableChildData(
+                  ResizableChild(
                     startingRatio: 0.5,
                   ),
                 ],
@@ -272,11 +272,11 @@ void main() {
             body: ResizableContainer(
               controller: ResizableController(
                 data: const [
-                  ResizableChildData(
+                  ResizableChild(
                     startingRatio: 0.5,
                     minSize: 200,
                   ),
-                  ResizableChildData(
+                  ResizableChild(
                     startingRatio: 0.5,
                   ),
                 ],
@@ -320,11 +320,11 @@ void main() {
 
         final controller = ResizableController(
           data: const [
-            ResizableChildData(
+            ResizableChild(
               startingRatio: 0.5,
             ),
-            ResizableChildData(),
-            ResizableChildData(),
+            ResizableChild(),
+            ResizableChild(),
           ],
         );
 

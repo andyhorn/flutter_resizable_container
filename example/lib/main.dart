@@ -22,11 +22,11 @@ class _ExampleAppState extends State<ExampleApp> {
 
   final controller1 = ResizableController(
     data: const [
-      ResizableChildData(
+      ResizableChild(
         startingRatio: ratio1,
         minSize: 150,
       ),
-      ResizableChildData(
+      ResizableChild(
         startingRatio: ratio2,
         maxSize: 500,
       ),
@@ -35,10 +35,10 @@ class _ExampleAppState extends State<ExampleApp> {
 
   final controller2 = ResizableController(
     data: const [
-      ResizableChildData(
+      ResizableChild(
         startingRatio: ratio3,
       ),
-      ResizableChildData(
+      ResizableChild(
         startingRatio: ratio4,
       ),
     ],

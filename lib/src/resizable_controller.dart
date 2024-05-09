@@ -1,10 +1,9 @@
 import "dart:math";
 
 import 'package:flutter/material.dart';
+import "package:flutter_resizable_container/flutter_resizable_container.dart";
 import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
 
-import "resizable_child_data.dart";
-import "resizable_container.dart";
 import "utils.dart";
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
@@ -27,9 +26,9 @@ class ResizableController with ChangeNotifier {
   double _nullRatioSpace = 0;
   List<double> _sizes = [];
 
-  /// A list of [ResizableChildData] objects that control the sizing parameters
+  /// A list of [ResizableChild] objects that control the sizing parameters
   /// for the list of children of a [ResizableContainer].
-  final List<ResizableChildData> data;
+  final List<ResizableChild> data;
 
   /// The sizes in pixels of each child.
   List<double> get sizes => _sizes;
@@ -65,7 +64,7 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  /// The ratios of all the children, like [ResizableChildData.startingRatio].
+  /// The ratios of all the children, like [ResizableChild.startingRatio].
   List<double> get ratios => [
         for (final size in sizes) size / _availableSpace,
       ];

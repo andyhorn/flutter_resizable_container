@@ -1,7 +1,7 @@
 /// Controls the sizing parameters for the [child] Widget.
-class ResizableChildData {
-  /// Create a new instance of the [ResizableChildData] class.
-  const ResizableChildData({
+class ResizableChild {
+  /// Create a new instance of the [ResizableChild] class.
+  const ResizableChild({
     this.startingRatio,
     this.maxSize,
     this.minSize,
