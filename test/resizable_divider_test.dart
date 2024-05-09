@@ -51,19 +51,18 @@ void main() {
           MaterialApp(
             home: Scaffold(
               body: ResizableContainer(
-                controller: ResizableController(
-                  data: const [
-                    ResizableChild(),
-                    ResizableChild(),
-                  ],
-                ),
+                controller: ResizableController(),
                 direction: Axis.horizontal,
                 divider: ResizableDivider(
                   onHoverEnter: () => hovered = true,
                 ),
                 children: const [
-                  SizedBox.expand(),
-                  SizedBox.expand(),
+                  ResizableChild(
+                    child: SizedBox.expand(),
+                  ),
+                  ResizableChild(
+                    child: SizedBox.expand(),
+                  ),
                 ],
               ),
             ),
@@ -97,19 +96,18 @@ void main() {
           MaterialApp(
             home: Scaffold(
               body: ResizableContainer(
-                controller: ResizableController(
-                  data: const [
-                    ResizableChild(),
-                    ResizableChild(),
-                  ],
-                ),
+                controller: ResizableController(),
                 direction: Axis.horizontal,
                 divider: ResizableDivider(
                   onHoverExit: () => hovered = false,
                 ),
                 children: const [
-                  SizedBox.expand(),
-                  SizedBox.expand(),
+                  ResizableChild(
+                    child: SizedBox.expand(),
+                  ),
+                  ResizableChild(
+                    child: SizedBox.expand(),
+                  ),
                 ],
               ),
             ),
