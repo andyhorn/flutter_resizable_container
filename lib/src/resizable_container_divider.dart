@@ -82,7 +82,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   }
 
   void _onEnter(PointerEnterEvent _) {
-    setState(() => isHovered = false);
+    setState(() => isHovered = true);
     widget.config.onHoverEnter?.call();
   }
 
