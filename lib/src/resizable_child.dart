@@ -1,7 +1,10 @@
+import 'package:flutter/material.dart';
+
 /// Controls the sizing parameters for the [child] Widget.
 class ResizableChild {
   /// Create a new instance of the [ResizableChild] class.
   const ResizableChild({
+    required this.child,
     this.startingRatio,
     this.maxSize,
     this.minSize,
@@ -20,9 +23,24 @@ class ResizableChild {
   /// The (optional) minimum size (in px) of this child Widget.
   final double? minSize;
 
+  /// The child [Widget]
+  final Widget child;
+
   @override
   String toString() => 'ResizableChildData('
       'startingRatio: $startingRatio, '
       'maxSize: $maxSize, '
-      'minSize: $minSize)';
+      'minSize: $minSize, '
+      'child: $child)';
+
+  @override
+  operator ==(Object other) =>
+      other is ResizableChild &&
+      other.startingRatio == startingRatio &&
+      other.maxSize == maxSize &&
+      other.minSize == minSize &&
+      other.child == child;
+
+  @override
+  int get hashCode => Object.hash(startingRatio, maxSize, minSize, child);
 }
