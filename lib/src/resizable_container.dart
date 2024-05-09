@@ -21,7 +21,8 @@ class ResizableContainer extends StatefulWidget {
     ResizableDivider? divider,
   }) : divider = divider ?? const ResizableDivider();
 
-  /// A list of resizable [Widget]s.
+  /// A list of resizable [ResizableChild] containing the child [Widget]s and
+  /// their sizing configuration.
   final List<ResizableChild> children;
 
   /// The controller that will be used to manage programmatic resizing of the children.
@@ -47,7 +48,11 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    if (oldWidget.children.length != widget.children.length) {
+    final hasChanges = oldWidget.children.indexed.any((element) {
+      return widget.children[element.$1] != element.$2;
+    });
+
+    if (hasChanges) {
       ResizableControllerManager.setChildren(
         widget.controller,
         widget.children,

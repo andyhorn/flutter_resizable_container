@@ -21,9 +21,9 @@ class ResizableControllerManager {
       );
     }
 
-    controller._children = children;
-
     final availableSpace = controller._availableSpace;
+
+    controller._children = children;
     controller._availableSpace = -1;
     controller._calculateChildSizes(availableSpace);
   }
