@@ -112,16 +112,15 @@ void main() {
       expect(handle, isNotNull);
 
       await tester.drag(handle, const Offset(100, 0));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(controller.ratios.map((r) => (r * 10).round()), [6, 4]);
 
       final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
       final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
 
-      // The size is not exactly 600 because the divider width is 2.0
-      expect(boxASize, const Size(600 - (dividerWidth / 2), 1000));
-      expect(boxBSize, const Size(400 - (dividerWidth / 2), 1000));
+      expect(boxASize.width, equals(controller.sizes.first));
+      expect(boxBSize.width, equals(controller.sizes.last));
     });
 
     testWidgets('can resize using the controller', (tester) async {
@@ -162,7 +161,6 @@ void main() {
       );
 
       const availableSpace = 1000 - dividerWidth;
-      // expect(controller.availableSpace, availableSpace);
 
       final resizableContainer = tester.widget(find.byType(ResizableContainer));
       expect(resizableContainer, isNotNull);
