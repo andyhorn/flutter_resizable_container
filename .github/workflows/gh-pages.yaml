@@ -17,6 +17,9 @@ jobs:
         with:
           flutter-version: "3.19.0"
 
+      - name: Install dependencies
+        run: flutter pub get
+
       - name: Build
         run: cd example && flutter build web
 
