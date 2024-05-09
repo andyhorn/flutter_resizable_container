@@ -7,6 +7,8 @@ class ResizableDivider {
     this.color,
     this.indent,
     this.endIndent,
+    this.onHoverEnter,
+    this.onHoverExit,
   })  : assert(size >= thickness, '[size] must be >= [thickness].'),
         assert(thickness > 0, '[thickness] must be > 0.');
 
@@ -37,4 +39,10 @@ class ResizableDivider {
   /// For dividers running from top-to-bottom, this adds empty space at the bottom.
   /// For dividers running from left-to-right, this adds empty space to the right.
   final double? endIndent;
+
+  /// Triggers when the user's cursor begins hovering over this divider.
+  final VoidCallback? onHoverEnter;
+
+  /// Triggers when the user's cursor ends hovering over this divider.
+  final VoidCallback? onHoverExit;
 }

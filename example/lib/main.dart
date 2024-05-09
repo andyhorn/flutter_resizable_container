@@ -18,6 +18,8 @@ class ExampleApp extends StatefulWidget {
 }
 
 class _ExampleAppState extends State<ExampleApp> {
+  bool hovered = false;
+
   final controller1 = ResizableController(
     data: const [
       ResizableChildData(
@@ -30,6 +32,7 @@ class _ExampleAppState extends State<ExampleApp> {
       ),
     ],
   );
+
   final controller2 = ResizableController(
     data: const [
       ResizableChildData(
@@ -101,12 +104,14 @@ class _ExampleAppState extends State<ExampleApp> {
           child: ResizableContainer(
             controller: controller1,
             direction: direction,
-            divider: const ResizableDivider(
+            divider: ResizableDivider(
               thickness: 3.0,
               size: 5.0,
-              color: Colors.blue,
+              color: hovered ? Colors.orange : Colors.blue,
               indent: 12,
               endIndent: 12,
+              onHoverEnter: () => setState(() => hovered = true),
+              onHoverExit: () => setState(() => hovered = false),
             ),
             children: [
               LayoutBuilder(
