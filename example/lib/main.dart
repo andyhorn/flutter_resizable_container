@@ -18,12 +18,12 @@ class ExampleApp extends StatefulWidget {
 }
 
 class _ExampleAppState extends State<ExampleApp> {
-  bool hovered = false;
-  bool hidden = false;
-
   final controller1 = ResizableController();
   final controller2 = ResizableController();
 
+  bool hovered = false;
+  bool hidden = false;
+  bool expand = true;
   Axis direction = Axis.horizontal;
 
   @override
@@ -89,6 +89,12 @@ class _ExampleAppState extends State<ExampleApp> {
               child: Text(hidden ? 'Show Child B' : 'Hide Child B'),
             ),
             const SizedBox(width: 10),
+            const Text('Auto-expand?'),
+            Switch(
+              value: expand,
+              onChanged: (_) => setState(() => expand = !expand),
+            ),
+            const SizedBox(width: 10),
           ],
         ),
         body: SafeArea(
@@ -109,16 +115,23 @@ class _ExampleAppState extends State<ExampleApp> {
                 startingRatio: ratio1,
                 minSize: 150,
                 child: LayoutBuilder(
-                  builder: (context, constraints) => Center(
-                    child: direction == Axis.horizontal
-                        ? Text(
-                            'Left pane: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
-                            textAlign: TextAlign.center,
-                          )
-                        : Text(
-                            'Top pane: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
-                            textAlign: TextAlign.center,
-                          ),
+                  builder: (context, constraints) => DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                    ),
+                    child: SizedBox.expand(
+                      child: Center(
+                        child: direction == Axis.horizontal
+                            ? Text(
+                                'Left pane: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
+                                textAlign: TextAlign.center,
+                              )
+                            : Text(
+                                'Top pane: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
+                                textAlign: TextAlign.center,
+                              ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -135,13 +148,22 @@ class _ExampleAppState extends State<ExampleApp> {
                       : Axis.horizontal,
                   children: [
                     ResizableChild(
-                      expand: true,
+                      expand: expand,
                       startingRatio: ratio3,
                       child: LayoutBuilder(
                         builder: (context, constraints) => Center(
-                          child: Text(
-                            'Nested Child A: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
-                            textAlign: TextAlign.center,
+                          child: DecoratedBox(
+                            decoration: const BoxDecoration(
+                              color: Colors.pink,
+                            ),
+                            child: SizedBox.expand(
+                              child: Center(
+                                child: Text(
+                                  'Nested Child A: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -151,9 +173,16 @@ class _ExampleAppState extends State<ExampleApp> {
                         startingRatio: ratio4,
                         child: LayoutBuilder(
                           builder: (context, constraints) => Center(
-                            child: Text(
-                              'Nested Child B: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
-                              textAlign: TextAlign.center,
+                            child: DecoratedBox(
+                              decoration: const BoxDecoration(
+                                color: Colors.amber,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Nested Child B: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
                             ),
                           ),
                         ),
