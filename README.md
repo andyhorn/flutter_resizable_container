@@ -11,7 +11,8 @@ View the interactive example app at [andyhorn.github.io/flutter_resizable_contai
 * `ResizableContainer`s are fully nestable
 * Customize the size/thickness, indentation, and color of the dividers between children
 * Respond to user interactions with `onHoverEnter` and `onHoverExit` callbacks on dividers
-* Programmatically set the ratios of the children
+* Programmatically set the ratios of the resizable children through a `ResizableController`
+* Respond to changes in the sizes of the resizable children by listening to the `ResizableController`
 
 ## Getting started
 
@@ -23,66 +24,40 @@ flutter pub add flutter_resizable_container
 
 ## Usage
 
-### Direction and Children
+### Direction
 
 Add a `ResizableContainer` to your widget tree and give it a `direction` of type `Axis` - this is the direction in which the `children` will be laid out and the direction in which their size will be allowed to flex.
 
 ```dart
 ResizableContainer(
+  ...
   direction: Axis.horizontal,
-  children: [
-    MyCoolWidget(),
-    MyOtherCoolWidget(),
-  ],
+  ...
 )
 ```
 
-In the example above, the two children will take up the maximum available height while being allowed to flex their width.
+In the example above, any children (more on this in the [ResizableChild](#resizable-child) section) will take up the maximum available height while being allowed to flex their width by dragging a divider or updating their ratios via the controller (see below).
 
 ### ResizableController
 
 #### Setup
 
-Second, add a `ResizableController`. This controller is used to respond to resize events and calculate the size of each child widget. When creating a controller, you must provide a list of `ResizableChildData` objects. These configuration objects control the `startingRatio`, `minSize`, and `maxSize` of their corresponding `Widget` (based on their respective indices).
+Second, add a `ResizableController`. This controller is used to respond to resize events and calculate the size of each child widget.
 
 For example:
 
 ```dart
 ResizableContainer(
-    controller: ResizableController(
-        data: const [
-            ResizableChildData(
-                minSize: 100,
-            ),
-            ResizableChildData(
-                maxSize: 500,
-            ),
-            ResizableChildData(
-                startingRatio: 0.25,
-            ),
-        ],
-    ),
+    controller: ResizableController(),
 ),
 ```
-
-In the first configuration objects, a `minSize` of `100` was supplied - this means that the corresponding child `Widget` will not be allowed to shrink below 100 logical pixels.
-
-In the second object, a `maxSize` of `500` was supplied - this means that the corresponding child `Widget` will not be allowed to grow beyond 500 logical pixels.
-
-In the first object, a `startingRatio` of `0.5` was supplied. When the container is initially laid out, the corresponding child `Widget` will be sized to 1/2 of the available space. Since the other two configuration objects were not supplied with a `startingRatio`, the remaining available space will be evenly distributed between them.
 
 #### Using a ResizableController
 
 If you retain a reference to the `ResizableController`, you can listen to its changes as well as programmatically set/reset the `ratios` of the container's children.
 
 ```dart
-final controller = ResizableController(
-    data: const [
-        ResizableChildData(),
-        ResizableChildData(),
-        ResizableChildData(),
-    ],
-);
+final controller = ResizableController();
 
 @override
 void initState() {
@@ -90,6 +65,8 @@ void initState() {
 
     controller.addListener(() {
         // ... react to size change events
+        final sizes = controller.sizes;
+        print(sizes.join(', '));
     });
 }
 
@@ -104,6 +81,51 @@ void dispose() {
 // container's children.
 onTap: () => controller.ratios = [0.25, 0.25, 0.5];
 ```
+
+### ResizableChild
+
+To add widgets to your container, you must provide a `List<ResizableChild>`, each of which contain the child `Widget` as well as some configuration parameters.
+
+```dart
+children: [
+    if (showNavBar) ...[
+        ResizableChild(
+            maxSize: 350.0,
+            child: NavBarWidget(),
+        ),
+    ],
+    const ResizableChild(
+        expand: true,
+        startingRatio: 0.75,
+        child: BodyWidget(),
+    ),
+    if (showSidePanel) ...[
+        ResizableChild(
+            minSize: 100,
+            child: SidePanelWidget(),
+        ),
+    ],
+],
+```
+
+In the example above, there are three `Widget`s added to the screen, two of which can be hidden based on state.
+
+The first child, containing the `NavBarWidget`, has a maximum size of 350.0.
+The second child, containing the `BodyWidget`, is set to automatically expand and has a starting ratio of 0.75.
+The third child, containing the `SidePanelWidget`, is set to _not_ expand and has a minimum size of 100.0.
+
+The `maxSize` parameter constrains the child and will prevent it from being expanded beyond that size in the `direction` of the container.
+
+The `minSize` parameter constrains the child and will prevent it from being _shrunk_ beyond that size in the `direction` of the container.
+
+The `startingRatio` parameter gives a directive of how to size the child during its initial layout. If this value is `null`, any remaining available space will be distributed evenly to this child and other children with `null` ratios.
+    - In this example, since the `NavBarWidget` and `SidePanelWidget` both have `null` ratios, the remaining available space (1.0 - 0.75 = 0.25) will be distributed evenly between them (0.25 / 2 = 0.125).
+
+The `expand` flag is used to control whether the child will be expanded to fill remaining available space, ignoring the `startingRatio` constraint. 
+    - Note: If there are children with `null` ratios, they will be given the remaining available space - this flag only affects the layout if the child has a valid `startingRatio` _and_ there are no other children with a `startingRatio` of `null`.
+    - In this example, if both of the other children are hidden, the `BodyWidget` will be expanded to the full available space. 
+
+If the state changes and one or more child widgets are added or removed, the children will be re-laid out according to all of these parameters.
 
 ### ResizableDivider
 

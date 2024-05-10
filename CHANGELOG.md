@@ -1,3 +1,12 @@
+## 2.0.0+beta.1
+
+- Renamed `ResizableChildData` to `ResizableChild`
+- Added an `expand` flag to the `ResizableChild` ctor 
+    - If there is a `startingRatio` set and this flag is `true`, the child will automatically expand to fill any remaining available space. If this flag is `false`, the child will only expand to meet its `startingRatio` constraint
+    - If the `startingRatio` is `null`, the child will automatically expand to fill any remaining available space, regardless of whether or not this flag is set
+- Move the list of `ResizableChild` objects out of the `ResizableController` and _back_ into the `ResizableContainer` as the `children` parameter
+    - This allows the list of children to be modified on-the-fly without recreating a `ResizableController`
+
 ## 1.0.0
 
 First stable version!
