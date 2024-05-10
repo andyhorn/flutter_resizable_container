@@ -178,13 +178,13 @@ class ResizableController with ChangeNotifier {
     final ratios = _children.map((datum) => datum.startingRatio);
     final nonNullRatios = ratios.whereType<double>().toList();
     final ratioSum = sum(nonNullRatios).toDouble();
-    final remainingRatioSpace = 1.0 - ratioSum;
+    final remainingRatioSpace = (Decimal.one - Decimal.parse('$ratioSum'));
     final nullRatiosCount = ratios.length - nonNullRatios.length;
 
     if (nullRatiosCount == 0) {
       return 0.0;
     }
 
-    return remainingRatioSpace / nullRatiosCount;
+    return (remainingRatioSpace / Decimal.fromInt(nullRatiosCount)).toDouble();
   }
 }
