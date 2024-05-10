@@ -186,7 +186,7 @@ class _ExampleAppState extends State<ExampleApp> {
                         vertical: 1,
                         horizontal: 8,
                       ),
-                      child: Text('v${data.version} (${data.buildNumber})'),
+                      child: Text('v${data.version}'),
                     );
                   }
 
