@@ -5,23 +5,28 @@ class ResizableChild {
   /// Create a new instance of the [ResizableChild] class.
   const ResizableChild({
     required this.child,
-    this.startingRatio,
+    this.expand = false,
     this.maxSize,
     this.minSize,
+    this.startingRatio,
   }) : assert(
           startingRatio == null || (startingRatio >= 0 && startingRatio <= 1),
           'The starting ratio must be null or between 0 and 1, inclusive',
         );
 
-  /// The starting size (as a ratio of available space) of the
-  /// corresponding widget.
-  final double? startingRatio;
+  /// Whether this child should expand to fill empty space, even if it extends
+  /// beyond its [startingRatio].
+  final bool expand;
 
   /// The (optional) maximum size (in px) of this child Widget.
   final double? maxSize;
 
   /// The (optional) minimum size (in px) of this child Widget.
   final double? minSize;
+
+  /// The starting size (as a ratio of available space) of the
+  /// corresponding widget.
+  final double? startingRatio;
 
   /// The child [Widget]
   final Widget child;
