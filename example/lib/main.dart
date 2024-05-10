@@ -18,32 +18,12 @@ class ExampleApp extends StatefulWidget {
 }
 
 class _ExampleAppState extends State<ExampleApp> {
+  final controller1 = ResizableController();
+  final controller2 = ResizableController();
+
   bool hovered = false;
-
-  final controller1 = ResizableController(
-    data: const [
-      ResizableChildData(
-        startingRatio: ratio1,
-        minSize: 150,
-      ),
-      ResizableChildData(
-        startingRatio: ratio2,
-        maxSize: 500,
-      ),
-    ],
-  );
-
-  final controller2 = ResizableController(
-    data: const [
-      ResizableChildData(
-        startingRatio: ratio3,
-      ),
-      ResizableChildData(
-        startingRatio: ratio4,
-      ),
-    ],
-  );
-
+  bool hidden = false;
+  bool expand = true;
   Axis direction = Axis.horizontal;
 
   @override
@@ -74,7 +54,7 @@ class _ExampleAppState extends State<ExampleApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.light(),
+      theme: ThemeData.light(useMaterial3: true),
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Example ResizableContainer'),
@@ -82,10 +62,15 @@ class _ExampleAppState extends State<ExampleApp> {
             ElevatedButton(
               onPressed: () {
                 controller1.ratios = [ratio1, ratio2];
-                controller2.ratios = [ratio3, ratio4];
+                if (!hidden) {
+                  controller2.ratios = [ratio3, ratio4];
+                } else {
+                  controller2.ratios = [null];
+                }
               },
               child: const Text("Reset ratios"),
             ),
+            const SizedBox(width: 10),
             ElevatedButton(
               onPressed: () {
                 final newDirection = direction == Axis.horizontal
@@ -98,6 +83,18 @@ class _ExampleAppState extends State<ExampleApp> {
                   ? const Text('Vertical')
                   : const Text('Horizontal'),
             ),
+            const SizedBox(width: 10),
+            ElevatedButton(
+              onPressed: () => setState(() => hidden = !hidden),
+              child: Text(hidden ? 'Show Child B' : 'Hide Child B'),
+            ),
+            const SizedBox(width: 10),
+            const Text('Auto-expand?'),
+            Switch(
+              value: expand,
+              onChanged: (_) => setState(() => expand = !expand),
+            ),
+            const SizedBox(width: 10),
           ],
         ),
         body: SafeArea(
@@ -114,47 +111,97 @@ class _ExampleAppState extends State<ExampleApp> {
               onHoverExit: () => setState(() => hovered = false),
             ),
             children: [
-              LayoutBuilder(
-                builder: (context, constraints) => Center(
-                  child: direction == Axis.horizontal
-                      ? Text(
-                          'Left pane: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
-                          textAlign: TextAlign.center,
-                        )
-                      : Text(
-                          'Top pane: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
-                          textAlign: TextAlign.center,
-                        ),
+              ResizableChild(
+                startingRatio: ratio1,
+                minSize: 150,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return ExpandedChild(
+                      color: Colors.green,
+                      constraints: constraints,
+                      label: direction == Axis.horizontal
+                          ? 'Left Pane'
+                          : 'Right Pane',
+                    );
+                  },
                 ),
               ),
-              ResizableContainer(
-                controller: controller2,
-                divider: const ResizableDivider(
-                  color: Colors.green,
+              ResizableChild(
+                startingRatio: ratio2,
+                maxSize: 500,
+                child: ResizableContainer(
+                  controller: controller2,
+                  divider: const ResizableDivider(
+                    color: Colors.green,
+                  ),
+                  direction: direction == Axis.horizontal
+                      ? Axis.vertical
+                      : Axis.horizontal,
+                  children: [
+                    ResizableChild(
+                      expand: expand,
+                      startingRatio: ratio3,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return ExpandedChild(
+                            color: Colors.pink,
+                            constraints: constraints,
+                            label: 'Nested Child A',
+                          );
+                        },
+                      ),
+                    ),
+                    if (!hidden) ...[
+                      ResizableChild(
+                        startingRatio: ratio4,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return ExpandedChild(
+                              label: 'Nested Child B',
+                              color: Colors.amber,
+                              constraints: constraints,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                direction: direction == Axis.horizontal
-                    ? Axis.vertical
-                    : Axis.horizontal,
-                children: [
-                  LayoutBuilder(
-                    builder: (context, constraints) => Center(
-                      child: Text(
-                        'Nested Child A: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                  LayoutBuilder(
-                    builder: (context, constraints) => Center(
-                      child: Text(
-                        'Nested Child B: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ExpandedChild extends StatelessWidget {
+  const ExpandedChild({
+    super.key,
+    required this.color,
+    required this.constraints,
+    required this.label,
+  });
+
+  final Color color;
+  final BoxConstraints constraints;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final height = constraints.maxHeight.toStringAsFixed(2);
+    final width = constraints.maxWidth.toStringAsFixed(2);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color,
+      ),
+      child: SizedBox.expand(
+        child: Center(
+          child: Text(
+            '$label ($height x $width)',
+            textAlign: TextAlign.center,
           ),
         ),
       ),

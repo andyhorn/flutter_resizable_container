@@ -1,35 +1,38 @@
 import "dart:math";
 
+import "package:decimal/decimal.dart";
 import 'package:flutter/material.dart';
+import "package:flutter_resizable_container/flutter_resizable_container.dart";
 import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
 
-import "resizable_child_data.dart";
-import "resizable_container.dart";
 import "utils.dart";
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
-  ResizableController({
-    required this.data,
-  }) {
-    final ratioSum = data.map((datum) => datum.startingRatio ?? 0).sum();
-
-    if (ratioSum > 1) {
-      throw ArgumentError.value(
-        ratioSum,
-        'startingRatio',
-        'The sum of all startingRatios must be less than or equal to 1.0',
-      );
-    }
-  }
-
   double _availableSpace = -1;
   double _nullRatioSpace = 0;
   List<double> _sizes = [];
+  List<ResizableChild> _children = const [];
 
-  /// A list of [ResizableChildData] objects that control the sizing parameters
-  /// for the list of children of a [ResizableContainer].
-  final List<ResizableChildData> data;
+  /// Configures this [ResizableController] with a list of children.
+  ///
+  /// This should only be used internally.
+  void setChildren(List<ResizableChild> children) {
+    _children = children;
+    _calculateChildSizes(_availableSpace);
+  }
+
+  /// Updates the list of [children] and re-calculates their sizes.
+  ///
+  /// This should only be used internally.
+  void updateChildren(List<ResizableChild> children) {
+    _children = children;
+
+    final availableSpace = _availableSpace;
+    _availableSpace = -1;
+    _calculateChildSizes(availableSpace);
+    _availableSpace = availableSpace;
+  }
 
   /// The sizes in pixels of each child.
   List<double> get sizes => _sizes;
@@ -40,15 +43,19 @@ class ResizableController with ChangeNotifier {
       return;
     }
 
-    if (_availableSpace == -1) {
-      _nullRatioSpace = _calculateSpaceForNullStartingRatios(value);
-      _sizes = _calculateSizesBasedOnStartingRatios(value).toList();
-    } else {
-      _sizes = _calculateSizesBasedOnCurrentRatios(value).toList();
-    }
-
+    _calculateChildSizes(value);
     _availableSpace = value;
+
     notifyListeners();
+  }
+
+  void _calculateChildSizes(double availableSpace) {
+    if (_availableSpace == -1) {
+      _nullRatioSpace = _calculateSpaceForNullStartingRatios(availableSpace);
+      _sizes = _calculateSizesBasedOnStartingRatios(availableSpace);
+    } else {
+      _sizes = _calculateSizesBasedOnCurrentRatios(availableSpace).toList();
+    }
   }
 
   /// Adjust the size of the child widget at [index] by the [delta] amount.
@@ -65,14 +72,14 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  /// The ratios of all the children, like [ResizableChildData.startingRatio].
+  /// The ratios of all the children, like [ResizableChild.startingRatio].
   List<double> get ratios => [
         for (final size in sizes) size / _availableSpace,
       ];
 
   /// Programmatically set the ratios on the children. See [ratios] to get their current ratios.
   set ratios(List<double?> values) {
-    if (values.length != data.length) {
+    if (values.length != _children.length) {
       throw ArgumentError('Must contain a ratio for every child');
     }
 
@@ -106,12 +113,32 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  Iterable<double> _calculateSizesBasedOnStartingRatios(
+  List<double> _calculateSizesBasedOnStartingRatios(
     double availableSpace,
-  ) sync* {
-    for (final datum in data) {
-      yield (datum.startingRatio ?? _nullRatioSpace) * availableSpace;
+  ) {
+    final sizes = [
+      for (final child in _children) ...[
+        (child.startingRatio ?? _nullRatioSpace) * availableSpace,
+      ],
+    ];
+
+    final sum = sizes.sum();
+    if (sum < availableSpace) {
+      final expandableCount = _children.where((child) => child.expand).length;
+
+      if (expandableCount > 0) {
+        final difference = availableSpace - sum;
+        final spacePerExpandable = difference / expandableCount;
+
+        for (var i = 0; i < _children.length; i++) {
+          if (_children[i].expand) {
+            sizes[i] += spacePerExpandable;
+          }
+        }
+      }
     }
+
+    return sizes;
   }
 
   Iterable<double> _calculateSizesBasedOnCurrentRatios(
@@ -128,9 +155,9 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     final currentSize = sizes[index];
-    final minCurrentSize = data[index].minSize ?? 0;
+    final minCurrentSize = _children[index].minSize ?? 0;
     final adjacentSize = sizes[index + 1];
-    final maxAdjacentSize = data[index + 1].maxSize ?? double.infinity;
+    final maxAdjacentSize = _children[index + 1].maxSize ?? double.infinity;
     final maxCurrentDelta = currentSize - minCurrentSize;
     final maxAdjacentDelta = maxAdjacentSize - adjacentSize;
     final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
@@ -148,9 +175,9 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     final currentSize = sizes[index];
-    final maxCurrentSize = data[index].maxSize ?? double.infinity;
+    final maxCurrentSize = _children[index].maxSize ?? double.infinity;
     final adjacentSize = sizes[index + 1];
-    final minAdjacentSize = data[index + 1].minSize ?? 0;
+    final minAdjacentSize = _children[index + 1].minSize ?? 0;
     final maxAvailableSpace = min(maxCurrentSize, _availableSpace);
     final maxCurrentDelta = maxAvailableSpace - currentSize;
     final maxAdjacentDelta = adjacentSize - minAdjacentSize;
@@ -166,16 +193,16 @@ class ResizableController with ChangeNotifier {
   // calculate the ratio of available space alloted to children without a
   // specified starting ratio.
   double _calculateSpaceForNullStartingRatios(double availableSpace) {
-    final ratios = data.map((datum) => datum.startingRatio);
+    final ratios = _children.map((datum) => datum.startingRatio);
     final nonNullRatios = ratios.whereType<double>().toList();
     final ratioSum = sum(nonNullRatios).toDouble();
-    final remainingRatioSpace = 1.0 - ratioSum;
+    final remainingRatioSpace = (Decimal.one - Decimal.parse('$ratioSum'));
     final nullRatiosCount = ratios.length - nonNullRatios.length;
 
     if (nullRatiosCount == 0) {
       return 0.0;
     }
 
-    return remainingRatioSpace / nullRatiosCount;
+    return (remainingRatioSpace / Decimal.fromInt(nullRatiosCount)).toDouble();
   }
 }

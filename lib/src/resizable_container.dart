@@ -7,25 +7,22 @@ import 'package:flutter_resizable_container/src/resizable_container_divider.dart
 ///
 /// Dividing lines will be added between each child. Dragging the dividers
 /// will resize the children along the [direction] axis.
-class ResizableContainer extends StatelessWidget {
+class ResizableContainer extends StatefulWidget {
   /// Creates a new [ResizableContainer] with the given [direction] and list
   /// of [children] Widgets.
   ///
   /// The sum of the [children]'s starting ratios must be equal to 1.0.
-  ResizableContainer({
+  const ResizableContainer({
     super.key,
     required this.children,
     required this.controller,
     required this.direction,
     ResizableDivider? divider,
-  })  : divider = divider ?? const ResizableDivider(),
-        assert(
-          children.length == controller.data.length,
-          'Controller must have as many data items as there are children.',
-        );
+  }) : divider = divider ?? const ResizableDivider();
 
-  /// A list of resizable [Widget]s.
-  final List<Widget> children;
+  /// A list of resizable [ResizableChild] containing the child [Widget]s and
+  /// their sizing configuration.
+  final List<ResizableChild> children;
 
   /// The controller that will be used to manage programmatic resizing of the children.
   final ResizableController controller;
@@ -37,19 +34,50 @@ class ResizableContainer extends StatelessWidget {
   final ResizableDivider divider;
 
   @override
+  State<ResizableContainer> createState() => _ResizableContainerState();
+}
+
+class _ResizableContainerState extends State<ResizableContainer> {
+  @override
+  void initState() {
+    super.initState();
+
+    widget.controller.setChildren(widget.children);
+  }
+
+  @override
+  void didUpdateWidget(covariant ResizableContainer oldWidget) {
+    bool compareChildren() => oldWidget.children.indexed.every(
+          (element) {
+            final (index, child) = element;
+            return widget.children[index] == child;
+          },
+        );
+
+    final isSameLength = oldWidget.children.length == widget.children.length;
+    final hasChanges = !isSameLength || !compareChildren();
+
+    if (hasChanges) {
+      widget.controller.updateChildren(widget.children);
+    }
+
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        controller.availableSpace = _getAvailableSpace(constraints);
+        widget.controller.availableSpace = _getAvailableSpace(constraints);
 
         return AnimatedBuilder(
-          animation: controller,
+          animation: widget.controller,
           builder: (context, _) {
             return Flex(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              direction: direction,
+              direction: widget.direction,
               children: [
-                for (var i = 0; i < children.length; i++) ...[
+                for (var i = 0; i < widget.children.length; i++) ...[
                   // build the child
                   Builder(
                     builder: (context) {
@@ -68,15 +96,16 @@ class ResizableContainer extends StatelessWidget {
                       return SizedBox(
                         height: height,
                         width: width,
-                        child: children[i],
+                        child: widget.children[i].child,
                       );
                     },
                   ),
-                  if (i < children.length - 1) ...[
+                  if (i < widget.children.length - 1) ...[
                     ResizableContainerDivider(
-                      config: divider,
-                      direction: direction,
-                      onResizeUpdate: (delta) => controller.adjustChildSize(
+                      config: widget.divider,
+                      direction: widget.direction,
+                      onResizeUpdate: (delta) =>
+                          widget.controller.adjustChildSize(
                         index: i,
                         delta: delta,
                       ),
@@ -92,8 +121,8 @@ class ResizableContainer extends StatelessWidget {
   }
 
   double _getAvailableSpace(BoxConstraints constraints) {
-    final totalSpace = constraints.maxForDirection(direction);
-    final dividerSpace = (children.length - 1) * divider.size;
+    final totalSpace = constraints.maxForDirection(widget.direction);
+    final dividerSpace = (widget.children.length - 1) * widget.divider.size;
     return totalSpace - dividerSpace;
   }
 
@@ -104,6 +133,6 @@ class ResizableContainer extends StatelessWidget {
   }) {
     return direction != direction
         ? constraints.maxForDirection(direction)
-        : controller.sizes[index];
+        : widget.controller.sizes[index];
   }
 }

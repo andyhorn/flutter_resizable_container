@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -6,32 +7,39 @@ void main() {
     late ResizableController controller;
 
     setUp(() {
-      controller = ResizableController(
-        data: const [
-          ResizableChildData(
-            startingRatio: 0.1,
-          ),
-          ResizableChildData(
-            startingRatio: 0.1,
-          ),
-          ResizableChildData(
-            startingRatio: 0.25,
-          ),
-          ResizableChildData(
-            startingRatio: 0.25,
-          ),
-          ResizableChildData(
-            startingRatio: 0.3,
-          ),
-        ],
-      );
+      controller = ResizableController();
     });
 
     tearDown(() => controller.dispose());
 
     group('ratios', () {
       setUp(() {
-        controller.availableSpace = 1000.0;
+        controller.setChildren(
+          const [
+            ResizableChild(
+              startingRatio: 0.1,
+              child: SizedBox(),
+            ),
+            ResizableChild(
+              startingRatio: 0.1,
+              child: SizedBox(),
+            ),
+            ResizableChild(
+              startingRatio: 0.25,
+              child: SizedBox(),
+            ),
+            ResizableChild(
+              startingRatio: 0.25,
+              child: SizedBox(),
+            ),
+            ResizableChild(
+              startingRatio: 0.3,
+              child: SizedBox(),
+            ),
+          ],
+        );
+
+        controller.availableSpace = 1000;
       });
 
       test('returns the ratios of all the children', () {
