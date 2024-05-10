@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
-import 'package:flutter_resizable_container/src/resizable_controller.dart';
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///
@@ -43,20 +42,23 @@ class _ResizableContainerState extends State<ResizableContainer> {
   void initState() {
     super.initState();
 
-    ResizableControllerManager.setChildren(widget.controller, widget.children);
+    widget.controller.setChildren(widget.children);
   }
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    final hasChanges = oldWidget.children.indexed.any((element) {
-      return widget.children[element.$1] != element.$2;
-    });
+    final isSameLength = oldWidget.children.length == widget.children.length;
+    final areChildrenEqual = oldWidget.children.indexed.every(
+      (element) {
+        final (index, child) = element;
+        return child == widget.children[index];
+      },
+    );
+
+    final hasChanges = !isSameLength || !areChildrenEqual;
 
     if (hasChanges) {
-      ResizableControllerManager.setChildren(
-        widget.controller,
-        widget.children,
-      );
+      widget.controller.setChildren(widget.children);
     }
 
     super.didUpdateWidget(oldWidget);

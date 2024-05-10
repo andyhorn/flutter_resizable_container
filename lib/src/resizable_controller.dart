@@ -1,33 +1,11 @@
 import "dart:math";
 
+import "package:decimal/decimal.dart";
 import 'package:flutter/material.dart';
 import "package:flutter_resizable_container/flutter_resizable_container.dart";
 import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
 
 import "utils.dart";
-
-class ResizableControllerManager {
-  static void setChildren(
-    ResizableController controller,
-    List<ResizableChild> children,
-  ) {
-    final ratioSum = children.map((datum) => datum.startingRatio ?? 0).sum();
-
-    if (ratioSum > 1) {
-      throw ArgumentError.value(
-        ratioSum,
-        'startingRatio',
-        'The sum of all startingRatios must be less than or equal to 1.0',
-      );
-    }
-
-    final availableSpace = controller._availableSpace;
-
-    controller._children = children;
-    controller._availableSpace = -1;
-    controller._calculateChildSizes(availableSpace);
-  }
-}
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
@@ -35,6 +13,14 @@ class ResizableController with ChangeNotifier {
   double _nullRatioSpace = 0;
   List<double> _sizes = [];
   List<ResizableChild> _children = const [];
+
+  /// Configures this [ResizableController] with a list of children.
+  ///
+  /// This should only be used internally.
+  void setChildren(List<ResizableChild> children) {
+    _children = children;
+    _calculateChildSizes(_availableSpace);
+  }
 
   /// The sizes in pixels of each child.
   List<double> get sizes => _sizes;
@@ -46,13 +32,13 @@ class ResizableController with ChangeNotifier {
     }
 
     _calculateChildSizes(value);
-
     _availableSpace = value;
+
     notifyListeners();
   }
 
   void _calculateChildSizes(double availableSpace) {
-    if (_availableSpace == -1) {
+    if (availableSpace == -1) {
       _nullRatioSpace = _calculateSpaceForNullStartingRatios(availableSpace);
       _sizes = _calculateSizesBasedOnStartingRatios(availableSpace).toList();
     } else {
