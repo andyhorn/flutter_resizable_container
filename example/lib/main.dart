@@ -115,24 +115,15 @@ class _ExampleAppState extends State<ExampleApp> {
                 startingRatio: ratio1,
                 minSize: 150,
                 child: LayoutBuilder(
-                  builder: (context, constraints) => DecoratedBox(
-                    decoration: const BoxDecoration(
+                  builder: (context, constraints) {
+                    return ExpandedChild(
                       color: Colors.green,
-                    ),
-                    child: SizedBox.expand(
-                      child: Center(
-                        child: direction == Axis.horizontal
-                            ? Text(
-                                'Left pane: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
-                                textAlign: TextAlign.center,
-                              )
-                            : Text(
-                                'Top pane: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
-                                textAlign: TextAlign.center,
-                              ),
-                      ),
-                    ),
-                  ),
+                      constraints: constraints,
+                      label: direction == Axis.horizontal
+                          ? 'Left Pane'
+                          : 'Right Pane',
+                    );
+                  },
                 ),
               ),
               ResizableChild(
@@ -151,40 +142,26 @@ class _ExampleAppState extends State<ExampleApp> {
                       expand: expand,
                       startingRatio: ratio3,
                       child: LayoutBuilder(
-                        builder: (context, constraints) => Center(
-                          child: DecoratedBox(
-                            decoration: const BoxDecoration(
-                              color: Colors.pink,
-                            ),
-                            child: SizedBox.expand(
-                              child: Center(
-                                child: Text(
-                                  'Nested Child A: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                        builder: (context, constraints) {
+                          return ExpandedChild(
+                            color: Colors.pink,
+                            constraints: constraints,
+                            label: 'Nested Child A',
+                          );
+                        },
                       ),
                     ),
                     if (!hidden) ...[
                       ResizableChild(
                         startingRatio: ratio4,
                         child: LayoutBuilder(
-                          builder: (context, constraints) => Center(
-                            child: DecoratedBox(
-                              decoration: const BoxDecoration(
-                                color: Colors.amber,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Nested Child B: ${constraints.maxHeight.toStringAsFixed(2)} x ${constraints.maxWidth.toStringAsFixed(2)}',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                          ),
+                          builder: (context, constraints) {
+                            return ExpandedChild(
+                              label: 'Nested Child B',
+                              color: Colors.amber,
+                              constraints: constraints,
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -192,6 +169,39 @@ class _ExampleAppState extends State<ExampleApp> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ExpandedChild extends StatelessWidget {
+  const ExpandedChild({
+    super.key,
+    required this.color,
+    required this.constraints,
+    required this.label,
+  });
+
+  final Color color;
+  final BoxConstraints constraints;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final height = constraints.maxHeight.toStringAsFixed(2);
+    final width = constraints.maxWidth.toStringAsFixed(2);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color,
+      ),
+      child: SizedBox.expand(
+        child: Center(
+          child: Text(
+            '$label ($height x $width)',
+            textAlign: TextAlign.center,
           ),
         ),
       ),
