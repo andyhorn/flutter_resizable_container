@@ -39,7 +39,7 @@ class ResizableChild {
       other.startingRatio == startingRatio &&
       other.maxSize == maxSize &&
       other.minSize == minSize &&
-      other.child == child;
+      other.child.runtimeType == child.runtimeType;
 
   @override
   int get hashCode => Object.hash(startingRatio, maxSize, minSize, child);
