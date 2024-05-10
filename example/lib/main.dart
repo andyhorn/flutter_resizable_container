@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 const ratio1 = 0.75;
 const ratio2 = 0.25;
@@ -98,75 +99,99 @@ class _ExampleAppState extends State<ExampleApp> {
           ],
         ),
         body: SafeArea(
-          child: ResizableContainer(
-            controller: controller1,
-            direction: direction,
-            divider: ResizableDivider(
-              thickness: 3.0,
-              size: 5.0,
-              color: hovered ? Colors.orange : Colors.blue,
-              indent: 12,
-              endIndent: 12,
-              onHoverEnter: () => setState(() => hovered = true),
-              onHoverExit: () => setState(() => hovered = false),
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ResizableChild(
-                startingRatio: ratio1,
-                minSize: 150,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return ExpandedChild(
-                      color: Colors.green,
-                      constraints: constraints,
-                      label: direction == Axis.horizontal
-                          ? 'Left Pane'
-                          : 'Right Pane',
-                    );
-                  },
-                ),
-              ),
-              ResizableChild(
-                startingRatio: ratio2,
-                maxSize: 500,
+              Expanded(
                 child: ResizableContainer(
-                  controller: controller2,
-                  divider: const ResizableDivider(
-                    color: Colors.green,
+                  controller: controller1,
+                  direction: direction,
+                  divider: ResizableDivider(
+                    thickness: 3.0,
+                    size: 5.0,
+                    color: hovered ? Colors.orange : Colors.blue,
+                    indent: 12,
+                    endIndent: 12,
+                    onHoverEnter: () => setState(() => hovered = true),
+                    onHoverExit: () => setState(() => hovered = false),
                   ),
-                  direction: direction == Axis.horizontal
-                      ? Axis.vertical
-                      : Axis.horizontal,
                   children: [
                     ResizableChild(
-                      expand: expand,
-                      startingRatio: ratio3,
+                      startingRatio: ratio1,
+                      minSize: 150,
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           return ExpandedChild(
-                            color: Colors.pink,
+                            color: Colors.green,
                             constraints: constraints,
-                            label: 'Nested Child A',
+                            label: direction == Axis.horizontal
+                                ? 'Left Pane'
+                                : 'Right Pane',
                           );
                         },
                       ),
                     ),
-                    if (!hidden) ...[
-                      ResizableChild(
-                        startingRatio: ratio4,
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            return ExpandedChild(
-                              label: 'Nested Child B',
-                              color: Colors.amber,
-                              constraints: constraints,
-                            );
-                          },
+                    ResizableChild(
+                      startingRatio: ratio2,
+                      maxSize: 500,
+                      child: ResizableContainer(
+                        controller: controller2,
+                        divider: const ResizableDivider(
+                          color: Colors.green,
                         ),
+                        direction: direction == Axis.horizontal
+                            ? Axis.vertical
+                            : Axis.horizontal,
+                        children: [
+                          ResizableChild(
+                            expand: expand,
+                            startingRatio: ratio3,
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                return ExpandedChild(
+                                  color: Colors.pink,
+                                  constraints: constraints,
+                                  label: 'Nested Child A',
+                                );
+                              },
+                            ),
+                          ),
+                          if (!hidden) ...[
+                            ResizableChild(
+                              startingRatio: ratio4,
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return ExpandedChild(
+                                    label: 'Nested Child B',
+                                    color: Colors.amber,
+                                    constraints: constraints,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ],
+                    ),
                   ],
                 ),
+              ),
+              FutureBuilder(
+                future: PackageInfo.fromPlatform(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final data = snapshot.data!;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 1,
+                        horizontal: 8,
+                      ),
+                      child: Text('v${data.version} (${data.buildNumber})'),
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
               ),
             ],
           ),
