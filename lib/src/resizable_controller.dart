@@ -22,6 +22,18 @@ class ResizableController with ChangeNotifier {
     _calculateChildSizes(_availableSpace);
   }
 
+  /// Updates the list of [children] and re-calculates their sizes.
+  ///
+  /// This should only be used internally.
+  void updateChildren(List<ResizableChild> children) {
+    _children = children;
+
+    final availableSpace = _availableSpace;
+    _availableSpace = -1;
+    _calculateChildSizes(availableSpace);
+    _availableSpace = availableSpace;
+  }
+
   /// The sizes in pixels of each child.
   List<double> get sizes => _sizes;
 
