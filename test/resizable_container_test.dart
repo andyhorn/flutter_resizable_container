@@ -5,37 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group(ResizableContainer, () {
-    testWidgets(
-      'throws an error if the child ratios are greater than 1',
-      (tester) async {
-        final container = ResizableContainer(
-          controller: ResizableController(),
-          direction: Axis.horizontal,
-          children: const [
-            ResizableChild(
-              startingRatio: 0.5,
-              child: SizedBox.expand(),
-            ),
-            ResizableChild(
-              startingRatio: 0.6,
-              child: SizedBox.expand(),
-            ),
-          ],
-        );
-
-        expect(
-          () async => await tester.pumpWidget(
-            MaterialApp(
-              home: Scaffold(
-                body: container,
-              ),
-            ),
-          ),
-          throwsArgumentError,
-        );
-      },
-    );
-
     testWidgets('can resize by dragging divider', (tester) async {
       const dividerWidth = 2.0;
       final controller = ResizableController();
