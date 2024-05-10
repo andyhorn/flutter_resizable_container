@@ -36,16 +36,24 @@ class ResizableChild {
       'startingRatio: $startingRatio, '
       'maxSize: $maxSize, '
       'minSize: $minSize, '
-      'child: $child)';
+      'child: $child, '
+      'expand: $expand)';
 
   @override
   operator ==(Object other) =>
       other is ResizableChild &&
+      other.expand == expand &&
       other.startingRatio == startingRatio &&
       other.maxSize == maxSize &&
       other.minSize == minSize &&
       other.child.runtimeType == child.runtimeType;
 
   @override
-  int get hashCode => Object.hash(startingRatio, maxSize, minSize, child);
+  int get hashCode => Object.hash(
+        expand,
+        startingRatio,
+        maxSize,
+        minSize,
+        child,
+      );
 }
