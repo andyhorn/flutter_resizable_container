@@ -113,12 +113,32 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  Iterable<double> _calculateSizesBasedOnStartingRatios(
+  List<double> _calculateSizesBasedOnStartingRatios(
     double availableSpace,
-  ) sync* {
-    for (final datum in _children) {
-      yield (datum.startingRatio ?? _nullRatioSpace) * availableSpace;
+  ) {
+    final sizes = [
+      for (final child in _children) ...[
+        (child.startingRatio ?? _nullRatioSpace) * availableSpace,
+      ],
+    ];
+
+    final sum = sizes.sum();
+    if (sum < availableSpace) {
+      final expandableCount = _children.where((child) => child.expand).length;
+
+      if (expandableCount > 0) {
+        final difference = availableSpace - sum;
+        final spacePerExpandable = difference / expandableCount;
+
+        for (var i = 0; i < _children.length; i++) {
+          if (_children[i].expand) {
+            sizes[i] += spacePerExpandable;
+          }
+        }
+      }
     }
+
+    return sizes;
   }
 
   Iterable<double> _calculateSizesBasedOnCurrentRatios(
