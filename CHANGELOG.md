@@ -1,4 +1,4 @@
-## 2.0.0+beta.1
+## 2.0.0-beta.1
 
 - Renamed `ResizableChildData` to `ResizableChild`
 - Added an `expand` flag to the `ResizableChild` ctor 
