@@ -38,7 +38,7 @@ class ResizableController with ChangeNotifier {
   }
 
   void _calculateChildSizes(double availableSpace) {
-    if (availableSpace == -1) {
+    if (_availableSpace == -1) {
       _nullRatioSpace = _calculateSpaceForNullStartingRatios(availableSpace);
       _sizes = _calculateSizesBasedOnStartingRatios(availableSpace).toList();
     } else {
