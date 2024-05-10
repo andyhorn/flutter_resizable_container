@@ -35941,7 +35941,7 @@ $2(a,b){return new A.iE(B.Cs,b,"Nested Child B",null)},
 $S:63}
 A.Y9.prototype={
 $2(a,b){var s=b.b
-if(s!=null)return new A.hF(B.yv,A.a4x("v"+s.c+" ("+s.d+")",null),null)
+if(s!=null)return new A.hF(B.yv,A.a4x("v"+s.c,null),null)
 return B.dX},
 $S:364}
 A.iE.prototype={
