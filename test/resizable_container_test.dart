@@ -281,5 +281,109 @@ void main() {
         expect(boxCSize, equals(const Size(249, 1000)));
       },
     );
+
+    testWidgets('children do not expand if set to false', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 1000));
+      await tester.pumpWidget(const _ToggleChildApp(expand: false));
+
+      expect(find.byKey(const Key('ChildA')), findsOneWidget);
+      expect(find.byKey(const Key('ChildB')), findsOneWidget);
+
+      expect(
+        tester.getSize(find.byKey(const Key('ChildA'))).width,
+        equals(499.0),
+      );
+      expect(
+        tester.getSize(find.byKey(const Key('ChildB'))).width,
+        equals(499.0),
+      );
+
+      await tester.tap(find.byKey(const Key('ToggleSwitch')));
+      await tester.pump();
+
+      expect(find.byKey(const Key('ChildA')), findsOneWidget);
+      expect(find.byKey(const Key('ChildB')), findsNothing);
+      expect(
+        tester.getSize(find.byKey(const Key('ChildA'))).width,
+        equals(500),
+      );
+    });
+
+    testWidgets('children auto-expand if set to true', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 1000));
+      await tester.pumpWidget(const _ToggleChildApp(expand: true));
+
+      expect(find.byKey(const Key('ChildA')), findsOneWidget);
+      expect(find.byKey(const Key('ChildB')), findsOneWidget);
+
+      expect(
+        tester.getSize(find.byKey(const Key('ChildA'))).width,
+        equals(499.0),
+      );
+      expect(
+        tester.getSize(find.byKey(const Key('ChildB'))).width,
+        equals(499.0),
+      );
+
+      await tester.tap(find.byKey(const Key('ToggleSwitch')));
+      await tester.pump();
+
+      expect(find.byKey(const Key('ChildA')), findsOneWidget);
+      expect(find.byKey(const Key('ChildB')), findsNothing);
+      expect(
+        tester.getSize(find.byKey(const Key('ChildA'))).width,
+        equals(1000),
+      );
+    });
   });
+}
+
+class _ToggleChildApp extends StatefulWidget {
+  const _ToggleChildApp({required this.expand});
+
+  final bool expand;
+
+  @override
+  State<_ToggleChildApp> createState() => __ToggleChildAppState();
+}
+
+class __ToggleChildAppState extends State<_ToggleChildApp> {
+  bool hidden = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          actions: [
+            Switch(
+              key: const Key('ToggleSwitch'),
+              value: hidden,
+              onChanged: (_) => setState(() => hidden = !hidden),
+            ),
+          ],
+        ),
+        body: ResizableContainer(
+          controller: ResizableController(),
+          direction: Axis.horizontal,
+          children: [
+            ResizableChild(
+              startingRatio: 0.5,
+              expand: widget.expand,
+              child: const SizedBox.expand(
+                key: Key('ChildA'),
+              ),
+            ),
+            if (!hidden)
+              const ResizableChild(
+                startingRatio: 0.5,
+                child: SizedBox.expand(
+                  key: Key('ChildB'),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
