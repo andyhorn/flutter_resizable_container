@@ -47,18 +47,18 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    final isSameLength = oldWidget.children.length == widget.children.length;
-    final areChildrenEqual = oldWidget.children.indexed.every(
-      (element) {
-        final (index, child) = element;
-        return child == widget.children[index];
-      },
-    );
+    bool compareChildren() => oldWidget.children.indexed.every(
+          (element) {
+            final (index, child) = element;
+            return widget.children[index] == child;
+          },
+        );
 
-    final hasChanges = !isSameLength || !areChildrenEqual;
+    final isSameLength = oldWidget.children.length == widget.children.length;
+    final hasChanges = !isSameLength || !compareChildren();
 
     if (hasChanges) {
-      widget.controller.setChildren(widget.children);
+      widget.controller.updateChildren(widget.children);
     }
 
     super.didUpdateWidget(oldWidget);
