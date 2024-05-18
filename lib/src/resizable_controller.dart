@@ -1,16 +1,14 @@
 import "dart:math";
 
-import "package:decimal/decimal.dart";
 import 'package:flutter/material.dart';
 import "package:flutter_resizable_container/flutter_resizable_container.dart";
 import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
-
-import "utils.dart";
+import "package:flutter_resizable_container/src/resizable_starting_size.dart";
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
   double _availableSpace = -1;
-  double _nullRatioSpace = 0;
+  double _remainingAvailableSpace = 0;
   List<double> _sizes = [];
   List<ResizableChild> _children = const [];
 
@@ -51,7 +49,10 @@ class ResizableController with ChangeNotifier {
 
   void _calculateChildSizes(double availableSpace) {
     if (_availableSpace == -1) {
-      _nullRatioSpace = _calculateSpaceForNullStartingRatios(availableSpace);
+      _remainingAvailableSpace = _calculateRemainingAvailableSPace(
+        availableSpace,
+      );
+
       _sizes = _calculateSizesBasedOnStartingRatios(availableSpace);
     } else {
       _sizes = _calculateSizesBasedOnCurrentRatios(availableSpace).toList();
@@ -101,13 +102,13 @@ class ResizableController with ChangeNotifier {
     final nullRatioCount = values.nullCount();
 
     if (remaining == 0 || nullRatioCount == 0) {
-      _nullRatioSpace = 0;
+      _remainingAvailableSpace = 0;
     } else {
-      _nullRatioSpace = remaining / nullRatioCount;
+      _remainingAvailableSpace = remaining / nullRatioCount;
     }
 
     for (var i = 0; i < values.length; i++) {
-      _sizes[i] = (values[i] ?? _nullRatioSpace) * _availableSpace;
+      _sizes[i] = (values[i] ?? _remainingAvailableSpace) * _availableSpace;
     }
 
     notifyListeners();
@@ -118,7 +119,7 @@ class ResizableController with ChangeNotifier {
   ) {
     final sizes = [
       for (final child in _children) ...[
-        (child.startingRatio ?? _nullRatioSpace) * availableSpace,
+        (child.startingRatio ?? _remainingAvailableSpace) * availableSpace,
       ],
     ];
 
@@ -192,17 +193,25 @@ class ResizableController with ChangeNotifier {
 
   // calculate the ratio of available space alloted to children without a
   // specified starting ratio.
-  double _calculateSpaceForNullStartingRatios(double availableSpace) {
-    final ratios = _children.map((datum) => datum.startingRatio);
-    final nonNullRatios = ratios.whereType<double>().toList();
-    final ratioSum = sum(nonNullRatios).toDouble();
-    final remainingRatioSpace = (Decimal.one - Decimal.parse('$ratioSum'));
-    final nullRatiosCount = ratios.length - nonNullRatios.length;
+  double _calculateRemainingAvailableSPace(double availableSpace) {
+    final startingSizes = _children.map((datum) => datum.startingSize);
 
-    if (nullRatiosCount == 0) {
-      return 0.0;
+    if (startingSizes.every((startingSize) => startingSize != null)) {
+      return 0;
     }
 
-    return (remainingRatioSpace / Decimal.fromInt(nullRatiosCount)).toDouble();
+    var takenSpace = 0.0;
+
+    for (final startingSize in startingSizes) {
+      takenSpace += switch (startingSize) {
+        ResizableStartingSizePixels(:final value) => value,
+        ResizableStartingSizeRatio(:final value) => availableSpace * value,
+        // We have already accounted for the `null` possibility
+        _ => 0,
+      };
+    }
+
+    final remainingSpace = availableSpace - takenSpace;
+    return remainingSpace;
   }
 }
