@@ -10,7 +10,9 @@ sealed class ResizableStartingSize {
 }
 
 final class ResizableStartingSizePixels extends ResizableStartingSize {
-  const ResizableStartingSizePixels._(double pixels) : super._(pixels);
+  const ResizableStartingSizePixels._(super.pixels)
+      : assert(pixels >= 0, 'value must be greater than or equal to 0'),
+        super._();
 
   @override
   String toString() => 'ResizableStartingSize(pixels: $value)';
@@ -24,7 +26,10 @@ final class ResizableStartingSizePixels extends ResizableStartingSize {
 }
 
 final class ResizableStartingSizeRatio extends ResizableStartingSize {
-  const ResizableStartingSizeRatio._(double ratio) : super._(ratio);
+  const ResizableStartingSizeRatio._(super.ratio)
+      : assert(ratio >= 0 && ratio <= 1,
+            'value must be between 0 and 1, inclusively'),
+        super._();
 
   @override
   String toString() => 'ResizableStartingSize(ratio: $value)';
