@@ -110,19 +110,22 @@ class ResizableController with ChangeNotifier {
     // If the available space is being set for the first time, calculate the
     // child sizes using their "startingSize" values and then apply the
     // auto-sizing and expanding rules
-
-    // First, calculate the amount of space claimed by the children using the
-    // new available space
-    final spaceClaimed = _getSpaceClaimed(availableSpace);
+    _sizes = _getInitialChildSizes(availableSpace);
 
     // Update the remaining available space
-    _remainingAvailableSpace = availableSpace - spaceClaimed;
+    _remainingAvailableSpace = availableSpace - _sizes.sum();
 
     // Apply auto-sizing
     _applyAutoSizing(_remainingAvailableSpace);
 
     // Apply expansions
     _applyExpansions(availableSpace);
+  }
+
+  List<double> _getInitialChildSizes(double availableSpace) {
+    return _children
+        .map((child) => _getSize(child.startingSize, availableSpace))
+        .toList();
   }
 
   void _updateChildSizesForNewAvailableSpace(double availableSpace) {
@@ -173,16 +176,6 @@ class ResizableController with ChangeNotifier {
     }
 
     return delta;
-  }
-
-  double _getSpaceClaimed(double availableSpace) {
-    final startingSizes = _children.map((child) => child.startingSize);
-
-    final spaceClaimed = startingSizes.fold(0.0, (claimed, startingSize) {
-      return claimed + _getSize(startingSize, availableSpace);
-    });
-
-    return spaceClaimed;
   }
 
   double _getSize(ResizableStartingSize? startingSize, double availableSpace) {
