@@ -57,19 +57,18 @@ class ResizableController with ChangeNotifier {
       throw ArgumentError('The sum of all ratios cannot not exceed 1.0');
     }
 
-    final remaining = 1.0 - ratioTotal;
-    final nullRatioCount = values.nullCount();
+    // Find the "ratio" for each auto-size child
+    final unclaimedSpaceRatio = 1.0 - ratioTotal;
+    final autoSizeChildCount = values.nullCount();
+    final autoSizeRatio = unclaimedSpaceRatio / max(1, autoSizeChildCount);
 
-    if (remaining == 0 || nullRatioCount == 0) {
-      _remainingAvailableSpace = 0;
-    } else {
-      _remainingAvailableSpace = remaining / nullRatioCount;
-    }
-
+    // Update the sizes of each child based on its corresponding ratio
     for (var i = 0; i < values.length; i++) {
-      _sizes[i] = (values[i] ?? _remainingAvailableSpace) * _availableSpace;
+      _sizes[i] = (values[i] ?? autoSizeRatio) * _availableSpace;
     }
 
+    // Update the remaining available space
+    _remainingAvailableSpace = _availableSpace - _sizes.sum();
     notifyListeners();
   }
 
