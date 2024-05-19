@@ -31,9 +31,32 @@ class ResizableController with ChangeNotifier {
       return;
     }
 
-    _calculateChildSizes(value);
-    _availableSpace = value;
+    if (_availableSpace == -1) {
+      // If the available space is being set for the first time, calculate the
+      // child sizes using their "startingSize" values.
 
+      // First, calculate the amount of space claimed by the children using the
+      // new value.
+      final spaceClaimed = _getSpaceClaimed(value);
+
+      // Update the remaining available space.
+      _remainingAvailableSpace = value - spaceClaimed;
+
+      // Apply auto-sizing
+      _applyAutoSizing(_remainingAvailableSpace);
+
+      // Apply expansions
+      _applyExpansions(value);
+    } else {
+      // If we are updating the available space again, calculate the child sizes
+      // based on their current ratios.
+      for (var i = 0; i < _children.length; i++) {
+        final currentRatio = _sizes[i] / _availableSpace;
+        _sizes[i] = currentRatio * value;
+      }
+    }
+
+    _availableSpace = value;
     notifyListeners();
   }
 
@@ -72,12 +95,12 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Configures this [ResizableController] with a list of children.
+  /// Configures this [ResizableController] with an initial list of children.
+  /// The available space is unknown at this point.
   ///
   /// This should only be used internally.
   void setChildren(List<ResizableChild> children) {
     _children = children;
-    _calculateChildSizes(_availableSpace);
   }
 
   /// Updates the list of [children] and re-calculates their sizes.
@@ -220,11 +243,66 @@ class ResizableController with ChangeNotifier {
     return remainingSpace;
   }
 
+  double _getSpaceClaimed(double availableSpace) {
+    final startingSizes = _children.map((child) => child.startingSize);
+
+    final spaceClaimed = startingSizes.fold(0.0, (claimed, startingSize) {
+      return claimed + _getSize(startingSize, availableSpace);
+    });
+
+    return spaceClaimed;
+  }
+
   double _getSize(ResizableStartingSize? startingSize, double availableSpace) {
     return switch (startingSize) {
       ResizableStartingSizePixels(:final value) => value,
       ResizableStartingSizeRatio(:final value) => value * availableSpace,
       null => 0.0,
     };
+  }
+
+  void _applyAutoSizing(double autoSizingSpace) {
+    if (autoSizingSpace == 0) {
+      return;
+    }
+
+    final autoSizeChildren = _children.where(
+      (child) => child.startingSize == null,
+    );
+
+    if (autoSizeChildren.isEmpty) {
+      return;
+    }
+
+    final spacePerChild = autoSizingSpace / autoSizeChildren.length;
+
+    for (var i = 0; i < _children.length; i++) {
+      if (_children[i].startingSize == null) {
+        _sizes[i] = spacePerChild;
+      }
+    }
+  }
+
+  void _applyExpansions(double availableSpace) {
+    final sum = _sizes.sum();
+
+    if (sum == availableSpace) {
+      return;
+    }
+
+    final expandableChildren = _children.where((child) => child.expand);
+
+    if (expandableChildren.isEmpty) {
+      return;
+    }
+
+    final difference = availableSpace - sum;
+    final spacePerChild = difference / expandableChildren.length;
+
+    for (var i = 0; i < _children.length; i++) {
+      if (_children[i].expand) {
+        sizes[i] += spacePerChild;
+      }
+    }
   }
 }
