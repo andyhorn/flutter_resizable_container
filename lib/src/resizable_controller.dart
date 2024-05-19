@@ -14,7 +14,7 @@ class ResizableController with ChangeNotifier {
   List<ResizableChild> _children = const [];
 
   /// The sizes in pixels of each child.
-  List<double> get sizes => _sizes;
+  UnmodifiableListView<double> get sizes => UnmodifiableListView(_sizes);
 
   /// The ratios of all the children, like [ResizableChild.startingRatio].
   UnmodifiableListView<double> get ratios {
