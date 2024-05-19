@@ -12,28 +12,13 @@ class ResizableController with ChangeNotifier {
   List<double> _sizes = [];
   List<ResizableChild> _children = const [];
 
-  /// Configures this [ResizableController] with a list of children.
-  ///
-  /// This should only be used internally.
-  void setChildren(List<ResizableChild> children) {
-    _children = children;
-    _calculateChildSizes(_availableSpace);
-  }
-
-  /// Updates the list of [children] and re-calculates their sizes.
-  ///
-  /// This should only be used internally.
-  void updateChildren(List<ResizableChild> children) {
-    _children = children;
-
-    final availableSpace = _availableSpace;
-    _availableSpace = -1;
-    _calculateChildSizes(availableSpace);
-    _availableSpace = availableSpace;
-  }
-
   /// The sizes in pixels of each child.
   List<double> get sizes => _sizes;
+
+  /// The ratios of all the children, like [ResizableChild.startingRatio].
+  List<double> get ratios => [
+        for (final size in sizes) size / _availableSpace,
+      ];
 
   /// Set the total available space.
   set availableSpace(double value) {
@@ -46,37 +31,6 @@ class ResizableController with ChangeNotifier {
 
     notifyListeners();
   }
-
-  void _calculateChildSizes(double availableSpace) {
-    if (_availableSpace == -1) {
-      _remainingAvailableSpace = _calculateRemainingAvailableSPace(
-        availableSpace,
-      );
-
-      _sizes = _calculateSizesBasedOnStartingRatios(availableSpace);
-    } else {
-      _sizes = _calculateSizesBasedOnCurrentRatios(availableSpace).toList();
-    }
-  }
-
-  /// Adjust the size of the child widget at [index] by the [delta] amount.
-  void adjustChildSize({
-    required int index,
-    required double delta,
-  }) {
-    final adjustedDelta = delta < 0
-        ? _getAdjustedReducingDelta(index: index, delta: delta)
-        : _getAdjustedIncreasingDelta(index: index, delta: delta);
-
-    _sizes[index] += adjustedDelta;
-    _sizes[index + 1] -= adjustedDelta;
-    notifyListeners();
-  }
-
-  /// The ratios of all the children, like [ResizableChild.startingRatio].
-  List<double> get ratios => [
-        for (final size in sizes) size / _availableSpace,
-      ];
 
   /// Programmatically set the ratios on the children. See [ratios] to get their current ratios.
   set ratios(List<double?> values) {
@@ -111,6 +65,52 @@ class ResizableController with ChangeNotifier {
       _sizes[i] = (values[i] ?? _remainingAvailableSpace) * _availableSpace;
     }
 
+    notifyListeners();
+  }
+
+  /// Configures this [ResizableController] with a list of children.
+  ///
+  /// This should only be used internally.
+  void setChildren(List<ResizableChild> children) {
+    _children = children;
+    _calculateChildSizes(_availableSpace);
+  }
+
+  /// Updates the list of [children] and re-calculates their sizes.
+  ///
+  /// This should only be used internally.
+  void updateChildren(List<ResizableChild> children) {
+    _children = children;
+
+    final availableSpace = _availableSpace;
+    _availableSpace = -1;
+    _calculateChildSizes(availableSpace);
+    _availableSpace = availableSpace;
+  }
+
+  void _calculateChildSizes(double availableSpace) {
+    if (_availableSpace == -1) {
+      _remainingAvailableSpace = _calculateRemainingAvailableSPace(
+        availableSpace,
+      );
+
+      _sizes = _calculateSizesBasedOnStartingRatios(availableSpace);
+    } else {
+      _sizes = _calculateSizesBasedOnCurrentRatios(availableSpace).toList();
+    }
+  }
+
+  /// Adjust the size of the child widget at [index] by the [delta] amount.
+  void adjustChildSize({
+    required int index,
+    required double delta,
+  }) {
+    final adjustedDelta = delta < 0
+        ? _getAdjustedReducingDelta(index: index, delta: delta)
+        : _getAdjustedIncreasingDelta(index: index, delta: delta);
+
+    _sizes[index] += adjustedDelta;
+    _sizes[index + 1] -= adjustedDelta;
     notifyListeners();
   }
 
