@@ -117,11 +117,17 @@ class ResizableController with ChangeNotifier {
   List<double> _calculateSizesBasedOnStartingRatios(
     double availableSpace,
   ) {
-    final sizes = [
-      for (final child in _children) ...[
-        (child.startingRatio ?? _remainingAvailableSpace) * availableSpace,
-      ],
-    ];
+    final autoSizeChildren = _children.where(
+      (child) => child.startingSize == null,
+    );
+    final autoSize = _remainingAvailableSpace / max(autoSizeChildren.length, 1);
+    final sizes = _children.map((child) {
+      if (child.startingSize == null) {
+        return autoSize;
+      }
+
+      return _getSize(child.startingSize, availableSpace);
+    }).toList();
 
     final sum = sizes.sum();
     if (sum < availableSpace) {
