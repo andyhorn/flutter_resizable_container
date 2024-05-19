@@ -32,21 +32,7 @@ class ResizableController with ChangeNotifier {
     }
 
     if (_availableSpace == -1) {
-      // If the available space is being set for the first time, calculate the
-      // child sizes using their "startingSize" values.
-
-      // First, calculate the amount of space claimed by the children using the
-      // new value.
-      final spaceClaimed = _getSpaceClaimed(value);
-
-      // Update the remaining available space.
-      _remainingAvailableSpace = value - spaceClaimed;
-
-      // Apply auto-sizing
-      _applyAutoSizing(_remainingAvailableSpace);
-
-      // Apply expansions
-      _applyExpansions(value);
+      _initializeAvailableSpace(value);
     } else {
       // If we are updating the available space again, calculate the child sizes
       // based on their current ratios.
@@ -139,6 +125,25 @@ class ResizableController with ChangeNotifier {
     _sizes[index] += adjustedDelta;
     _sizes[index + 1] -= adjustedDelta;
     notifyListeners();
+  }
+
+  void _initializeAvailableSpace(double availableSpace) {
+    // If the available space is being set for the first time, calculate the
+    // child sizes using their "startingSize" values and then apply the
+    // auto-sizing and expanding rules
+
+    // First, calculate the amount of space claimed by the children using the
+    // new available space
+    final spaceClaimed = _getSpaceClaimed(availableSpace);
+
+    // Update the remaining available space
+    _remainingAvailableSpace = availableSpace - spaceClaimed;
+
+    // Apply auto-sizing
+    _applyAutoSizing(_remainingAvailableSpace);
+
+    // Apply expansions
+    _applyExpansions(availableSpace);
   }
 
   List<double> _calculateSizesBasedOnStartingRatios(
