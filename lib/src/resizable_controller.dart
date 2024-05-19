@@ -203,15 +203,18 @@ class ResizableController with ChangeNotifier {
     var takenSpace = 0.0;
 
     for (final startingSize in startingSizes) {
-      takenSpace += switch (startingSize) {
-        ResizableStartingSizePixels(:final value) => value,
-        ResizableStartingSizeRatio(:final value) => availableSpace * value,
-        // We have already accounted for the `null` possibility
-        _ => 0,
-      };
+      takenSpace += _getSize(startingSize, availableSpace);
     }
 
     final remainingSpace = availableSpace - takenSpace;
     return remainingSpace;
+  }
+
+  double _getSize(ResizableStartingSize? startingSize, double availableSpace) {
+    return switch (startingSize) {
+      ResizableStartingSizePixels(:final value) => value,
+      ResizableStartingSizeRatio(:final value) => value * availableSpace,
+      null => 0.0,
+    };
   }
 }
