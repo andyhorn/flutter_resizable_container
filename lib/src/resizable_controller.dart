@@ -34,12 +34,7 @@ class ResizableController with ChangeNotifier {
     if (_availableSpace == -1) {
       _initializeAvailableSpace(value);
     } else {
-      // If we are updating the available space again, calculate the child sizes
-      // based on their current ratios.
-      for (var i = 0; i < _children.length; i++) {
-        final currentRatio = _sizes[i] / _availableSpace;
-        _sizes[i] = currentRatio * value;
-      }
+      _updateChildSizesForNewAvailableSpace(value);
     }
 
     _availableSpace = value;
@@ -144,6 +139,15 @@ class ResizableController with ChangeNotifier {
 
     // Apply expansions
     _applyExpansions(availableSpace);
+  }
+
+  void _updateChildSizesForNewAvailableSpace(double availableSpace) {
+    // If we are updating the available space again, calculate the child sizes
+    // based on their current ratios.
+    for (var i = 0; i < _children.length; i++) {
+      final currentRatio = _sizes[i] / _availableSpace;
+      _sizes[i] = currentRatio * availableSpace;
+    }
   }
 
   List<double> _calculateSizesBasedOnStartingRatios(
