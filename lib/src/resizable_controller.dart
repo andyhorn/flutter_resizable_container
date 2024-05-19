@@ -1,3 +1,4 @@
+import "dart:collection";
 import "dart:math";
 
 import 'package:flutter/material.dart';
@@ -16,9 +17,13 @@ class ResizableController with ChangeNotifier {
   List<double> get sizes => _sizes;
 
   /// The ratios of all the children, like [ResizableChild.startingRatio].
-  List<double> get ratios => [
-        for (final size in sizes) size / _availableSpace,
-      ];
+  UnmodifiableListView<double> get ratios {
+    return UnmodifiableListView([
+      for (final size in sizes) ...[
+        size / _availableSpace,
+      ],
+    ]);
+  }
 
   /// Set the total available space.
   set availableSpace(double value) {
