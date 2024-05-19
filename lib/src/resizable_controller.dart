@@ -4,7 +4,7 @@ import "dart:math";
 import 'package:flutter/material.dart';
 import "package:flutter_resizable_container/flutter_resizable_container.dart";
 import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
-import "package:flutter_resizable_container/src/resizable_starting_size.dart";
+import "package:flutter_resizable_container/src/resizable_size.dart";
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
@@ -178,10 +178,10 @@ class ResizableController with ChangeNotifier {
     return delta;
   }
 
-  double _getSize(ResizableStartingSize? startingSize, double availableSpace) {
+  double _getSize(ResizableSize? startingSize, double availableSpace) {
     return switch (startingSize) {
-      ResizableStartingSizePixels(:final value) => value,
-      ResizableStartingSizeRatio(:final value) => value * availableSpace,
+      ResizableSizePixels(:final value) => value,
+      ResizableSizeRatio(:final value) => value * availableSpace,
       null => 0.0,
     };
   }

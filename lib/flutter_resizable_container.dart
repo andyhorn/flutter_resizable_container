@@ -4,4 +4,4 @@ export 'src/resizable_container.dart';
 export 'src/resizable_controller.dart';
 export 'src/resizable_child.dart';
 export 'src/resizable_divider.dart';
-export 'src/resizable_starting_size.dart' show ResizableStartingSize;
+export 'src/resizable_size.dart' show ResizableSize;

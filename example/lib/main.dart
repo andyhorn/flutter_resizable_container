@@ -117,7 +117,7 @@ class _ExampleAppState extends State<ExampleApp> {
                   ),
                   children: [
                     ResizableChild(
-                      startingSize: ResizableStartingSize.ratio(ratio1),
+                      startingSize: ResizableSize.ratio(ratio1),
                       minSize: 150,
                       child: LayoutBuilder(
                         builder: (context, constraints) {
@@ -132,7 +132,7 @@ class _ExampleAppState extends State<ExampleApp> {
                       ),
                     ),
                     ResizableChild(
-                      startingSize: ResizableStartingSize.ratio(ratio2),
+                      startingSize: ResizableSize.ratio(ratio2),
                       maxSize: 500,
                       child: ResizableContainer(
                         controller: controller2,
@@ -145,7 +145,7 @@ class _ExampleAppState extends State<ExampleApp> {
                         children: [
                           ResizableChild(
                             expand: expand,
-                            startingSize: ResizableStartingSize.ratio(ratio3),
+                            startingSize: ResizableSize.ratio(ratio3),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 return ExpandedChild(
@@ -158,7 +158,7 @@ class _ExampleAppState extends State<ExampleApp> {
                           ),
                           if (!hidden) ...[
                             ResizableChild(
-                              startingSize: ResizableStartingSize.ratio(ratio4),
+                              startingSize: ResizableSize.ratio(ratio4),
                               child: LayoutBuilder(
                                 builder: (context, constraints) {
                                   return ExpandedChild(

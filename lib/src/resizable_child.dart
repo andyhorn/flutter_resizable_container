@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_resizable_container/src/resizable_starting_size.dart';
+import 'package:flutter_resizable_container/src/resizable_size.dart';
 
 /// Controls the sizing parameters for the [child] Widget.
 class ResizableChild {
@@ -32,7 +32,7 @@ class ResizableChild {
   /// // Absolute size in logical pixels
   /// startingSize: const ResizableStartingSize.pixels(300);
   /// ```
-  final ResizableStartingSize? startingSize;
+  final ResizableSize? startingSize;
 
   /// The child [Widget]
   final Widget child;
