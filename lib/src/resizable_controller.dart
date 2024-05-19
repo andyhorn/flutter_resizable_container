@@ -32,7 +32,7 @@ class ResizableController with ChangeNotifier {
     }
 
     if (_availableSpace == -1) {
-      _initializeAvailableSpace(value);
+      _initializeChildSizesForSpace(value);
     } else {
       _updateChildSizesForNewAvailableSpace(value);
     }
@@ -89,23 +89,7 @@ class ResizableController with ChangeNotifier {
   /// This should only be used internally.
   void updateChildren(List<ResizableChild> children) {
     _children = children;
-
-    final availableSpace = _availableSpace;
-    _availableSpace = -1;
-    _calculateChildSizes(availableSpace);
-    _availableSpace = availableSpace;
-  }
-
-  void _calculateChildSizes(double availableSpace) {
-    if (_availableSpace == -1) {
-      _remainingAvailableSpace = _calculateRemainingAvailableSPace(
-        availableSpace,
-      );
-
-      _sizes = _calculateSizesBasedOnStartingRatios(availableSpace);
-    } else {
-      _sizes = _calculateSizesBasedOnCurrentRatios(availableSpace).toList();
-    }
+    _initializeChildSizesForSpace(_availableSpace);
   }
 
   /// Adjust the size of the child widget at [index] by the [delta] amount.
@@ -122,7 +106,7 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  void _initializeAvailableSpace(double availableSpace) {
+  void _initializeChildSizesForSpace(double availableSpace) {
     // If the available space is being set for the first time, calculate the
     // child sizes using their "startingSize" values and then apply the
     // auto-sizing and expanding rules
@@ -147,48 +131,6 @@ class ResizableController with ChangeNotifier {
     for (var i = 0; i < _children.length; i++) {
       final currentRatio = _sizes[i] / _availableSpace;
       _sizes[i] = currentRatio * availableSpace;
-    }
-  }
-
-  List<double> _calculateSizesBasedOnStartingRatios(
-    double availableSpace,
-  ) {
-    final autoSizeChildren = _children.where(
-      (child) => child.startingSize == null,
-    );
-    final autoSize = _remainingAvailableSpace / max(autoSizeChildren.length, 1);
-    final sizes = _children.map((child) {
-      if (child.startingSize == null) {
-        return autoSize;
-      }
-
-      return _getSize(child.startingSize, availableSpace);
-    }).toList();
-
-    final sum = sizes.sum();
-    if (sum < availableSpace) {
-      final expandableCount = _children.where((child) => child.expand).length;
-
-      if (expandableCount > 0) {
-        final difference = availableSpace - sum;
-        final spacePerExpandable = difference / expandableCount;
-
-        for (var i = 0; i < _children.length; i++) {
-          if (_children[i].expand) {
-            sizes[i] += spacePerExpandable;
-          }
-        }
-      }
-    }
-
-    return sizes;
-  }
-
-  Iterable<double> _calculateSizesBasedOnCurrentRatios(
-    double availableSpace,
-  ) sync* {
-    for (final size in _sizes) {
-      yield (size / _availableSpace) * availableSpace;
     }
   }
 
@@ -231,25 +173,6 @@ class ResizableController with ChangeNotifier {
     }
 
     return delta;
-  }
-
-  // calculate the ratio of available space alloted to children without a
-  // specified starting ratio.
-  double _calculateRemainingAvailableSPace(double availableSpace) {
-    final startingSizes = _children.map((datum) => datum.startingSize);
-
-    if (startingSizes.every((startingSize) => startingSize != null)) {
-      return 0;
-    }
-
-    var takenSpace = 0.0;
-
-    for (final startingSize in startingSizes) {
-      takenSpace += _getSize(startingSize, availableSpace);
-    }
-
-    final remainingSpace = availableSpace - takenSpace;
-    return remainingSpace;
   }
 
   double _getSpaceClaimed(double availableSpace) {
