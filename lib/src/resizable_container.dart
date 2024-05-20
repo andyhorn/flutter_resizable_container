@@ -38,6 +38,8 @@ class ResizableContainer extends StatefulWidget {
 }
 
 class _ResizableContainerState extends State<ResizableContainer> {
+  late final controller = widget.controller;
+
   @override
   void initState() {
     super.initState();
@@ -58,7 +60,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
     final hasChanges = !isSameLength || !compareChildren();
 
     if (hasChanges) {
-      widget.controller.updateChildren(widget.children);
+      controller.updateChildren(widget.children);
     }
 
     super.didUpdateWidget(oldWidget);
@@ -69,10 +71,10 @@ class _ResizableContainerState extends State<ResizableContainer> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableSpace = _getAvailableSpace(constraints);
-        widget.controller.setAvailableSpace(availableSpace);
+        controller.setAvailableSpace(availableSpace);
 
         return AnimatedBuilder(
-          animation: widget.controller,
+          animation: controller,
           builder: (context, _) {
             return Flex(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -134,6 +136,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }) {
     return direction != direction
         ? constraints.maxForDirection(direction)
-        : widget.controller.sizes[index];
+        : controller.sizes[index];
   }
 }
