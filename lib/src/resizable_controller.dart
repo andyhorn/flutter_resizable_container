@@ -55,37 +55,10 @@ class ResizableController with ChangeNotifier {
       throw ArgumentError('Must contain a value for every child');
     }
 
-    final totalPixels = values
-        .whereType<ResizableSizePixels>()
-        .fold(0.0, (sum, size) => sum + size.value);
-
-    if (totalPixels > _availableSpace) {
-      throw ArgumentError('Size cannot exceed total available space.');
-    }
-
-    final totalRatio = values
-        .whereType<ResizableSizeRatio>()
-        .fold(0.0, (sum, size) => sum + size.value);
-
-    if (totalRatio > 1.0) {
-      throw ArgumentError('Ratios cannot exceed 1.0');
-    }
-
-    final remainingSpace = _availableSpace - totalPixels;
-    final ratioSpace = remainingSpace * totalRatio;
-    final autoSizeSpace = remainingSpace - ratioSpace;
-    final nullValueCount = values.nullCount();
-    final nullValueSpace = autoSizeSpace == 0 || nullValueCount == 0
-        ? 0.0
-        : autoSizeSpace / nullValueCount;
-
-    for (var i = 0; i < values.length; i++) {
-      _sizes[i] = switch (values[i]) {
-        ResizableSizePixels(:final value) => value,
-        ResizableSizeRatio(:final value) => remainingSpace * value,
-        null => nullValueSpace,
-      };
-    }
+    _sizes = _mapSizesToAvailableSpace(
+      resizableSizes: values,
+      availableSpace: _availableSpace,
+    );
 
     notifyListeners();
   }
@@ -162,9 +135,49 @@ class ResizableController with ChangeNotifier {
   }
 
   List<double> _getInitialChildSizes(double availableSpace) {
-    return _children
-        .map((child) => _getSize(child.startingSize, availableSpace))
-        .toList();
+    return _mapSizesToAvailableSpace(
+      resizableSizes: _children.map((child) => child.startingSize).toList(),
+      availableSpace: availableSpace,
+    );
+  }
+
+  List<double> _mapSizesToAvailableSpace({
+    required List<ResizableSize?> resizableSizes,
+    required double availableSpace,
+  }) {
+    final totalPixels = resizableSizes
+        .whereType<ResizableSizePixels>()
+        .fold(0.0, (sum, size) => sum + size.value);
+
+    if (totalPixels > availableSpace) {
+      throw ArgumentError('Size cannot exceed total available space.');
+    }
+
+    final totalRatio = resizableSizes
+        .whereType<ResizableSizeRatio>()
+        .fold(0.0, (sum, size) => sum + size.value);
+
+    if (totalRatio > 1.0) {
+      throw ArgumentError('Ratios cannot exceed 1.0');
+    }
+
+    final remainingSpace = availableSpace - totalPixels;
+    final ratioSpace = remainingSpace * totalRatio;
+    final autoSizeSpace = remainingSpace - ratioSpace;
+    final nullValueCount = resizableSizes.nullCount();
+    final nullValueSpace = autoSizeSpace == 0 || nullValueCount == 0
+        ? 0.0
+        : autoSizeSpace / nullValueCount;
+
+    final sizes = resizableSizes.map((size) {
+      return switch (size) {
+        ResizableSizePixels(:final value) => value,
+        ResizableSizeRatio(:final value) => remainingSpace * value,
+        null => nullValueSpace,
+      };
+    });
+
+    return sizes.toList();
   }
 
   void _updateChildSizesForNewAvailableSpace(double availableSpace) {
@@ -213,14 +226,6 @@ class ResizableController with ChangeNotifier {
     }
 
     return delta;
-  }
-
-  double _getSize(ResizableSize? startingSize, double availableSpace) {
-    return switch (startingSize) {
-      ResizableSizePixels(:final value) => value,
-      ResizableSizeRatio(:final value) => value * availableSpace,
-      null => 0.0,
-    };
   }
 
   void _applyAutoSizing(double autoSizingSpace) {
