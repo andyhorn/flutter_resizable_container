@@ -69,14 +69,14 @@ void main() {
             ),
           ]);
 
-          controller.setAvailableSpace(100);
+          controller.setAvailableSpace(300);
         });
 
         test('does not notify listeners', () {
           var notified = false;
           controller.addListener(() => notified = true);
 
-          controller.setAvailableSpace(100);
+          controller.setAvailableSpace(300);
 
           expect(notified, isFalse);
         });
@@ -233,7 +233,7 @@ void main() {
         expect(controller.sizes, equals([100, 50, 50]));
       });
 
-      test('notifies listeners', () {
+      test('does not notify listeners', () {
         var notified = false;
         controller.addListener(() => notified = true);
         controller.updateChildren(const [
@@ -251,7 +251,7 @@ void main() {
           ),
         ]);
 
-        expect(notified, isTrue);
+        expect(notified, isFalse);
       });
     });
 
