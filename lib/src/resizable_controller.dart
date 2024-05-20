@@ -16,7 +16,81 @@ class ResizableController with ChangeNotifier {
   /// The sizes in pixels of each child.
   UnmodifiableListView<double> get sizes => UnmodifiableListView(_sizes);
 
-  /// The ratios of all the children, like [ResizableChild.startingRatio].
+  /// Programmatically set the sizes of the children.
+  ///
+  /// Each child must have a corresponding index in the [values] list.
+  /// The value at each index may be a pixel value, a ratio, or `null`.
+  ///
+  /// * If the value is a pixel value, the child will be given that size.
+  /// * If the value is a ratio value, the child will be given that portion of
+  /// the remaining available space, after all pixels values have been allocated.
+  /// * If the value is `null`, the child will be given the remaining available
+  /// space, after all pixel and ratio values have been allocated.
+  /// * If there are multiple `null` values, each child will be given an equal
+  /// portion of the remaining available space, after all pixel and ratio values
+  /// have been allocated.
+  ///
+  /// For example,
+  ///
+  /// ```dart
+  /// controller.setSizes([
+  ///   ResizableSize.pixels(100),
+  ///   ResizableSize.ratio(0.5),
+  ///   null,
+  /// ]);
+  /// ```
+  ///
+  /// In this scenario:
+  /// * the first child will be given 100 logical pixels of space
+  /// * the second child will be given 50% of the remaining available space
+  /// * the third child will be given whatever remaining space is left:
+  /// (total space - 100 - (total space * 0.5))
+  ///
+  /// This method throws an `ArgumentError` in any of the following scenarios:
+  /// * The length of [values] is different from the length of [children]
+  /// * The total amount of pixels is greater than the total available space
+  /// * The sum of all ratio values exceeds 1.0
+  void setSizes(List<ResizableSize?> values) {
+    if (values.length != _children.length) {
+      throw ArgumentError('Must contain a value for every child');
+    }
+
+    final totalPixels = values
+        .whereType<ResizableSizePixels>()
+        .fold(0.0, (sum, size) => sum + size.value);
+
+    if (totalPixels > _availableSpace) {
+      throw ArgumentError('Size cannot exceed total available space.');
+    }
+
+    final totalRatio = values
+        .whereType<ResizableSizeRatio>()
+        .fold(0.0, (sum, size) => sum + size.value);
+
+    if (totalRatio > 1.0) {
+      throw ArgumentError('Ratios cannot exceed 1.0');
+    }
+
+    final remainingSpace = _availableSpace - totalPixels;
+    final ratioSpace = remainingSpace * totalRatio;
+    final autoSizeSpace = remainingSpace - ratioSpace;
+    final nullValueCount = values.nullCount();
+    final nullValueSpace = autoSizeSpace == 0 || nullValueCount == 0
+        ? 0.0
+        : autoSizeSpace / nullValueCount;
+
+    for (var i = 0; i < values.length; i++) {
+      _sizes[i] = switch (values[i]) {
+        ResizableSizePixels(:final value) => value,
+        ResizableSizeRatio(:final value) => remainingSpace * value,
+        null => nullValueSpace,
+      };
+    }
+
+    notifyListeners();
+  }
+
+  /// A list of ratios (proportion of total available space taken) for each child.
   UnmodifiableListView<double> get ratios {
     return UnmodifiableListView([
       for (final size in sizes) ...[
