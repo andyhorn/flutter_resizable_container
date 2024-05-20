@@ -21,14 +21,21 @@ class ResizableController with ChangeNotifier {
   /// Each child must have a corresponding index in the [values] list.
   /// The value at each index may be a pixel value, a ratio, or `null`.
   ///
-  /// * If the value is a pixel value, the child will be given that size.
-  /// * If the value is a ratio value, the child will be given that portion of
-  /// the remaining available space, after all pixels values have been allocated.
+  /// Sizes are allocated based on the following hierarchy:
+  /// 1. ResizeSize.pixels
+  /// 2. ResizeSize.ratio
+  /// 3. null
+  ///
+  /// * If the value is a ResizeSize.pixels, the child will be given that size
+  /// in logical pixels
+  /// * If the value is a ResizeSize.ratio, the child will be given that portion
+  /// of the remaining available space, after all ResizeSize.pixel values have
+  /// been allocated
   /// * If the value is `null`, the child will be given the remaining available
-  /// space, after all pixel and ratio values have been allocated.
+  /// space, after all pixel and ratio values have been allocated
   /// * If there are multiple `null` values, each child will be given an equal
   /// portion of the remaining available space, after all pixel and ratio values
-  /// have been allocated.
+  /// have been allocated
   ///
   /// For example,
   ///
@@ -72,7 +79,10 @@ class ResizableController with ChangeNotifier {
     ]);
   }
 
-  /// Set the total available space and recalculate the child sizes.
+  /// Set the total available space and recalculate the child sizes according to
+  /// their rules.
+  ///
+  /// This should only be used internally.
   void setAvailableSpace(double availableSpace) {
     if (availableSpace == _availableSpace) {
       return;
