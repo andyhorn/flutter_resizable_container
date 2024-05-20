@@ -13,7 +13,7 @@ class ResizableChild {
   });
 
   /// Whether this child should expand to fill empty space, even if it extends
-  /// beyond its [startingRatio].
+  /// beyond its [startingSize].
   final bool expand;
 
   /// The (optional) maximum size (in px) of this child Widget.
