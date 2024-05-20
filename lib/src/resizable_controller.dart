@@ -99,7 +99,7 @@ class ResizableController with ChangeNotifier {
     ]);
   }
 
-  /// Set the total available space.
+  /// Set the total available space and recalculate the child sizes.
   set availableSpace(double value) {
     if (value == _availableSpace) {
       return;
@@ -176,7 +176,6 @@ class ResizableController with ChangeNotifier {
     }
   }
 
-  // get the adjusted delta for reducing the size of the child at [index]
   double _getAdjustedReducingDelta({
     required int index,
     required double delta,
@@ -196,7 +195,6 @@ class ResizableController with ChangeNotifier {
     return delta;
   }
 
-  // get the adjusted delta for increasing the size of the child at [index]
   double _getAdjustedIncreasingDelta({
     required int index,
     required double delta,
@@ -265,7 +263,7 @@ class ResizableController with ChangeNotifier {
 
     for (var i = 0; i < _children.length; i++) {
       if (_children[i].expand) {
-        sizes[i] += spacePerChild;
+        _sizes[i] += spacePerChild;
       }
     }
   }
