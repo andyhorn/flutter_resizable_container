@@ -1,41 +1,42 @@
-sealed class ResizableSize {
-  const ResizableSize._(this.value);
-
-  factory ResizableSize.pixels(double pixels) => ResizableSizePixels._(pixels);
-  factory ResizableSize.ratio(double ratio) => ResizableSizeRatio._(ratio);
-
-  final double value;
+enum SizeType {
+  ratio,
+  pixels,
 }
 
-final class ResizableSizePixels extends ResizableSize {
-  const ResizableSizePixels._(super.pixels)
-      : assert(pixels >= 0, 'value must be greater than or equal to 0'),
-        super._();
+final class ResizableSize {
+  const ResizableSize.pixels(double pixels)
+      // ignore: prefer_initializing_formals
+      : pixels = pixels,
+        ratio = null,
+        type = SizeType.pixels,
+        assert(pixels >= 0, 'Value cannot be less than 0.');
+
+  const ResizableSize.ratio(double ratio)
+      // ignore: prefer_initializing_formals
+      : ratio = ratio,
+        pixels = null,
+        type = SizeType.ratio,
+        assert(
+          ratio >= 0 && ratio <= 1,
+          'Value must be between 0 and 1, inclusive.',
+        );
+
+  final double? ratio;
+  final double? pixels;
+  final SizeType type;
+
+  double get value => switch (type) {
+        SizeType.ratio => ratio!,
+        SizeType.pixels => pixels!,
+      };
 
   @override
-  String toString() => 'ResizableSize(pixels: $value)';
+  String toString() => 'ResizableSize(type: $type, value: $value)';
 
   @override
   operator ==(Object other) =>
-      other is ResizableSizePixels && other.value == value;
+      other is ResizableSize && other.type == type && other.value == value;
 
   @override
-  int get hashCode => Object.hash(runtimeType, value);
-}
-
-final class ResizableSizeRatio extends ResizableSize {
-  const ResizableSizeRatio._(super.ratio)
-      : assert(ratio >= 0 && ratio <= 1,
-            'value must be between 0 and 1, inclusively'),
-        super._();
-
-  @override
-  String toString() => 'ResizableSize(ratio: $value)';
-
-  @override
-  operator ==(Object other) =>
-      other is ResizableSizeRatio && other.value == value;
-
-  @override
-  int get hashCode => Object.hash(runtimeType, value);
+  int get hashCode => Object.hash(type, value);
 }

@@ -146,16 +146,16 @@ class ResizableController with ChangeNotifier {
     required double availableSpace,
   }) {
     final totalPixels = resizableSizes
-        .whereType<ResizableSizePixels>()
-        .fold(0.0, (sum, size) => sum + size.value);
+        .where((size) => size?.type == SizeType.pixels)
+        .fold(0.0, (sum, size) => sum + size!.value);
 
     if (totalPixels > availableSpace) {
       throw ArgumentError('Size cannot exceed total available space.');
     }
 
     final totalRatio = resizableSizes
-        .whereType<ResizableSizeRatio>()
-        .fold(0.0, (sum, size) => sum + size.value);
+        .where((size) => size?.type == SizeType.ratio)
+        .fold(0.0, (sum, size) => sum + size!.value);
 
     if (totalRatio > 1.0) {
       throw ArgumentError('Ratios cannot exceed 1.0');
@@ -170,9 +170,9 @@ class ResizableController with ChangeNotifier {
         : autoSizeSpace / nullValueCount;
 
     final sizes = resizableSizes.map((size) {
-      return switch (size) {
-        ResizableSizePixels(:final value) => value,
-        ResizableSizeRatio(:final value) => remainingSpace * value,
+      return switch (size?.type) {
+        SizeType.pixels => size!.value,
+        SizeType.ratio => remainingSpace * size!.value,
         null => nullValueSpace,
       };
     });

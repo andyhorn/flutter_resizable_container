@@ -15,14 +15,14 @@ void main() {
 
     group('.sizes', () {
       setUp(() {
-        controller.setChildren([
+        controller.setChildren(const [
           ResizableChild(
             startingSize: ResizableSize.pixels(100),
-            child: const SizedBox.shrink(),
+            child: SizedBox.shrink(),
           ),
           ResizableChild(
             startingSize: ResizableSize.pixels(200),
-            child: const SizedBox.shrink(),
+            child: SizedBox.shrink(),
           ),
         ]);
 
@@ -36,14 +36,14 @@ void main() {
 
     group('.ratios', () {
       setUp(() {
-        controller.setChildren([
+        controller.setChildren(const [
           ResizableChild(
             startingSize: ResizableSize.pixels(100),
-            child: const SizedBox.shrink(),
+            child: SizedBox.shrink(),
           ),
           ResizableChild(
             startingSize: ResizableSize.pixels(200),
-            child: const SizedBox.shrink(),
+            child: SizedBox.shrink(),
           ),
         ]);
 
@@ -58,14 +58,14 @@ void main() {
     group('#setAvailableSpace', () {
       group('when the new value is the same', () {
         setUp(() {
-          controller.setChildren([
+          controller.setChildren(const [
             ResizableChild(
               startingSize: ResizableSize.pixels(100),
-              child: const SizedBox.shrink(),
+              child: SizedBox.shrink(),
             ),
             ResizableChild(
               startingSize: ResizableSize.pixels(200),
-              child: const SizedBox.shrink(),
+              child: SizedBox.shrink(),
             ),
           ]);
 
@@ -84,16 +84,16 @@ void main() {
 
       group('when setting the value for the first time', () {
         setUp(() {
-          controller.setChildren([
+          controller.setChildren(const [
             ResizableChild(
               startingSize: ResizableSize.pixels(100),
-              child: const SizedBox.shrink(),
+              child: SizedBox.shrink(),
             ),
             ResizableChild(
               startingSize: ResizableSize.ratio(1 / 2),
-              child: const SizedBox.shrink(),
+              child: SizedBox.shrink(),
             ),
-            const ResizableChild(child: SizedBox.shrink()),
+            ResizableChild(child: SizedBox.shrink()),
           ]);
         });
 
@@ -112,16 +112,16 @@ void main() {
 
       group('when updating the available space', () {
         setUp(() {
-          controller.setChildren([
+          controller.setChildren(const [
             ResizableChild(
               startingSize: ResizableSize.pixels(100),
-              child: const SizedBox.shrink(),
+              child: SizedBox.shrink(),
             ),
             ResizableChild(
               startingSize: ResizableSize.ratio(1 / 2),
-              child: const SizedBox.shrink(),
+              child: SizedBox.shrink(),
             ),
-            const ResizableChild(child: SizedBox.shrink()),
+            ResizableChild(child: SizedBox.shrink()),
           ]);
 
           controller.setAvailableSpace(300);
@@ -143,20 +143,20 @@ void main() {
 
     group('#setChildren', () {
       test('sets the list of ResizableChild', () {
-        controller.setChildren([
+        controller.setChildren(const [
           ResizableChild(
             startingSize: ResizableSize.pixels(100),
-            child: const SizedBox.shrink(),
+            child: SizedBox.shrink(),
           ),
         ]);
 
         expect(
           ResizableControllerTestHelper.getChildren(controller),
           equals(
-            [
+            const [
               ResizableChild(
                 startingSize: ResizableSize.pixels(100),
-                child: const SizedBox.shrink(),
+                child: SizedBox.shrink(),
               ),
             ],
           ),
@@ -166,10 +166,10 @@ void main() {
       test('does not notify listeners', () {
         var notified = false;
         controller.addListener(() => notified = true);
-        controller.setChildren([
+        controller.setChildren(const [
           ResizableChild(
             startingSize: ResizableSize.pixels(100),
-            child: const SizedBox.shrink(),
+            child: SizedBox.shrink(),
           ),
         ]);
         expect(notified, isFalse);
@@ -178,12 +178,12 @@ void main() {
 
     group('#updateChildren', () {
       setUp(() {
-        controller.setChildren([
+        controller.setChildren(const [
           ResizableChild(
             startingSize: ResizableSize.pixels(100),
-            child: const SizedBox.shrink(),
+            child: SizedBox.shrink(),
           ),
-          const ResizableChild(
+          ResizableChild(
             startingSize: null,
             child: SizedBox.shrink(),
           ),
@@ -193,16 +193,16 @@ void main() {
       });
 
       test('sets the list of children', () {
-        controller.updateChildren([
+        controller.updateChildren(const [
           ResizableChild(
             startingSize: ResizableSize.pixels(100),
-            child: const SizedBox.shrink(),
+            child: SizedBox.shrink(),
           ),
-          const ResizableChild(
+          ResizableChild(
             startingSize: null,
             child: SizedBox.shrink(),
           ),
-          const ResizableChild(
+          ResizableChild(
             startingSize: null,
             child: SizedBox.shrink(),
           ),
@@ -215,16 +215,16 @@ void main() {
       });
 
       test('updates children sizes', () {
-        controller.updateChildren([
+        controller.updateChildren(const [
           ResizableChild(
             startingSize: ResizableSize.pixels(100),
-            child: const SizedBox.shrink(),
+            child: SizedBox.shrink(),
           ),
-          const ResizableChild(
+          ResizableChild(
             startingSize: null,
             child: SizedBox.shrink(),
           ),
-          const ResizableChild(
+          ResizableChild(
             startingSize: null,
             child: SizedBox.shrink(),
           ),
@@ -236,16 +236,16 @@ void main() {
       test('notifies listeners', () {
         var notified = false;
         controller.addListener(() => notified = true);
-        controller.updateChildren([
+        controller.updateChildren(const [
           ResizableChild(
             startingSize: ResizableSize.pixels(100),
-            child: const SizedBox.shrink(),
+            child: SizedBox.shrink(),
           ),
-          const ResizableChild(
+          ResizableChild(
             startingSize: null,
             child: SizedBox.shrink(),
           ),
-          const ResizableChild(
+          ResizableChild(
             startingSize: null,
             child: SizedBox.shrink(),
           ),
@@ -257,16 +257,16 @@ void main() {
 
     group('#adjustChildSize', () {
       setUp(() {
-        controller.setChildren([
+        controller.setChildren(const [
           ResizableChild(
             startingSize: ResizableSize.pixels(100),
-            child: const SizedBox.shrink(),
+            child: SizedBox.shrink(),
           ),
-          const ResizableChild(
+          ResizableChild(
             startingSize: null,
             child: SizedBox.shrink(),
           ),
-          const ResizableChild(
+          ResizableChild(
             startingSize: null,
             child: SizedBox.shrink(),
           ),
@@ -297,16 +297,16 @@ void main() {
 
     group('#setSizes', () {
       setUp(() {
-        controller.setChildren([
+        controller.setChildren(const [
           ResizableChild(
             startingSize: ResizableSize.pixels(100),
-            child: const SizedBox.shrink(),
+            child: SizedBox.shrink(),
           ),
-          const ResizableChild(
+          ResizableChild(
             startingSize: null,
             child: SizedBox.shrink(),
           ),
-          const ResizableChild(
+          ResizableChild(
             startingSize: null,
             child: SizedBox.shrink(),
           ),
@@ -318,7 +318,7 @@ void main() {
       group('when the list is the wrong length', () {
         test('throws argument error', () {
           expect(
-            () => controller.setSizes([
+            () => controller.setSizes(const [
               ResizableSize.pixels(100),
               ResizableSize.pixels(100),
             ]),
@@ -330,7 +330,7 @@ void main() {
       group('when the number of pixels exceeds the available space', () {
         test('throws an argument error', () {
           expect(
-            () => controller.setSizes([
+            () => controller.setSizes(const [
               ResizableSize.pixels(150),
               ResizableSize.pixels(150),
               ResizableSize.pixels(150),
@@ -343,7 +343,7 @@ void main() {
       group('when the ratio sum exceeds 1', () {
         test('throws an argument error', () {
           expect(
-            () => controller.setSizes([
+            () => controller.setSizes(const [
               ResizableSize.ratio(0.5),
               ResizableSize.ratio(0.5),
               ResizableSize.ratio(0.5),
@@ -354,7 +354,7 @@ void main() {
       });
 
       test('sets child sizes', () {
-        controller.setSizes([
+        controller.setSizes(const [
           ResizableSize.pixels(100),
           ResizableSize.ratio(0.5),
           null,

@@ -3,54 +3,54 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group(ResizableSize, () {
-    group(ResizableSizePixels, () {
-      group('constructor', () {
-        test('throws an error if the value is less than 0', () {
+    group('constructor', () {
+      group('ratio', () {
+        test('throws if the value is less than 0', () {
+          expect(() => ResizableSize.ratio(-1), throwsAssertionError);
+        });
+
+        test('throws if the value is greater than 1', () {
+          expect(() => ResizableSize.ratio(1.1), throwsAssertionError);
+        });
+
+        test('does not throw for a value of 0', () {
+          expect(() => const ResizableSize.ratio(0), isNot(throwsA(anything)));
+        });
+
+        test('does not throw for a value of 1', () {
+          expect(() => const ResizableSize.ratio(1), isNot(throwsA(anything)));
+        });
+      });
+
+      group('pixels', () {
+        test('throws for a value less than 0', () {
           expect(() => ResizableSize.pixels(-1), throwsAssertionError);
         });
 
-        test('does not throw an error for a size of 0', () {
-          expect(() => ResizableSize.pixels(0), isNot(throwsA(anything)));
+        test('does not throw for a value of 0', () {
+          expect(() => const ResizableSize.pixels(0), isNot(throwsA(anything)));
         });
       });
 
       group('equality', () {
-        test('returns false for a different type', () {
-          final ratio = ResizableSize.ratio(0.5);
-          final pixel = ResizableSize.pixels(100);
-
-          expect(ratio == pixel, isFalse);
+        test('returns true for equal objects', () {
+          expect(
+            const ResizableSize.pixels(1) == const ResizableSize.pixels(1),
+            isTrue,
+          );
         });
 
-        test('returns false for a different value', () {
+        test('returns false for different objects', () {
           expect(
-            ResizableSize.pixels(100) == ResizableSize.pixels(101),
+            const ResizableSize.pixels(1) == const ResizableSize.ratio(1),
             isFalse,
           );
         });
 
-        test('returns true for the same value', () {
+        test('returns false for similar objects with different values', () {
           expect(
-            ResizableSize.pixels(100) == ResizableSize.pixels(100),
-            isTrue,
-          );
-        });
-      });
-    });
-
-    group(ResizableSizeRatio, () {
-      group('equality', () {
-        test('returns false for a different value', () {
-          expect(
-            ResizableSize.ratio(0.5) == ResizableSize.ratio(0.6),
+            const ResizableSize.pixels(1) == const ResizableSize.pixels(2),
             isFalse,
-          );
-        });
-
-        test('returns true for the same value', () {
-          expect(
-            ResizableSize.ratio(0.5) == ResizableSize.ratio(0.5),
-            isTrue,
           );
         });
       });

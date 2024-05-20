@@ -62,13 +62,13 @@ class _ExampleAppState extends State<ExampleApp> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                controller1.setSizes([
+                controller1.setSizes(const [
                   ResizableSize.ratio(ratio1),
                   ResizableSize.ratio(ratio2),
                 ]);
 
                 if (!hidden) {
-                  controller2.setSizes([
+                  controller2.setSizes(const [
                     ResizableSize.ratio(ratio3),
                     ResizableSize.ratio(ratio4),
                   ]);
@@ -124,7 +124,7 @@ class _ExampleAppState extends State<ExampleApp> {
                   ),
                   children: [
                     ResizableChild(
-                      startingSize: ResizableSize.ratio(ratio1),
+                      startingSize: const ResizableSize.ratio(ratio1),
                       minSize: 150,
                       child: LayoutBuilder(
                         builder: (context, constraints) {
@@ -139,7 +139,7 @@ class _ExampleAppState extends State<ExampleApp> {
                       ),
                     ),
                     ResizableChild(
-                      startingSize: ResizableSize.ratio(ratio2),
+                      startingSize: const ResizableSize.ratio(ratio2),
                       maxSize: 500,
                       child: ResizableContainer(
                         controller: controller2,
@@ -152,7 +152,7 @@ class _ExampleAppState extends State<ExampleApp> {
                         children: [
                           ResizableChild(
                             expand: expand,
-                            startingSize: ResizableSize.ratio(ratio3),
+                            startingSize: const ResizableSize.ratio(ratio3),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 return ExpandedChild(
@@ -165,7 +165,7 @@ class _ExampleAppState extends State<ExampleApp> {
                           ),
                           if (!hidden) ...[
                             ResizableChild(
-                              startingSize: ResizableSize.ratio(ratio4),
+                              startingSize: const ResizableSize.ratio(ratio4),
                               child: LayoutBuilder(
                                 builder: (context, constraints) {
                                   return ExpandedChild(
