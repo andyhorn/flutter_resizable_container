@@ -68,7 +68,8 @@ class _ResizableContainerState extends State<ResizableContainer> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        widget.controller.availableSpace = _getAvailableSpace(constraints);
+        final availableSpace = _getAvailableSpace(constraints);
+        widget.controller.setAvailableSpace(availableSpace);
 
         return AnimatedBuilder(
           animation: widget.controller,

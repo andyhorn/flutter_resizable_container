@@ -100,18 +100,18 @@ class ResizableController with ChangeNotifier {
   }
 
   /// Set the total available space and recalculate the child sizes.
-  set availableSpace(double value) {
-    if (value == _availableSpace) {
+  void setAvailableSpace(double availableSpace) {
+    if (availableSpace == _availableSpace) {
       return;
     }
 
     if (_availableSpace == -1) {
-      _initializeChildSizesForSpace(value);
+      _initializeChildSizesForSpace(availableSpace);
     } else {
-      _updateChildSizesForNewAvailableSpace(value);
+      _updateChildSizesForNewAvailableSpace(availableSpace);
     }
 
-    _availableSpace = value;
+    _availableSpace = availableSpace;
     notifyListeners();
   }
 
