@@ -273,3 +273,10 @@ class ResizableController with ChangeNotifier {
     }
   }
 }
+
+abstract class ResizableControllerTestHelper {
+  const ResizableControllerTestHelper._();
+
+  static List<ResizableChild> getChildren(ResizableController controller) =>
+      controller._children;
+}
