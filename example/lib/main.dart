@@ -62,11 +62,18 @@ class _ExampleAppState extends State<ExampleApp> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                controller1.ratios = [ratio1, ratio2];
+                controller1.setSizes([
+                  ResizableSize.ratio(ratio1),
+                  ResizableSize.ratio(ratio2),
+                ]);
+
                 if (!hidden) {
-                  controller2.ratios = [ratio3, ratio4];
+                  controller2.setSizes([
+                    ResizableSize.ratio(ratio3),
+                    ResizableSize.ratio(ratio4),
+                  ]);
                 } else {
-                  controller2.ratios = [null];
+                  controller2.setSizes([null]);
                 }
               },
               child: const Text("Reset ratios"),

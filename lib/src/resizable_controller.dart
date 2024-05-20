@@ -13,7 +13,7 @@ class ResizableController with ChangeNotifier {
   List<double> _sizes = [];
   List<ResizableChild> _children = const [];
 
-  /// The sizes in pixels of each child.
+  /// The size, in pixels, of each child, in order.
   UnmodifiableListView<double> get sizes => UnmodifiableListView(_sizes);
 
   /// Programmatically set the sizes of the children.
@@ -112,41 +112,6 @@ class ResizableController with ChangeNotifier {
     }
 
     _availableSpace = value;
-    notifyListeners();
-  }
-
-  /// Programmatically set the ratios on the children. See [ratios] to get their current ratios.
-  set ratios(List<double?> values) {
-    if (values.length != _children.length) {
-      throw ArgumentError('Must contain a ratio for every child');
-    }
-
-    if (values.any((value) => value != null && value < 0)) {
-      throw ArgumentError.value(values, 'Ratio values cannot be less than 0.');
-    }
-
-    if (values.any((value) => value != null && value > 1)) {
-      throw ArgumentError.value(values, 'Ratio values cannot exceed 1.0');
-    }
-
-    final ratioTotal = values.whereType<double>().sum();
-
-    if (ratioTotal > 1.0) {
-      throw ArgumentError('The sum of all ratios cannot not exceed 1.0');
-    }
-
-    // Find the "ratio" for each auto-size child
-    final unclaimedSpaceRatio = 1.0 - ratioTotal;
-    final autoSizeChildCount = values.nullCount();
-    final autoSizeRatio = unclaimedSpaceRatio / max(1, autoSizeChildCount);
-
-    // Update the sizes of each child based on its corresponding ratio
-    for (var i = 0; i < values.length; i++) {
-      _sizes[i] = (values[i] ?? autoSizeRatio) * _availableSpace;
-    }
-
-    // Update the remaining available space
-    _remainingAvailableSpace = _availableSpace - _sizes.sum();
     notifyListeners();
   }
 
