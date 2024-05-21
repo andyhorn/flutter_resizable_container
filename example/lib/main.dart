@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-const ratio1 = 0.75;
-const ratio2 = 0.25;
-const ratio3 = 0.5;
-const ratio4 = 0.5;
+const rightPanelRatio = 0.25;
 
 void main() {
   runApp(const ExampleApp());
@@ -33,14 +30,22 @@ class _ExampleAppState extends State<ExampleApp> {
 
     controller1.addListener(() {
       final sizes = controller1.sizes.map((size) => size.toStringAsFixed(2));
+      final ratios = controller1.ratios.map(
+        (ratio) => ratio.toStringAsFixed(2),
+      );
 
       debugPrint('Controller 1 sizes: ${sizes.join(', ')}');
+      debugPrint('Controller 1 ratios: ${ratios.join(', ')}');
     });
 
     controller2.addListener(() {
       final sizes = controller2.sizes.map((size) => size.toStringAsFixed(2));
+      final ratios = controller2.ratios.map(
+        (ratio) => ratio.toStringAsFixed(2),
+      );
 
       debugPrint('Controller 2 sizes: ${sizes.join(', ')}');
+      debugPrint('Controller 2 ratios: ${ratios.join(', ')}');
     });
   }
 
@@ -54,6 +59,7 @@ class _ExampleAppState extends State<ExampleApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'ResizableContainer',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.light(useMaterial3: true),
       home: Scaffold(
@@ -63,22 +69,18 @@ class _ExampleAppState extends State<ExampleApp> {
             ElevatedButton(
               onPressed: () {
                 controller1.setSizes(const [
-                  ResizableSize.ratio(ratio1),
-                  ResizableSize.ratio(ratio2),
+                  ResizableSize.expand(),
+                  ResizableSize.ratio(rightPanelRatio),
                 ]);
 
-                if (!hidden) {
-                  controller2.setSizes(const [
-                    ResizableSize.ratio(ratio3),
-                    ResizableSize.ratio(ratio4),
-                  ]);
-                } else {
-                  controller2.setSizes([
+                controller2.setSizes([
+                  const ResizableSize.expand(),
+                  if (!hidden) ...[
                     const ResizableSize.expand(),
-                  ]);
-                }
+                  ],
+                ]);
               },
-              child: const Text("Reset ratios"),
+              child: const Text("Reset sizes"),
             ),
             const SizedBox(width: 10),
             ElevatedButton(
@@ -97,12 +99,6 @@ class _ExampleAppState extends State<ExampleApp> {
             ElevatedButton(
               onPressed: () => setState(() => hidden = !hidden),
               child: Text(hidden ? 'Show Child B' : 'Hide Child B'),
-            ),
-            const SizedBox(width: 10),
-            const Text('Auto-expand?'),
-            Switch(
-              value: expand,
-              onChanged: (_) => setState(() => expand = !expand),
             ),
             const SizedBox(width: 10),
           ],
@@ -135,13 +131,13 @@ class _ExampleAppState extends State<ExampleApp> {
                             constraints: constraints,
                             label: direction == Axis.horizontal
                                 ? 'Left Pane'
-                                : 'Right Pane',
+                                : 'Top Pane',
                           );
                         },
                       ),
                     ),
                     ResizableChild(
-                      size: const ResizableSize.ratio(ratio2),
+                      size: const ResizableSize.ratio(rightPanelRatio),
                       maxSize: 500,
                       child: ResizableContainer(
                         controller: controller2,
