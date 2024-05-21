@@ -87,9 +87,9 @@ class ResizableController with ChangeNotifier {
     }
 
     if (_availableSpace == -1) {
-      _initializeChildSizesForSpace(availableSpace);
+      _initializeChildSizes(availableSpace);
     } else {
-      _updateChildSizesForNewAvailableSpace(availableSpace);
+      _updateChildSizes(availableSpace);
     }
 
     _availableSpace = availableSpace;
@@ -109,7 +109,7 @@ class ResizableController with ChangeNotifier {
   /// This should only be used internally.
   void updateChildren(List<ResizableChild> children) {
     _children = children;
-    _initializeChildSizesForSpace(_availableSpace);
+    _initializeChildSizes(_availableSpace);
   }
 
   /// Adjust the size of the child widget at [index] by the [delta] amount.
@@ -126,7 +126,7 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  void _initializeChildSizesForSpace(double availableSpace) {
+  void _initializeChildSizes(double availableSpace) {
     // If the available space is being set for the first time, calculate the
     // child sizes using their "startingSize" values and then apply the
     // auto-sizing and expanding rules
@@ -195,7 +195,7 @@ class ResizableController with ChangeNotifier {
     return sizes.toList();
   }
 
-  void _updateChildSizesForNewAvailableSpace(double availableSpace) {
+  void _updateChildSizes(double availableSpace) {
     // If we are updating the available space again, calculate the child sizes
     // based on their current ratios.
     for (var i = 0; i < _children.length; i++) {
