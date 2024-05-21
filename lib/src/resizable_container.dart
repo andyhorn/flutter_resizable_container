@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_controller.dart';
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///
@@ -41,12 +42,13 @@ class ResizableContainer extends StatefulWidget {
 class _ResizableContainerState extends State<ResizableContainer> {
   late final controller = widget.controller ?? ResizableController();
   late final isDefaultController = widget.controller == null;
+  late final manager = ResizableControllerManager(controller);
 
   @override
   void initState() {
     super.initState();
 
-    controller.setChildren(widget.children);
+    manager.setChildren(widget.children);
   }
 
   @override
@@ -54,7 +56,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
     final hasChanges = !listEquals(oldWidget.children, widget.children);
 
     if (hasChanges) {
-      controller.updateChildren(widget.children);
+      manager.updateChildren(widget.children);
     }
 
     super.didUpdateWidget(oldWidget);
@@ -74,7 +76,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableSpace = _getAvailableSpace(constraints);
-        controller.setAvailableSpace(availableSpace);
+        manager.setAvailableSpace(availableSpace);
 
         return AnimatedBuilder(
           animation: controller,
@@ -110,7 +112,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                     ResizableContainerDivider(
                       config: widget.divider,
                       direction: widget.direction,
-                      onResizeUpdate: (delta) => controller.adjustChildSize(
+                      onResizeUpdate: (delta) => manager.adjustChildSize(
                         index: i,
                         delta: delta,
                       ),

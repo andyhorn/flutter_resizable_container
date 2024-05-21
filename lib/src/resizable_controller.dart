@@ -15,6 +15,15 @@ class ResizableController with ChangeNotifier {
   /// The size, in pixels, of each child.
   UnmodifiableListView<double> get sizes => UnmodifiableListView(_sizes);
 
+  /// A list of ratios (proportion of total available space taken) for each child.
+  UnmodifiableListView<double> get ratios {
+    return UnmodifiableListView([
+      for (final size in sizes) ...[
+        size / _availableSpace,
+      ],
+    ]);
+  }
+
   /// Programmatically set the sizes of the children.
   ///
   /// Each child must have a corresponding index in the [values] list.
@@ -69,20 +78,20 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  /// A list of ratios (proportion of total available space taken) for each child.
-  UnmodifiableListView<double> get ratios {
-    return UnmodifiableListView([
-      for (final size in sizes) ...[
-        size / _availableSpace,
-      ],
-    ]);
+  void _adjustChildSize({
+    required int index,
+    required double delta,
+  }) {
+    final adjustedDelta = delta < 0
+        ? _getAdjustedReducingDelta(index: index, delta: delta)
+        : _getAdjustedIncreasingDelta(index: index, delta: delta);
+
+    _sizes[index] += adjustedDelta;
+    _sizes[index + 1] -= adjustedDelta;
+    notifyListeners();
   }
 
-  /// Set the total available space and recalculate the child sizes according to
-  /// their rules.
-  ///
-  /// This should only be used internally.
-  void setAvailableSpace(double availableSpace) {
+  void _setAvailableSpace(double availableSpace) {
     if (availableSpace == _availableSpace) {
       return;
     }
@@ -97,40 +106,16 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Configures this [ResizableController] with an initial list of children.
-  /// The available space is unknown at this point.
-  ///
-  /// This should only be used internally.
-  void setChildren(List<ResizableChild> children) {
+  void _setChildren(List<ResizableChild> children) {
     _children = children;
   }
 
-  /// Updates the list of [children] and re-calculates their sizes.
-  ///
-  /// This should only be used internally.
-  void updateChildren(List<ResizableChild> children) {
+  void _updateChildren(List<ResizableChild> children) {
     _children = children;
     _initializeChildSizes(_availableSpace);
   }
 
-  /// Adjust the size of the child widget at [index] by the [delta] amount.
-  void adjustChildSize({
-    required int index,
-    required double delta,
-  }) {
-    final adjustedDelta = delta < 0
-        ? _getAdjustedReducingDelta(index: index, delta: delta)
-        : _getAdjustedIncreasingDelta(index: index, delta: delta);
-
-    _sizes[index] += adjustedDelta;
-    _sizes[index + 1] -= adjustedDelta;
-    notifyListeners();
-  }
-
   void _initializeChildSizes(double availableSpace) {
-    // If the available space is being set for the first time, calculate the
-    // child sizes using their "startingSize" values and then apply the
-    // auto-sizing and expanding rules
     _sizes = _getInitialChildSizes(availableSpace);
   }
 
@@ -232,6 +217,31 @@ class ResizableController with ChangeNotifier {
     }
 
     return delta;
+  }
+}
+
+final class ResizableControllerManager {
+  const ResizableControllerManager(this._controller);
+
+  final ResizableController _controller;
+
+  void setAvailableSpace(double availableSpace) {
+    _controller._setAvailableSpace(availableSpace);
+  }
+
+  void setChildren(List<ResizableChild> children) {
+    _controller._setChildren(children);
+  }
+
+  void updateChildren(List<ResizableChild> children) {
+    _controller._updateChildren(children);
+  }
+
+  void adjustChildSize({
+    required int index,
+    required double delta,
+  }) {
+    _controller._adjustChildSize(index: index, delta: delta);
   }
 }
 
