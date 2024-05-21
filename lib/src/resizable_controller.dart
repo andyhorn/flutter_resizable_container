@@ -13,7 +13,7 @@ class ResizableController with ChangeNotifier {
   List<double> _sizes = [];
   List<ResizableChild> _children = const [];
 
-  /// The size, in pixels, of each child, in order.
+  /// The size, in pixels, of each child.
   UnmodifiableListView<double> get sizes => UnmodifiableListView(_sizes);
 
   /// Programmatically set the sizes of the children.
@@ -50,8 +50,7 @@ class ResizableController with ChangeNotifier {
   /// In this scenario:
   /// * the first child will be given 100 logical pixels of space
   /// * the second child will be given 50% of the remaining available space
-  /// * the third child will be given whatever remaining space is left:
-  /// (total space - 100 - (total space * 0.5))
+  /// * the third child will be given whatever remaining space is left
   ///
   /// This method throws an `ArgumentError` in any of the following scenarios:
   /// * The length of [values] is different from the length of [children]
