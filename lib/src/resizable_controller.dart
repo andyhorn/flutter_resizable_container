@@ -151,7 +151,7 @@ class ResizableController with ChangeNotifier {
       (size) => switch (size.type) {
         SizeType.pixels => size.value,
         SizeType.ratio => remainingSpace * size.value,
-        SizeType.expand => flexUnitSpace * size.value.truncate(),
+        SizeType.expand => flexUnitSpace * size.value,
       },
     );
 
@@ -162,21 +162,36 @@ class ResizableController with ChangeNotifier {
     final flexCount = _children.map((child) => child.size).flexCount;
 
     if (flexCount > 0) {
-      // If children are set to expand, adjust them instead of the others
-      final delta = availableSpace - _availableSpace;
-      final deltaPerExpandable = delta / flexCount;
-
-      for (var i = 0; i < _children.length; i++) {
-        if (_children[i].size.isExpand) {
-          _sizes[i] += deltaPerExpandable * _children[i].size.value;
-        }
-      }
+      // If any children are set to expand, adjust them instead of any
+      // statically-sized children
+      _flexExpandableChildren(
+        availableSpace: availableSpace,
+        flexCount: flexCount,
+      );
     } else {
       // If no children are set to expand, then scale each child uniformly
-      for (var i = 0; i < _children.length; i++) {
-        final currentRatio = _sizes[i] / _availableSpace;
-        _sizes[i] = currentRatio * availableSpace;
+      _adjustChildrenUniformly(availableSpace);
+    }
+  }
+
+  void _flexExpandableChildren({
+    required double availableSpace,
+    required int flexCount,
+  }) {
+    final delta = availableSpace - _availableSpace;
+    final deltaPerExpandable = delta / flexCount;
+
+    for (var i = 0; i < _children.length; i++) {
+      if (_children[i].size.isExpand) {
+        _sizes[i] += deltaPerExpandable * _children[i].size.value;
       }
+    }
+  }
+
+  void _adjustChildrenUniformly(double availableSpace) {
+    for (var i = 0; i < _children.length; i++) {
+      final currentRatio = _sizes[i] / _availableSpace;
+      _sizes[i] = currentRatio * availableSpace;
     }
   }
 
