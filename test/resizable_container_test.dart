@@ -111,12 +111,11 @@ void main() {
     testWidgets('container respects min size', (tester) async {
       await tester.binding.setSurfaceSize(const Size(1000, 1000));
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
-              controller: ResizableController(),
               direction: Axis.horizontal,
-              children: const [
+              children: [
                 ResizableChild(
                   minSize: 200,
                   child: SizedBox.expand(
@@ -144,15 +143,14 @@ void main() {
       const dividerWidth = 2.0;
       await tester.binding.setSurfaceSize(const Size(1000, 1000));
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
-              controller: ResizableController(),
-              divider: const ResizableDivider(
+              divider: ResizableDivider(
                 size: dividerWidth,
               ),
               direction: Axis.horizontal,
-              children: const [
+              children: [
                 ResizableChild(
                   maxSize: 700,
                   child: SizedBox.expand(
@@ -187,15 +185,14 @@ void main() {
       const dividerWidth = 2.0;
       await tester.binding.setSurfaceSize(const Size(1000, 1000));
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
-              controller: ResizableController(),
-              divider: const ResizableDivider(
+              divider: ResizableDivider(
                 size: dividerWidth,
               ),
               direction: Axis.horizontal,
-              children: const [
+              children: [
                 ResizableChild(
                   minSize: 200,
                   child: SizedBox.expand(
@@ -233,38 +230,33 @@ void main() {
           const Size(1000, 1000),
         );
 
-        final controller = ResizableController();
-
-        final container = ResizableContainer(
-          controller: controller,
-          direction: Axis.horizontal,
-          divider: const ResizableDivider(
-            size: 2.0,
-          ),
-          children: const [
-            ResizableChild(
-              startingSize: ResizableSize.ratio(0.5),
-              child: SizedBox.expand(
-                key: Key('Box A'),
-              ),
-            ),
-            ResizableChild(
-              child: SizedBox.expand(
-                key: Key('Box B'),
-              ),
-            ),
-            ResizableChild(
-              child: SizedBox.expand(
-                key: Key('Box C'),
-              ),
-            ),
-          ],
-        );
-
         await widgetTester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
-              body: container,
+              body: ResizableContainer(
+                direction: Axis.horizontal,
+                divider: ResizableDivider(
+                  size: 2.0,
+                ),
+                children: [
+                  ResizableChild(
+                    startingSize: ResizableSize.ratio(0.5),
+                    child: SizedBox.expand(
+                      key: Key('Box A'),
+                    ),
+                  ),
+                  ResizableChild(
+                    child: SizedBox.expand(
+                      key: Key('Box B'),
+                    ),
+                  ),
+                  ResizableChild(
+                    child: SizedBox.expand(
+                      key: Key('Box C'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -367,7 +359,6 @@ class __ToggleChildAppState extends State<_ToggleChildApp> {
           ],
         ),
         body: ResizableContainer(
-          controller: ResizableController(),
           direction: Axis.horizontal,
           children: [
             ResizableChild(
