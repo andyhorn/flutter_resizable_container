@@ -168,7 +168,7 @@ class ResizableController with ChangeNotifier {
 
       for (var i = 0; i < _children.length; i++) {
         if (_children[i].size.isExpand) {
-          _sizes[i] += deltaPerExpandable;
+          _sizes[i] += deltaPerExpandable * _children[i].size.value;
         }
       }
     } else {
