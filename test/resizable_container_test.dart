@@ -22,13 +22,13 @@ void main() {
               ),
               children: const [
                 ResizableChild(
-                  startingSize: ResizableSize.ratio(0.5),
+                  size: ResizableSize.ratio(0.5),
                   child: SizedBox.expand(
                     key: Key('BoxA'),
                   ),
                 ),
                 ResizableChild(
-                  startingSize: ResizableSize.ratio(0.5),
+                  size: ResizableSize.ratio(0.5),
                   child: SizedBox.expand(
                     key: Key('BoxB'),
                   ),
@@ -223,101 +223,20 @@ void main() {
       expect(boxBSize, const Size(800 - dividerWidth, 1000));
     });
 
-    testWidgets(
-      'null starting ratios are allotted space evenly',
-      (widgetTester) async {
-        await widgetTester.binding.setSurfaceSize(
-          const Size(1000, 1000),
-        );
-
-        await widgetTester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: ResizableContainer(
-                direction: Axis.horizontal,
-                divider: ResizableDivider(
-                  size: 2.0,
-                ),
-                children: [
-                  ResizableChild(
-                    startingSize: ResizableSize.ratio(0.5),
-                    child: SizedBox.expand(
-                      key: Key('Box A'),
-                    ),
-                  ),
-                  ResizableChild(
-                    child: SizedBox.expand(
-                      key: Key('Box B'),
-                    ),
-                  ),
-                  ResizableChild(
-                    child: SizedBox.expand(
-                      key: Key('Box C'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-
-        final boxAFinder = find.byKey(const Key('Box A'));
-        final boxBFinder = find.byKey(const Key('Box B'));
-        final boxCFinder = find.byKey(const Key('Box C'));
-
-        final boxASize = widgetTester.getSize(boxAFinder);
-        final boxBSize = widgetTester.getSize(boxBFinder);
-        final boxCSize = widgetTester.getSize(boxCFinder);
-
-        // slightly less than 500, 250, and 250 because of the space
-        // used by the dividers.
-        expect(boxASize, equals(const Size(498, 1000)));
-        expect(boxBSize, equals(const Size(249, 1000)));
-        expect(boxCSize, equals(const Size(249, 1000)));
-      },
-    );
-
-    testWidgets('children do not expand if set to false', (tester) async {
+    testWidgets('children expand appropriately', (tester) async {
       await tester.binding.setSurfaceSize(const Size(1000, 1000));
-      await tester.pumpWidget(const _ToggleChildApp(expand: false));
+      await tester.pumpWidget(const _ToggleChildApp());
 
       expect(find.byKey(const Key('ChildA')), findsOneWidget);
       expect(find.byKey(const Key('ChildB')), findsOneWidget);
 
       expect(
         tester.getSize(find.byKey(const Key('ChildA'))).width,
-        equals(499.0),
+        equals((1000 - 2) * 2 / 3),
       );
       expect(
         tester.getSize(find.byKey(const Key('ChildB'))).width,
-        equals(499.0),
-      );
-
-      await tester.tap(find.byKey(const Key('ToggleSwitch')));
-      await tester.pump();
-
-      expect(find.byKey(const Key('ChildA')), findsOneWidget);
-      expect(find.byKey(const Key('ChildB')), findsNothing);
-      expect(
-        tester.getSize(find.byKey(const Key('ChildA'))).width,
-        equals(500),
-      );
-    });
-
-    testWidgets('children auto-expand if set to true', (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1000, 1000));
-      await tester.pumpWidget(const _ToggleChildApp(expand: true));
-
-      expect(find.byKey(const Key('ChildA')), findsOneWidget);
-      expect(find.byKey(const Key('ChildB')), findsOneWidget);
-
-      expect(
-        tester.getSize(find.byKey(const Key('ChildA'))).width,
-        equals(499.0),
-      );
-      expect(
-        tester.getSize(find.byKey(const Key('ChildB'))).width,
-        equals(499.0),
+        equals((1000 - 2) * 1 / 3),
       );
 
       await tester.tap(find.byKey(const Key('ToggleSwitch')));
@@ -334,9 +253,7 @@ void main() {
 }
 
 class _ToggleChildApp extends StatefulWidget {
-  const _ToggleChildApp({required this.expand});
-
-  final bool expand;
+  const _ToggleChildApp();
 
   @override
   State<_ToggleChildApp> createState() => __ToggleChildAppState();
@@ -361,16 +278,15 @@ class __ToggleChildAppState extends State<_ToggleChildApp> {
         body: ResizableContainer(
           direction: Axis.horizontal,
           children: [
-            ResizableChild(
-              startingSize: const ResizableSize.ratio(0.5),
-              expand: widget.expand,
-              child: const SizedBox.expand(
+            const ResizableChild(
+              size: ResizableSize.expand(flex: 2),
+              child: SizedBox.expand(
                 key: Key('ChildA'),
               ),
             ),
             if (!hidden)
               const ResizableChild(
-                startingSize: ResizableSize.ratio(0.5),
+                size: ResizableSize.expand(),
                 child: SizedBox.expand(
                   key: Key('ChildB'),
                 ),
