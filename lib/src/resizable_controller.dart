@@ -9,7 +9,6 @@ import "package:flutter_resizable_container/src/resizable_size.dart";
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
   double _availableSpace = -1;
-  double _remainingAvailableSpace = 0;
   List<double> _sizes = [];
   List<ResizableChild> _children = const [];
 
@@ -133,14 +132,21 @@ class ResizableController with ChangeNotifier {
     // auto-sizing and expanding rules
     _sizes = _getInitialChildSizes(availableSpace);
 
-    // Update the remaining available space
-    _remainingAvailableSpace = availableSpace - _sizes.sum();
+    // Calculate the remaining available space
+    final remainingSpace = availableSpace - _sizes.sum();
 
-    // Apply auto-sizing
-    _applyAutoSizing(_remainingAvailableSpace);
+    // If all space has been allocated, we are finished
+    if (remainingSpace == 0) {
+      return;
+    }
 
-    // Apply expansions
-    _applyExpansions(availableSpace);
+    // Otherwise, apply auto-sizing
+    final didAutoSize = _applyAutoSizing(remainingSpace);
+
+    if (!didAutoSize) {
+      // If no children were auto-sized, apply expansions
+      _applyExpansions(remainingSpace);
+    }
   }
 
   List<double> _getInitialChildSizes(double availableSpace) {
@@ -237,9 +243,9 @@ class ResizableController with ChangeNotifier {
     return delta;
   }
 
-  void _applyAutoSizing(double autoSizingSpace) {
-    if (autoSizingSpace == 0) {
-      return;
+  bool _applyAutoSizing(double remainingSpace) {
+    if (remainingSpace == 0) {
+      return false;
     }
 
     final autoSizeChildren = _children.where(
@@ -247,33 +253,28 @@ class ResizableController with ChangeNotifier {
     );
 
     if (autoSizeChildren.isEmpty) {
-      return;
+      return false;
     }
 
-    final spacePerChild = autoSizingSpace / autoSizeChildren.length;
+    final spacePerChild = remainingSpace / autoSizeChildren.length;
 
     for (var i = 0; i < _children.length; i++) {
       if (_children[i].startingSize == null) {
         _sizes[i] = spacePerChild;
       }
     }
+
+    return true;
   }
 
-  void _applyExpansions(double availableSpace) {
-    final sum = _sizes.sum();
-
-    if (sum == availableSpace) {
-      return;
-    }
-
+  void _applyExpansions(double remainingSpace) {
     final expandableChildren = _children.where((child) => child.expand);
 
     if (expandableChildren.isEmpty) {
       return;
     }
 
-    final difference = availableSpace - sum;
-    final spacePerChild = difference / expandableChildren.length;
+    final spacePerChild = remainingSpace / expandableChildren.length;
 
     for (var i = 0; i < _children.length; i++) {
       if (_children[i].expand) {
