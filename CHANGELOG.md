@@ -6,6 +6,7 @@
     - If there is a mixture of pixels and ratio sizes, the pixel sizes will be given priority and then the ratio sizes will be given the remaining available space
 - Added a `setSizes` method to the `ResizableController` that takes a list of optional `ResizableSize`s. These sizes will be applied to the current children following the same rules as noted above
 - Removed the `ratios` setter in favor of the new `setSizes` method
+- Made the controller an optional param in the `ResizableContainer` ctor
 
 ## 2.0.0-beta.1
 
