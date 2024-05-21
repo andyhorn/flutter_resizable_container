@@ -16,7 +16,7 @@ View the interactive example app at [andyhorn.github.io/flutter_resizable_contai
 
 ## Getting started
 
-Add this package to your `pubspec.yaml` or install using the command line.
+Add this package to your `pubspec.yaml` or install using `flutter pub add`.
 
 ```dart
 flutter pub add flutter_resizable_container
@@ -30,7 +30,6 @@ Add a `ResizableContainer` to your widget tree and give it a `direction` of type
 
 ```dart
 ResizableContainer(
-  ...
   direction: Axis.horizontal,
   ...
 )
@@ -65,7 +64,7 @@ void initState() {
 
     controller.addListener(() {
         // ... react to size change events
-        final sizes = controller.sizes;
+        final List<double> sizes = controller.sizes;
         print(sizes.join(', '));
     });
 }
@@ -77,9 +76,15 @@ void dispose() {
 }
 
 // (somewhere else in your code)
-// use the ratios setter to programmatically set the ratios of the 
+// use the `setSizes` method to programmatically set the sizes of the 
 // container's children.
-onTap: () => controller.ratios = [0.25, 0.25, 0.5];
+//
+// This method takes a list of ResizableSize objects - more on this below.
+onTap: () => controller.setSizes(const [
+    ResizableSize.ratio(0.25),
+    ResizableSize.ratio(0.25),
+    ResizableSize.ratio(0.5),
+]);
 ```
 
 ### ResizableChild
@@ -96,7 +101,7 @@ children: [
     ],
     const ResizableChild(
         expand: true,
-        startingRatio: 0.75,
+        startingSize: ResizableSize.ratio(0.75),
         child: BodyWidget(),
     ),
     if (showSidePanel) ...[
@@ -118,14 +123,97 @@ The `maxSize` parameter constrains the child and will prevent it from being expa
 
 The `minSize` parameter constrains the child and will prevent it from being _shrunk_ beyond that size in the `direction` of the container.
 
-The `startingRatio` parameter gives a directive of how to size the child during its initial layout. If this value is `null`, any remaining available space will be distributed evenly to this child and other children with `null` ratios.
-    - In this example, since the `NavBarWidget` and `SidePanelWidget` both have `null` ratios, the remaining available space (1.0 - 0.75 = 0.25) will be distributed evenly between them (0.25 / 2 = 0.125).
+The `startingSize` parameter gives a directive of how to size the child during its initial layout. If this value is `null`, any remaining available space will be distributed evenly to this child and other children with `null` starting sizes.
+    - In this example, since the `NavBarWidget` and `SidePanelWidget` both have a `null` starting size, the remaining available space (1.0 - 0.75 = 0.25) will be distributed evenly between them (0.25 / 2 = 0.125).
 
-The `expand` flag is used to control whether the child will be expanded to fill remaining available space, ignoring the `startingRatio` constraint. 
-    - Note: If there are children with `null` ratios, they will be given the remaining available space - this flag only affects the layout if the child has a valid `startingRatio` _and_ there are no other children with a `startingRatio` of `null`.
+The `expand` flag is used to control whether the child will be expanded to fill remaining available space, ignoring the `startingSize` constraint. 
+    - Note: If there are children with `null` starting sizes, they will be given the remaining available space - this flag only affects the layout if the child has a valid `startingSize` _and_ there are no other children with a `startingSize` of `null`.
     - In this example, if both of the other children are hidden, the `BodyWidget` will be expanded to the full available space. 
 
 If the state changes and one or more child widgets are added or removed, the children will be re-laid out according to all of these parameters.
+
+### ResizableSize
+
+The `ResizableSize` class defines a "size" as either a ratio of the available space, using the `.ratio` constructor, or as an absolute size in logical pixels, using the `.pixels` constructor.
+
+For example, to create a size equal to half of the available space:
+
+```dart
+const half = ResizableSize.ratio(0.5);
+```
+
+And to create a size of 300px:
+
+```dart
+const threeHundredPixels = ResizableSize.pixels(300);
+```
+
+This class is used by the `ResizableChild` as its `startingSize` and by the `ResizableController` in the `setSizes` method.
+
+#### Size Hierarchy
+
+When the controller is laying out the sizes of children, it uses the following rules:
+
+1. If a child has a size using pixels, it will be given that amount of space
+2. If a child has a size using a ratio, it will be given the proportionate amount of the _remaining_ space _after_ all pixel-sizes have been allocated
+3. If a child has a size of `null`, it will be given whatever space is left after the allocations in rule 1 and rule 2 - If there are multiple children with a size of `null`, the space remaining after the allocations in rule 1 and rule 2 will be evenly distributed between them
+
+##### Example 1
+
+Take the following list:
+
+```dart
+// available space = 500px
+controller.setSizes(const [
+    ResizableSize.pixels(300),
+    ResizableSize.ratio(0.25),
+    ResizableSize.ratio(0.5),
+]);
+```
+
+When the controller is allocating space, the first child will be given 300px, leaving 200px of available space.
+
+The second child will be given 1/4 of the remaining 200px, equal to 50px.
+
+The third child will be given 1/2 of the remaining 200px, equal to 100px.
+
+**Note:** In this scenario, there will be 50px of "unclaimed" space.
+
+##### Example 2
+
+Another way of distributing space could be:
+
+```dart
+// available space = 500px
+controller.setSizes(const [
+    ResizableSize.pixels(300),
+    null, // you must include a value for all children
+    ResizableSize.ratio(0.25),
+]);
+```
+
+In this example, the first child will be given 300px, leaving 200px of available space.
+
+The third child will be given 1/4 of the remaining 200px, equaling 50px.
+
+The second child will be given the space remaining after the other allocations, equaling 150px.
+
+##### Example 3
+
+One last example:
+
+```dart
+// available space = 500px
+controller.setSizes(const [
+    ResizableSize.pixels(300),
+    null,
+    null,
+]);
+```
+
+In this scenario, the first child will be given 300px, leaving 200px of available space.
+
+The remaining 200px will be evenly distributed between the `null` children, resulting in each child being given a size of 100px.
 
 ### ResizableDivider
 

@@ -22,13 +22,13 @@ void main() {
               ),
               children: const [
                 ResizableChild(
-                  startingRatio: 0.5,
+                  startingSize: ResizableSize.ratio(0.5),
                   child: SizedBox.expand(
                     key: Key('BoxA'),
                   ),
                 ),
                 ResizableChild(
-                  startingRatio: 0.5,
+                  startingSize: ResizableSize.ratio(0.5),
                   child: SizedBox.expand(
                     key: Key('BoxB'),
                   ),
@@ -94,7 +94,10 @@ void main() {
       final resizableContainer = tester.widget(find.byType(ResizableContainer));
       expect(resizableContainer, isNotNull);
 
-      controller.ratios = [0.6, 0.4];
+      controller.setSizes(const [
+        ResizableSize.ratio(0.6),
+        ResizableSize.ratio(0.4),
+      ]);
       await tester.pump();
 
       final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
@@ -240,7 +243,7 @@ void main() {
           ),
           children: const [
             ResizableChild(
-              startingRatio: 0.5,
+              startingSize: ResizableSize.ratio(0.5),
               child: SizedBox.expand(
                 key: Key('Box A'),
               ),
@@ -368,7 +371,7 @@ class __ToggleChildAppState extends State<_ToggleChildApp> {
           direction: Axis.horizontal,
           children: [
             ResizableChild(
-              startingRatio: 0.5,
+              startingSize: const ResizableSize.ratio(0.5),
               expand: widget.expand,
               child: const SizedBox.expand(
                 key: Key('ChildA'),
@@ -376,7 +379,7 @@ class __ToggleChildAppState extends State<_ToggleChildApp> {
             ),
             if (!hidden)
               const ResizableChild(
-                startingRatio: 0.5,
+                startingSize: ResizableSize.ratio(0.5),
                 child: SizedBox.expand(
                   key: Key('ChildB'),
                 ),

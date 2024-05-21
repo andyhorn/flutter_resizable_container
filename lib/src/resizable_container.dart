@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
@@ -38,6 +39,8 @@ class ResizableContainer extends StatefulWidget {
 }
 
 class _ResizableContainerState extends State<ResizableContainer> {
+  late final controller = widget.controller;
+
   @override
   void initState() {
     super.initState();
@@ -47,18 +50,10 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    bool compareChildren() => oldWidget.children.indexed.every(
-          (element) {
-            final (index, child) = element;
-            return widget.children[index] == child;
-          },
-        );
-
-    final isSameLength = oldWidget.children.length == widget.children.length;
-    final hasChanges = !isSameLength || !compareChildren();
+    final hasChanges = !listEquals(oldWidget.children, widget.children);
 
     if (hasChanges) {
-      widget.controller.updateChildren(widget.children);
+      controller.updateChildren(widget.children);
     }
 
     super.didUpdateWidget(oldWidget);
@@ -68,10 +63,11 @@ class _ResizableContainerState extends State<ResizableContainer> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        widget.controller.availableSpace = _getAvailableSpace(constraints);
+        final availableSpace = _getAvailableSpace(constraints);
+        controller.setAvailableSpace(availableSpace);
 
         return AnimatedBuilder(
-          animation: widget.controller,
+          animation: controller,
           builder: (context, _) {
             return Flex(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -133,6 +129,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }) {
     return direction != direction
         ? constraints.maxForDirection(direction)
-        : widget.controller.sizes[index];
+        : controller.sizes[index];
   }
 }

@@ -1,3 +1,12 @@
+## 2.0.0-beta.2
+
+- Added a new `ResizableSize` class that defines a "size" in pixels or as a ratio
+- Changed the `startingRatio` in the `ResizableChild` to `startingSize` that takes an optional `ResizableSize`
+    - This change allows the starting size of a child to be defined as an absolute value (in logical pixels) or as a ratio of the available space
+    - If there is a mixture of pixels and ratio sizes, the pixel sizes will be given priority and then the ratio sizes will be given the remaining available space
+- Added a `setSizes` method to the `ResizableController` that takes a list of optional `ResizableSize`s. These sizes will be applied to the current children following the same rules as noted above
+- Removed the `ratios` setter in favor of the new `setSizes` method
+
 ## 2.0.0-beta.1
 
 - Renamed `ResizableChildData` to `ResizableChild`

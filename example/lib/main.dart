@@ -62,11 +62,18 @@ class _ExampleAppState extends State<ExampleApp> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                controller1.ratios = [ratio1, ratio2];
+                controller1.setSizes(const [
+                  ResizableSize.ratio(ratio1),
+                  ResizableSize.ratio(ratio2),
+                ]);
+
                 if (!hidden) {
-                  controller2.ratios = [ratio3, ratio4];
+                  controller2.setSizes(const [
+                    ResizableSize.ratio(ratio3),
+                    ResizableSize.ratio(ratio4),
+                  ]);
                 } else {
-                  controller2.ratios = [null];
+                  controller2.setSizes([null]);
                 }
               },
               child: const Text("Reset ratios"),
@@ -117,7 +124,7 @@ class _ExampleAppState extends State<ExampleApp> {
                   ),
                   children: [
                     ResizableChild(
-                      startingRatio: ratio1,
+                      startingSize: const ResizableSize.ratio(ratio1),
                       minSize: 150,
                       child: LayoutBuilder(
                         builder: (context, constraints) {
@@ -132,7 +139,7 @@ class _ExampleAppState extends State<ExampleApp> {
                       ),
                     ),
                     ResizableChild(
-                      startingRatio: ratio2,
+                      startingSize: const ResizableSize.ratio(ratio2),
                       maxSize: 500,
                       child: ResizableContainer(
                         controller: controller2,
@@ -145,7 +152,7 @@ class _ExampleAppState extends State<ExampleApp> {
                         children: [
                           ResizableChild(
                             expand: expand,
-                            startingRatio: ratio3,
+                            startingSize: const ResizableSize.ratio(ratio3),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 return ExpandedChild(
@@ -158,7 +165,7 @@ class _ExampleAppState extends State<ExampleApp> {
                           ),
                           if (!hidden) ...[
                             ResizableChild(
-                              startingRatio: ratio4,
+                              startingSize: const ResizableSize.ratio(ratio4),
                               child: LayoutBuilder(
                                 builder: (context, constraints) {
                                   return ExpandedChild(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_resizable_container/src/resizable_size.dart';
 
 /// Controls the sizing parameters for the [child] Widget.
 class ResizableChild {
@@ -8,14 +9,11 @@ class ResizableChild {
     this.expand = false,
     this.maxSize,
     this.minSize,
-    this.startingRatio,
-  }) : assert(
-          startingRatio == null || (startingRatio >= 0 && startingRatio <= 1),
-          'The starting ratio must be null or between 0 and 1, inclusive',
-        );
+    this.startingSize,
+  });
 
   /// Whether this child should expand to fill empty space, even if it extends
-  /// beyond its [startingRatio].
+  /// beyond its [startingSize].
   final bool expand;
 
   /// The (optional) maximum size (in px) of this child Widget.
@@ -24,16 +22,24 @@ class ResizableChild {
   /// The (optional) minimum size (in px) of this child Widget.
   final double? minSize;
 
-  /// The starting size (as a ratio of available space) of the
-  /// corresponding widget.
-  final double? startingRatio;
+  /// The starting size of the corresponding widget. May use a ratio of the
+  /// available space or an absolute size in logical pixels.
+  ///
+  /// ```dart
+  /// // Ratio of available space
+  /// startingSize: const ResizableStartingSize.ratio(0.25);
+  ///
+  /// // Absolute size in logical pixels
+  /// startingSize: const ResizableStartingSize.pixels(300);
+  /// ```
+  final ResizableSize? startingSize;
 
   /// The child [Widget]
   final Widget child;
 
   @override
   String toString() => 'ResizableChildData('
-      'startingRatio: $startingRatio, '
+      'startingSize: $startingSize, '
       'maxSize: $maxSize, '
       'minSize: $minSize, '
       'child: $child, '
@@ -43,7 +49,7 @@ class ResizableChild {
   operator ==(Object other) =>
       other is ResizableChild &&
       other.expand == expand &&
-      other.startingRatio == startingRatio &&
+      other.startingSize == startingSize &&
       other.maxSize == maxSize &&
       other.minSize == minSize &&
       other.child.runtimeType == child.runtimeType;
@@ -51,7 +57,7 @@ class ResizableChild {
   @override
   int get hashCode => Object.hash(
         expand,
-        startingRatio,
+        startingSize,
         maxSize,
         minSize,
         child,
