@@ -41,19 +41,23 @@ In the example above, any children (more on this in the [ResizableChild](#resiza
 
 #### Setup
 
-Second, add a `ResizableController`. This controller is used to respond to resize events and calculate the size of each child widget.
+If you wish to respond to changes in sizes or to programmatically adjust child sizes, create a `ResizableController` and keep a reference to it; then, pass it to the `ResizableContainer`'s constructor.
 
 For example:
 
 ```dart
+final controller = ResizableController();
+
+...
+
 ResizableContainer(
-    controller: ResizableController(),
+    controller: controller,
 ),
 ```
 
 #### Using a ResizableController
 
-If you retain a reference to the `ResizableController`, you can listen to its changes as well as programmatically set/reset the `ratios` of the container's children.
+Using the controller, you can listen to changes as well as programmatically set the sizes of the container's children.
 
 ```dart
 final controller = ResizableController();
