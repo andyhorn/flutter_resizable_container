@@ -6,15 +6,10 @@ class ResizableChild {
   /// Create a new instance of the [ResizableChild] class.
   const ResizableChild({
     required this.child,
-    this.expand = false,
+    required this.size,
     this.maxSize,
     this.minSize,
-    this.startingSize,
   });
-
-  /// Whether this child should expand to fill empty space, even if it extends
-  /// beyond its [startingSize].
-  final bool expand;
 
   /// The (optional) maximum size (in px) of this child Widget.
   final double? maxSize;
@@ -22,42 +17,43 @@ class ResizableChild {
   /// The (optional) minimum size (in px) of this child Widget.
   final double? minSize;
 
-  /// The starting size of the corresponding widget. May use a ratio of the
-  /// available space or an absolute size in logical pixels.
+  /// The size of the corresponding widget. May use a ratio of the
+  /// available space, an absolute size in logical pixels, or it can
+  /// auto-expand to fill available space.
   ///
   /// ```dart
   /// // Ratio of available space
-  /// startingSize: const ResizableStartingSize.ratio(0.25);
+  /// size: const ResizableSize.ratio(0.25);
   ///
   /// // Absolute size in logical pixels
-  /// startingSize: const ResizableStartingSize.pixels(300);
+  /// size: const ResizableSize.pixels(300);
+  ///
+  /// // Auto-fill available space
+  /// size: const ResizableSize.expand(),
   /// ```
-  final ResizableSize? startingSize;
+  final ResizableSize size;
 
   /// The child [Widget]
   final Widget child;
 
   @override
   String toString() => 'ResizableChildData('
-      'startingSize: $startingSize, '
+      'size: $size, '
       'maxSize: $maxSize, '
       'minSize: $minSize, '
-      'child: $child, '
-      'expand: $expand)';
+      'child: $child)';
 
   @override
   operator ==(Object other) =>
       other is ResizableChild &&
-      other.expand == expand &&
-      other.startingSize == startingSize &&
+      other.size == size &&
       other.maxSize == maxSize &&
       other.minSize == minSize &&
       other.child.runtimeType == child.runtimeType;
 
   @override
   int get hashCode => Object.hash(
-        expand,
-        startingSize,
+        size,
         maxSize,
         minSize,
         child,

@@ -73,7 +73,9 @@ class _ExampleAppState extends State<ExampleApp> {
                     ResizableSize.ratio(ratio4),
                   ]);
                 } else {
-                  controller2.setSizes([null]);
+                  controller2.setSizes([
+                    const ResizableSize.expand(),
+                  ]);
                 }
               },
               child: const Text("Reset ratios"),
@@ -124,7 +126,7 @@ class _ExampleAppState extends State<ExampleApp> {
                   ),
                   children: [
                     ResizableChild(
-                      startingSize: const ResizableSize.ratio(ratio1),
+                      size: const ResizableSize.expand(),
                       minSize: 150,
                       child: LayoutBuilder(
                         builder: (context, constraints) {
@@ -139,7 +141,7 @@ class _ExampleAppState extends State<ExampleApp> {
                       ),
                     ),
                     ResizableChild(
-                      startingSize: const ResizableSize.ratio(ratio2),
+                      size: const ResizableSize.ratio(ratio2),
                       maxSize: 500,
                       child: ResizableContainer(
                         controller: controller2,
@@ -151,8 +153,7 @@ class _ExampleAppState extends State<ExampleApp> {
                             : Axis.horizontal,
                         children: [
                           ResizableChild(
-                            expand: expand,
-                            startingSize: const ResizableSize.ratio(ratio3),
+                            size: const ResizableSize.expand(),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 return ExpandedChild(
@@ -165,7 +166,7 @@ class _ExampleAppState extends State<ExampleApp> {
                           ),
                           if (!hidden) ...[
                             ResizableChild(
-                              startingSize: const ResizableSize.ratio(ratio4),
+                              size: const ResizableSize.expand(),
                               child: LayoutBuilder(
                                 builder: (context, constraints) {
                                   return ExpandedChild(
