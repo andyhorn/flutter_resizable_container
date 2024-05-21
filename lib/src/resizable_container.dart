@@ -16,8 +16,8 @@ class ResizableContainer extends StatefulWidget {
   const ResizableContainer({
     super.key,
     required this.children,
-    required this.controller,
     required this.direction,
+    this.controller,
     ResizableDivider? divider,
   }) : divider = divider ?? const ResizableDivider();
 
@@ -26,7 +26,7 @@ class ResizableContainer extends StatefulWidget {
   final List<ResizableChild> children;
 
   /// The controller that will be used to manage programmatic resizing of the children.
-  final ResizableController controller;
+  final ResizableController? controller;
 
   /// The direction along which the child widgets will be laid and resized.
   final Axis direction;
@@ -39,13 +39,14 @@ class ResizableContainer extends StatefulWidget {
 }
 
 class _ResizableContainerState extends State<ResizableContainer> {
-  late final controller = widget.controller;
+  late final controller = widget.controller ?? ResizableController();
+  late final isDefaultController = widget.controller == null;
 
   @override
   void initState() {
     super.initState();
 
-    widget.controller.setChildren(widget.children);
+    controller.setChildren(widget.children);
   }
 
   @override
@@ -57,6 +58,15 @@ class _ResizableContainerState extends State<ResizableContainer> {
     }
 
     super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void dispose() {
+    if (isDefaultController) {
+      controller.dispose();
+    }
+
+    super.dispose();
   }
 
   @override
@@ -100,8 +110,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                     ResizableContainerDivider(
                       config: widget.divider,
                       direction: widget.direction,
-                      onResizeUpdate: (delta) =>
-                          widget.controller.adjustChildSize(
+                      onResizeUpdate: (delta) => controller.adjustChildSize(
                         index: i,
                         delta: delta,
                       ),
