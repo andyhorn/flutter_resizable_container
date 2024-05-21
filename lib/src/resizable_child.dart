@@ -6,7 +6,7 @@ class ResizableChild {
   /// Create a new instance of the [ResizableChild] class.
   const ResizableChild({
     required this.child,
-    required this.size,
+    this.size = const ResizableSize.expand(),
     this.maxSize,
     this.minSize,
   });
