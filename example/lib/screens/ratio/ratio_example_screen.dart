@@ -4,15 +4,8 @@ import 'package:example/widgets/size_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 
-class RatioExampleScreen extends StatefulWidget {
+class RatioExampleScreen extends StatelessWidget {
   const RatioExampleScreen({super.key});
-
-  @override
-  State<RatioExampleScreen> createState() => _RatioExampleScreenState();
-}
-
-class _RatioExampleScreenState extends State<RatioExampleScreen> {
-  final controller = ResizableController();
 
   @override
   Widget build(BuildContext context) {
