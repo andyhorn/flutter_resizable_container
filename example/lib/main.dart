@@ -1,6 +1,7 @@
 import 'package:example/screens/basic/basic_example_screen.dart';
 import 'package:example/screens/controller_listen/controller_listen_example_screen.dart';
 import 'package:example/screens/controller_set_sizes/controller_set_sizes_example_screen.dart';
+import 'package:example/screens/divider/custom_divider_example_screen.dart';
 import 'package:example/screens/pixels/pixels_example_screen.dart';
 import 'package:example/screens/ratio/ratio_example_screen.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +25,7 @@ class ExampleApp extends StatelessWidget {
         'pixels': (context) => const PixelsExampleScreen(),
         'listen': (context) => const ControllerListenExampleScreen(),
         'sizes': (context) => const ControllerSetSizesExampleScreen(),
+        'divider': (context) => const CustomDividerExampleScreen(),
       },
     );
   }
