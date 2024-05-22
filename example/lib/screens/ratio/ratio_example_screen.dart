@@ -39,14 +39,14 @@ class _RatioExampleScreenState extends State<RatioExampleScreen> {
           ),
           ResizableChild(
             child: ColoredBox(
-              color: Theme.of(context).colorScheme.secondaryContainer,
+              color: Theme.of(context).colorScheme.tertiaryContainer,
               child: const SizeLabel(),
             ),
           ),
           ResizableChild(
             size: const ResizableSize.ratio(0.15),
             child: ColoredBox(
-              color: Theme.of(context).colorScheme.tertiaryContainer,
+              color: Theme.of(context).colorScheme.primaryContainer,
               child: const SizeLabel(),
             ),
           ),
