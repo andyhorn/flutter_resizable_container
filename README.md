@@ -98,18 +98,18 @@ To add widgets to your container, you must provide a `List<ResizableChild>`, eac
 ```dart
 children: [
     if (showNavBar) ...[
-        ResizableChild(
+        const ResizableChild(
             maxSize: 350.0,
             child: NavBarWidget(),
         ),
     ],
     const ResizableChild(
-        expand: true,
-        startingSize: ResizableSize.ratio(0.75),
+        startingSize: ResizableSize.expand(),
         child: BodyWidget(),
     ),
     if (showSidePanel) ...[
-        ResizableChild(
+        const ResizableChild(
+            size: ResizableSize.ratio(0.25),
             minSize: 100,
             child: SidePanelWidget(),
         ),
@@ -119,26 +119,19 @@ children: [
 
 In the example above, there are three `Widget`s added to the screen, two of which can be hidden based on state.
 
-The first child, containing the `NavBarWidget`, has a maximum size of 350.0.
-The second child, containing the `BodyWidget`, is set to automatically expand and has a starting ratio of 0.75.
-The third child, containing the `SidePanelWidget`, is set to _not_ expand and has a minimum size of 100.0.
+The first child, containing the `NavBarWidget`, has a maximum size of 350.0 px.
+The second child, containing the `BodyWidget`, is set to automatically expand via the `ResizableSize.expand()` value.
+The third child, containing the `SidePanelWidget`, is set to a ratio of 0.75 with a minimum size of 100.0 logical pixels.
 
 The `maxSize` parameter constrains the child and will prevent it from being expanded beyond that size in the `direction` of the container.
 
 The `minSize` parameter constrains the child and will prevent it from being _shrunk_ beyond that size in the `direction` of the container.
 
-The `startingSize` parameter gives a directive of how to size the child during its initial layout. If this value is `null`, any remaining available space will be distributed evenly to this child and other children with `null` starting sizes.
-    - In this example, since the `NavBarWidget` and `SidePanelWidget` both have a `null` starting size, the remaining available space (1.0 - 0.75 = 0.25) will be distributed evenly between them (0.25 / 2 = 0.125).
-
-The `expand` flag is used to control whether the child will be expanded to fill remaining available space, ignoring the `startingSize` constraint. 
-    - Note: If there are children with `null` starting sizes, they will be given the remaining available space - this flag only affects the layout if the child has a valid `startingSize` _and_ there are no other children with a `startingSize` of `null`.
-    - In this example, if both of the other children are hidden, the `BodyWidget` will be expanded to the full available space. 
-
-If the state changes and one or more child widgets are added or removed, the children will be re-laid out according to all of these parameters.
+The `size` parameter gives a directive of how to size the child during its initial layout and during screen size changes. See the [Resizable Size](#resizable-size) section below for more information.
 
 ### ResizableSize
 
-The `ResizableSize` class defines a "size" as either a ratio of the available space, using the `.ratio` constructor, or as an absolute size in logical pixels, using the `.pixels` constructor.
+The `ResizableSize` class defines a "size" as either a ratio of the available space, using the `.ratio` constructor, an absolute size in logical pixels, using the `.pixels` constructor, or as an auto-expanding size using the `expand` constructor.
 
 For example, to create a size equal to half of the available space:
 
@@ -146,13 +139,17 @@ For example, to create a size equal to half of the available space:
 const half = ResizableSize.ratio(0.5);
 ```
 
-And to create a size of 300px:
+To create a size of 300px:
 
 ```dart
 const threeHundredPixels = ResizableSize.pixels(300);
 ```
 
-This class is used by the `ResizableChild` as its `startingSize` and by the `ResizableController` in the `setSizes` method.
+To allow a child to fill any remaining space:
+
+```dart
+const expandable = ResizableSize.expand();
+```
 
 #### Size Hierarchy
 
@@ -160,7 +157,7 @@ When the controller is laying out the sizes of children, it uses the following r
 
 1. If a child has a size using pixels, it will be given that amount of space
 2. If a child has a size using a ratio, it will be given the proportionate amount of the _remaining_ space _after_ all pixel-sizes have been allocated
-3. If a child has a size of `null`, it will be given whatever space is left after the allocations in rule 1 and rule 2 - If there are multiple children with a size of `null`, the space remaining after the allocations in rule 1 and rule 2 will be evenly distributed between them
+3. If a child has a size using `expand`, it will be given whatever space is left after the allocations in rule 1 and rule 2 - If there are multiple children using `expand`, the space remaining after the allocations in rule 1 and rule 2 will be evenly distributed between them
 
 ##### Example 1
 
@@ -191,7 +188,7 @@ Another way of distributing space could be:
 // available space = 500px
 controller.setSizes(const [
     ResizableSize.pixels(300),
-    null, // you must include a value for all children
+    ResizableSize.expand(),
     ResizableSize.ratio(0.25),
 ]);
 ```
@@ -204,20 +201,35 @@ The second child will be given the space remaining after the other allocations, 
 
 ##### Example 3
 
-One last example:
-
 ```dart
 // available space = 500px
 controller.setSizes(const [
     ResizableSize.pixels(300),
-    null,
-    null,
+    ResizableSize.expand(),
+    ResizableSize.expand(),
 ]);
 ```
 
 In this scenario, the first child will be given 300px, leaving 200px of available space.
 
-The remaining 200px will be evenly distributed between the `null` children, resulting in each child being given a size of 100px.
+The remaining 200px will be evenly distributed between the `expand` children, resulting in each child being given a size of 100px.
+
+###### Flex
+
+The `ResizableSize.expand` constructor takes an optional `flex` parameter of type `int`. If there are multiple `expand` sizes, the available space will be divided by total flex count and then distributed to the children according to their individual flex values - this is the same as the `Flexible` and `Expanded` widgets.
+
+For example:
+
+```dart
+ResizableChild(
+    size: ResizableSize.expand(flex: 2),
+),
+ResizableChild(
+    size: ResizableSize.expand(), // defaults to flex: 1
+),
+```
+
+In this scenario, the first child would be given 2/3 of the total available space while the second child received 1/3.
 
 ### ResizableDivider
 
