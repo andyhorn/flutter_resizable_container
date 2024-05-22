@@ -1,3 +1,10 @@
+## 2.0.0-beta.3
+
+- Add a `ResizableSize.expand` constructor that takes a `flex` integer (defaults to 1)
+- Remove the optionality of the `size` parameter in `ResizableChild` and use a default `ResizableSize.expand()` value
+- Adjust the controller to disallow `null` values for `ResizableSize` arguments
+- Adjust the controller to prioritize modifying `ResizableSize.expand` children when scaling the window (up or down) over the `pixel` and `ratio` children, unless no `expand` children are set
+
 ## 2.0.0-beta.2
 
 - Added a new `ResizableSize` class that defines a "size" in pixels or as a ratio
