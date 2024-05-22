@@ -1,3 +1,4 @@
+import 'package:example/widgets/help_dialog.dart';
 import 'package:flutter/material.dart';
 
 class BasicExampleHelpDialog extends StatelessWidget {
@@ -6,22 +7,19 @@ class BasicExampleHelpDialog extends StatelessWidget {
   static void show({
     required BuildContext context,
   }) {
-    showDialog(
+    HelpDialog.show(
       context: context,
-      builder: (context) => const BasicExampleHelpDialog._(),
+      child: const BasicExampleHelpDialog._(
+        key: Key('BasicExampleHelpDialog'),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      insetPadding: EdgeInsets.symmetric(
-        horizontal: MediaQuery.sizeOf(context).width * 0.15,
-        vertical: MediaQuery.sizeOf(context).height * 0.15,
-      ),
-      title: const Text('About this example'),
-      contentTextStyle: Theme.of(context).textTheme.bodyLarge,
-      content: const Column(
+    return const HelpDialog(
+      title: 'About this example',
+      content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -46,12 +44,6 @@ class BasicExampleHelpDialog extends StatelessWidget {
           ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
-        ),
-      ],
     );
   }
 }
