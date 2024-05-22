@@ -24,6 +24,10 @@ class HelpDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       contentTextStyle: Theme.of(context).textTheme.bodyLarge,
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: MediaQuery.sizeOf(context).width * 0.15,
+        vertical: MediaQuery.sizeOf(context).height * 0.15,
+      ),
       title: Text(title),
       content: content,
       actions: [
