@@ -1,3 +1,4 @@
+import 'package:example/widgets/app_version.dart';
 import 'package:flutter/material.dart';
 
 class NavDrawer extends StatelessWidget {
@@ -7,11 +8,13 @@ class NavDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 15),
           Text(
             'Examples',
             style: Theme.of(context).textTheme.titleMedium,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 15),
           ListTile(
@@ -26,6 +29,8 @@ class NavDrawer extends StatelessWidget {
             title: const Text('Pixels Example'),
             onTap: () => Navigator.of(context).pushReplacementNamed('pixels'),
           ),
+          const Spacer(),
+          const AppVersion(),
         ],
       ),
     );
