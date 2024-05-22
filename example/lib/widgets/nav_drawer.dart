@@ -12,7 +12,7 @@ class NavDrawer extends StatelessWidget {
         children: [
           const SizedBox(height: 15),
           Text(
-            'Examples',
+            'Basic Examples',
             style: Theme.of(context).textTheme.titleMedium,
             textAlign: TextAlign.center,
           ),
@@ -28,6 +28,17 @@ class NavDrawer extends StatelessWidget {
           ListTile(
             title: const Text('Pixels Example'),
             onTap: () => Navigator.of(context).pushReplacementNamed('pixels'),
+          ),
+          const SizedBox(height: 15),
+          Text(
+            'Controller Examples',
+            style: Theme.of(context).textTheme.titleMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 15),
+          ListTile(
+            title: const Text('Controller Listen Example'),
+            onTap: () => Navigator.of(context).pushReplacementNamed('listen'),
           ),
           const Spacer(),
           const AppVersion(),
