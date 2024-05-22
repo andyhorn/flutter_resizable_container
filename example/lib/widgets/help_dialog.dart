@@ -29,7 +29,7 @@ class HelpDialog extends StatelessWidget {
         vertical: MediaQuery.sizeOf(context).height * 0.15,
       ),
       title: Text(title),
-      content: content,
+      content: SingleChildScrollView(child: content),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
