@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -74,7 +76,7 @@ class _ExampleAppState extends State<ExampleApp> {
                 ]);
 
                 controller2.setSizes([
-                  const ResizableSize.expand(),
+                  const ResizableSize.expand(flex: 2),
                   if (!hidden) ...[
                     const ResizableSize.expand(),
                   ],
@@ -126,12 +128,64 @@ class _ExampleAppState extends State<ExampleApp> {
                       minSize: 150,
                       child: LayoutBuilder(
                         builder: (context, constraints) {
-                          return ExpandedChild(
-                            color: Colors.green,
-                            constraints: constraints,
-                            label: direction == Axis.horizontal
-                                ? 'Left Pane'
-                                : 'Top Pane',
+                          final pane = switch (direction) {
+                            Axis.horizontal => 'Left Pane',
+                            Axis.vertical => 'Top Pane',
+                          };
+
+                          return DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
+                            ),
+                            child: SizedBox.expand(
+                              child: Stack(
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        pane,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      ConstraintsLabel(
+                                        constraints: constraints,
+                                      ),
+                                    ],
+                                  ),
+                                  if (direction == Axis.horizontal) ...[
+                                    const Align(
+                                      alignment: Alignment.topCenter,
+                                      child: Text(
+                                        'expand()',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ] else ...[
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Transform.translate(
+                                        offset: const Offset(-35, -35),
+                                        child: Transform.rotate(
+                                          angle: -pi / 2,
+                                          alignment: Alignment.centerRight,
+                                          child: Text(
+                                            'expand()',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelLarge,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
                           );
                         },
                       ),
@@ -144,18 +198,100 @@ class _ExampleAppState extends State<ExampleApp> {
                         divider: const ResizableDivider(
                           color: Colors.green,
                         ),
-                        direction: direction == Axis.horizontal
-                            ? Axis.vertical
-                            : Axis.horizontal,
+                        direction: switch (direction) {
+                          Axis.vertical => Axis.horizontal,
+                          Axis.horizontal => Axis.vertical,
+                        },
                         children: [
                           ResizableChild(
-                            size: const ResizableSize.expand(),
+                            size: const ResizableSize.expand(flex: 2),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
-                                return ExpandedChild(
-                                  color: Colors.pink,
-                                  constraints: constraints,
-                                  label: 'Nested Child A',
+                                final pane = switch (direction) {
+                                  Axis.horizontal => 'Top Right',
+                                  Axis.vertical => 'Bottom Left',
+                                };
+
+                                return DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .secondaryContainer,
+                                  ),
+                                  child: SizedBox.expand(
+                                    child: Stack(
+                                      children: [
+                                        if (direction == Axis.horizontal) ...[
+                                          const Align(
+                                            alignment: Alignment.topCenter,
+                                            child: Text(
+                                              'ratio(0.25)',
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        ] else ...[
+                                          Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Transform.translate(
+                                              offset: const Offset(-50, -35),
+                                              child: Transform.rotate(
+                                                angle: -pi / 2,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text(
+                                                  'ratio(0.25)',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .labelLarge,
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                        Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            Text(
+                                              pane,
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            ConstraintsLabel(
+                                              constraints: constraints,
+                                            ),
+                                          ],
+                                        ),
+                                        if (direction == Axis.horizontal) ...[
+                                          Align(
+                                            alignment: Alignment.centerRight,
+                                            child: Transform.translate(
+                                              offset: const Offset(-10, 50),
+                                              child: Transform.rotate(
+                                                angle: pi / 2,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text(
+                                                  'expand(flex: 2)',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .labelLarge,
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ] else ...[
+                                          const Align(
+                                            alignment: Alignment.topCenter,
+                                            child: Text('expand(flex: 2)'),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
                                 );
                               },
                             ),
@@ -165,10 +301,55 @@ class _ExampleAppState extends State<ExampleApp> {
                               size: const ResizableSize.expand(),
                               child: LayoutBuilder(
                                 builder: (context, constraints) {
-                                  return ExpandedChild(
-                                    label: 'Nested Child B',
-                                    color: Colors.amber,
-                                    constraints: constraints,
+                                  return DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .tertiaryContainer,
+                                    ),
+                                    child: SizedBox.expand(
+                                      child: Stack(
+                                        children: [
+                                          Center(
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                const Text('Bottom Right'),
+                                                ConstraintsLabel(
+                                                  constraints: constraints,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          if (direction == Axis.horizontal) ...[
+                                            Align(
+                                              alignment: Alignment.centerRight,
+                                              child: Transform.translate(
+                                                offset: const Offset(-10, 30),
+                                                child: Transform.rotate(
+                                                  angle: pi / 2,
+                                                  alignment:
+                                                      Alignment.centerRight,
+                                                  child: Text(
+                                                    'expand()',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .labelLarge,
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ] else ...[
+                                            const Align(
+                                              alignment: Alignment.topCenter,
+                                              child: Text('expand()'),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
                                   );
                                 },
                               ),
@@ -205,6 +386,23 @@ class _ExampleAppState extends State<ExampleApp> {
   }
 }
 
+class ConstraintsLabel extends StatelessWidget {
+  const ConstraintsLabel({super.key, required this.constraints});
+
+  final BoxConstraints constraints;
+
+  @override
+  Widget build(BuildContext context) {
+    final height = constraints.maxHeight.toStringAsFixed(2);
+    final width = constraints.maxWidth.toStringAsFixed(2);
+
+    return Text(
+      'Height: $height px\nWidth: $width px',
+      textAlign: TextAlign.center,
+    );
+  }
+}
+
 class ExpandedChild extends StatelessWidget {
   const ExpandedChild({
     super.key,
@@ -219,19 +417,18 @@ class ExpandedChild extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final height = constraints.maxHeight.toStringAsFixed(2);
-    final width = constraints.maxWidth.toStringAsFixed(2);
-
     return DecoratedBox(
       decoration: BoxDecoration(
         color: color,
       ),
       child: SizedBox.expand(
-        child: Center(
-          child: Text(
-            '$label ($height x $width)',
-            textAlign: TextAlign.center,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(label, textAlign: TextAlign.center),
+            ConstraintsLabel(constraints: constraints),
+          ],
         ),
       ),
     );
