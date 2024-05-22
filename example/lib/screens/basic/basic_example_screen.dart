@@ -1,4 +1,5 @@
 import 'package:example/screens/basic/basic_example_help_dialog.dart';
+import 'package:example/widgets/code_view_dialog.dart';
 import 'package:example/widgets/nav_drawer.dart';
 import 'package:example/widgets/size_label.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,13 @@ class BasicExampleScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.help_center),
             onPressed: () => BasicExampleHelpDialog.show(context: context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.code),
+            onPressed: () => CodeViewDialog.show(
+              context: context,
+              filePath: 'lib/screens/basic/basic_example_screen.dart',
+            ),
           ),
         ],
       ),
