@@ -17,6 +17,10 @@ class NavDrawer extends StatelessWidget {
               title: const Text('Basic Example'),
               onTap: () => Navigator.of(context).pushReplacementNamed('basic'),
             ),
+            ListTile(
+              title: const Text('Ratio Example'),
+              onTap: () => Navigator.of(context).pushReplacementNamed('ratio'),
+            ),
           ],
         ),
       ),
