@@ -40,6 +40,10 @@ class NavDrawer extends StatelessWidget {
             title: const Text('Controller Listen Example'),
             onTap: () => Navigator.of(context).pushReplacementNamed('listen'),
           ),
+          ListTile(
+            title: const Text('Controller Set Sizes Example'),
+            onTap: () => Navigator.of(context).pushReplacementNamed('sizes'),
+          ),
           const Spacer(),
           const AppVersion(),
         ],
