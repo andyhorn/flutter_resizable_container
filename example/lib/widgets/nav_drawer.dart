@@ -10,13 +10,17 @@ class NavDrawer extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 15),
-          Text(
-            'Basic Examples',
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.center,
+          Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: InkWell(
+                onTap: () => Navigator.of(context).pop(),
+                child: const Icon(Icons.close),
+              ),
+            ),
           ),
-          const SizedBox(height: 15),
+          const NavSectionHeader(title: 'Basic Examples'),
           ListTile(
             title: const Text('Basic Example'),
             onTap: () => Navigator.of(context).pushReplacementNamed('basic'),
@@ -34,12 +38,7 @@ class NavDrawer extends StatelessWidget {
             onTap: () => Navigator.of(context).pushReplacementNamed('divider'),
           ),
           const SizedBox(height: 15),
-          Text(
-            'Controller Examples',
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 15),
+          const NavSectionHeader(title: 'Controller Examples'),
           ListTile(
             title: const Text('Controller Listen Example'),
             onTap: () => Navigator.of(context).pushReplacementNamed('listen'),
@@ -51,6 +50,36 @@ class NavDrawer extends StatelessWidget {
           const Spacer(),
           const AppVersion(),
         ],
+      ),
+    );
+  }
+}
+
+class NavSectionHeader extends StatelessWidget {
+  const NavSectionHeader({
+    super.key,
+    required this.title,
+  });
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium,
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
     );
   }
