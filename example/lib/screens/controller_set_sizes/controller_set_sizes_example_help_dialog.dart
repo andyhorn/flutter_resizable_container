@@ -10,7 +10,7 @@ class ControllerSetSizesExampleHelpDialog extends StatelessWidget {
     HelpDialog.show(
       context: context,
       child: const ControllerSetSizesExampleHelpDialog._(
-        key: Key('ControllerSetSizesHelpDialog'),
+        key: Key('ControllerSetSizesExampleHelpDialog'),
       ),
     );
   }
