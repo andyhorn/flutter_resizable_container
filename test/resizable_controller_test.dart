@@ -130,8 +130,12 @@ void main() {
         });
 
         test('adjusts child sizes', () {
+          // only the "expandable" child (last) should change
+          final expected = [...controller.sizes];
+          expected.last += 300;
+
           manager.setAvailableSpace(600);
-          expect(controller.sizes, equals([200, 200, 200]));
+          expect(controller.sizes, equals(expected));
         });
 
         test('notifies listeners', () {
