@@ -61,11 +61,13 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
   assets:
     - lib/screens/basic/basic_example_screen.dart
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+    - lib/screens/controller_listen/controller_listen_example_screen.dart
+    - lib/screens/controller_set_sizes/controller_set_sizes_example_screen.dart
+    - lib/screens/divider/custom_divider_example_screen.dart
+    - lib/screens/pixels/pixels_example_screen.dart
+    - lib/screens/ratio/ratio_example_screen.dart
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
