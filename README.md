@@ -2,9 +2,17 @@
 
 Add flexibility and interaction to your UI with ease.
 
+## Example App
+
 View the interactive example app at [andyhorn.github.io/flutter_resizable_container](https://andyhorn.github.io/flutter_resizable_container)
 
-![Flutter Resizable Container](./doc/screenshot.png)
+The example app contains multiple examples demonstrating the features of this package and how to use them.
+
+![Multiple Examples](./doc/screenshot_nav_bar.png?raw=true "Multiple Examples")
+
+Each example also comes with an embedded source-code view, so you don't have to bounce between the app and the repo.
+
+![Source Code Preview](./doc/screenshot_source_code.png?raw=true "Source Code Preview")
 
 ## Features
 
