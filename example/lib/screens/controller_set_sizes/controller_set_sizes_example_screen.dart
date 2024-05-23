@@ -1,4 +1,5 @@
 import 'package:example/screens/controller_set_sizes/controller_set_sizes_example_help_dialog.dart';
+import 'package:example/widgets/code_view_dialog.dart';
 import 'package:example/widgets/nav_drawer.dart';
 import 'package:example/widgets/size_label.dart';
 import 'package:flutter/material.dart';
@@ -75,6 +76,14 @@ class _ControllerSetSizesExampleScreenState
               context: context,
             ),
             icon: const Icon(Icons.help_center),
+          ),
+          IconButton(
+            onPressed: () => CodeViewDialog.show(
+              context: context,
+              filePath:
+                  'lib/screens/controller_set_sizes/controller_set_sizes_example_screen.dart',
+            ),
+            icon: const Icon(Icons.code),
           ),
         ],
       ),
