@@ -1,3 +1,4 @@
+import 'package:example/widgets/code_view_dialog.dart';
 import 'package:example/widgets/nav_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
@@ -19,6 +20,16 @@ class _CustomDividerExampleScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Custom divider example'),
+        actions: [
+          IconButton(
+            onPressed: () => CodeViewDialog.show(
+              context: context,
+              filePath:
+                  'lib/screens/divider/custom_divider_example_screen.dart',
+            ),
+            icon: const Icon(Icons.code),
+          ),
+        ],
       ),
       drawer: const NavDrawer(),
       body: ResizableContainer(
