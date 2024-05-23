@@ -1,3 +1,4 @@
+import 'package:example/file_asset_paths.dart';
 import 'package:example/screens/ratio/ratio_example_help_dialog.dart';
 import 'package:example/widgets/code_view_dialog.dart';
 import 'package:example/widgets/nav_drawer.dart';
@@ -21,7 +22,7 @@ class RatioExampleScreen extends StatelessWidget {
           IconButton(
             onPressed: () => CodeViewDialog.show(
               context: context,
-              filePath: 'lib/screens/ratio/ratio_example_screen.dart',
+              filePath: FileAssetPaths.ratioScreen,
             ),
             icon: const Icon(Icons.code),
           ),

@@ -1,3 +1,4 @@
+import 'package:example/file_asset_paths.dart';
 import 'package:example/screens/controller_set_sizes/controller_set_sizes_example_help_dialog.dart';
 import 'package:example/widgets/code_view_dialog.dart';
 import 'package:example/widgets/nav_drawer.dart';
@@ -79,8 +80,7 @@ class _ControllerSetSizesExampleScreenState
           IconButton(
             onPressed: () => CodeViewDialog.show(
               context: context,
-              filePath:
-                  'lib/screens/controller_set_sizes/controller_set_sizes_example_screen.dart',
+              filePath: FileAssetPaths.controllerSetSizesScreen,
             ),
             icon: const Icon(Icons.code),
           ),

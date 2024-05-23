@@ -1,4 +1,5 @@
 import 'package:example/extensions/int_ext.dart';
+import 'package:example/file_asset_paths.dart';
 import 'package:flutter/material.dart';
 
 class CodeViewDialog extends StatelessWidget {
@@ -9,13 +10,13 @@ class CodeViewDialog extends StatelessWidget {
 
   static void show({
     required BuildContext context,
-    required String filePath,
+    required FileAssetPaths filePath,
   }) {
     showDialog(
       context: context,
       builder: (context) => CodeViewDialog._(
         key: const Key('CodeViewDialog'),
-        filePath: filePath,
+        filePath: filePath.path,
       ),
     );
   }

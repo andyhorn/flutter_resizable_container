@@ -1,3 +1,4 @@
+import 'package:example/file_asset_paths.dart';
 import 'package:example/screens/controller_listen/controller_listen_example_help_dialog.dart';
 import 'package:example/widgets/code_view_dialog.dart';
 import 'package:example/widgets/nav_drawer.dart';
@@ -54,8 +55,7 @@ class _ControllerListenExampleScreenState
           IconButton(
             onPressed: () => CodeViewDialog.show(
               context: context,
-              filePath:
-                  'lib/screens/controller_listen/controller_listen_example_screen.dart',
+              filePath: FileAssetPaths.controllerListenScreen,
             ),
             icon: const Icon(Icons.code),
           ),

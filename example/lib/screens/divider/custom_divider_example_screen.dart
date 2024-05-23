@@ -1,3 +1,4 @@
+import 'package:example/file_asset_paths.dart';
 import 'package:example/widgets/code_view_dialog.dart';
 import 'package:example/widgets/nav_drawer.dart';
 import 'package:flutter/material.dart';
@@ -25,8 +26,7 @@ class _CustomDividerExampleScreenState
           IconButton(
             onPressed: () => CodeViewDialog.show(
               context: context,
-              filePath:
-                  'lib/screens/divider/custom_divider_example_screen.dart',
+              filePath: FileAssetPaths.dividerScreen,
             ),
             icon: const Icon(Icons.code),
           ),

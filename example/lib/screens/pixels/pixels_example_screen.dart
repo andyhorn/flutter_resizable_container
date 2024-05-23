@@ -1,3 +1,4 @@
+import 'package:example/file_asset_paths.dart';
 import 'package:example/screens/pixels/pixels_example_help_dialog.dart';
 import 'package:example/widgets/code_view_dialog.dart';
 import 'package:example/widgets/nav_drawer.dart';
@@ -21,7 +22,7 @@ class PixelsExampleScreen extends StatelessWidget {
           IconButton(
             onPressed: () => CodeViewDialog.show(
               context: context,
-              filePath: 'lib/screens/pixels/pixels_example_screen.dart',
+              filePath: FileAssetPaths.pixelsScreen,
             ),
             icon: const Icon(Icons.code),
           ),
