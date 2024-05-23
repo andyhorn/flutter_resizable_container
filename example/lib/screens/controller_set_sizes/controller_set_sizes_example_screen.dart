@@ -22,7 +22,6 @@ class _ControllerSetSizesExampleScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Controller set sizes example'),
-        centerTitle: true,
         actions: [
           PopupMenuButton(
             color: Theme.of(context).colorScheme.primaryContainer,

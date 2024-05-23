@@ -20,6 +20,7 @@ class _CustomDividerExampleScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Custom divider example'),
+        centerTitle: false,
         actions: [
           IconButton(
             onPressed: () => CodeViewDialog.show(
