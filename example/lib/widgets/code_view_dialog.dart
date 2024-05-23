@@ -1,3 +1,4 @@
+import 'package:example/extensions/int_ext.dart';
 import 'package:flutter/material.dart';
 
 class CodeViewDialog extends StatelessWidget {
@@ -62,7 +63,7 @@ class CodeViewDialog extends StatelessWidget {
 
                 final content = snapshot.data!;
                 final lines = content.split('\n');
-                final characters = lines.length % 10 + 1;
+                final maxDigits = lines.length.digitCount;
 
                 return DecoratedBox(
                   decoration: const BoxDecoration(
@@ -76,8 +77,8 @@ class CodeViewDialog extends StatelessWidget {
                       child: ListView.builder(
                         itemCount: lines.length,
                         itemBuilder: (context, index) {
-                          final length = (index + 1).toString().length;
-                          final padding = (characters - length) * 2 + 2;
+                          final digitCount = (index + 1).digitCount;
+                          final padding = (maxDigits - digitCount) + 2;
                           final label = '${index + 1}${' ' * padding}';
 
                           return Text.rich(
