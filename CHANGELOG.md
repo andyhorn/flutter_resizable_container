@@ -1,3 +1,7 @@
+## 2.0.0-beta.4
+
+- Fix a bug in the "available size" initialization that was throwing a "marked dirty during build" exception
+
 ## 2.0.0-beta.3
 
 - Add a `ResizableSize.expand` constructor that takes a `flex` integer (defaults to 1)
@@ -117,7 +121,3 @@ First stable version!
 
   - Container resizes and enforces child size constraints (if present)
   - Resize cursor responds to user clicks and drags on web
-
-**TODO**
-
-  - Add documentation, code comments, and examples  

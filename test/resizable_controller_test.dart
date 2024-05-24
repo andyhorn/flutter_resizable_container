@@ -104,11 +104,11 @@ void main() {
           expect(controller.sizes, equals([100, 100, 100]));
         });
 
-        test('notifies listeners', () {
+        test('does not notify listeners', () {
           var notified = false;
           controller.addListener(() => notified = true);
           manager.setAvailableSpace(300);
-          expect(notified, isTrue);
+          expect(notified, isFalse);
         });
       });
 

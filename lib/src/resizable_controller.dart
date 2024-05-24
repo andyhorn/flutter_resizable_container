@@ -97,13 +97,17 @@ class ResizableController with ChangeNotifier {
     }
 
     if (_availableSpace == -1) {
+      // Initialize the child sizes and available space, but do not notify
+      // listeners; this step only occurs during the initial build, so we do
+      // not need to trigger another build
       _initializeChildSizes(availableSpace);
+      _availableSpace = availableSpace;
     } else {
+      // Update the child sizes to the new space and notify listeners
       _updateChildSizes(availableSpace);
+      _availableSpace = availableSpace;
+      notifyListeners();
     }
-
-    _availableSpace = availableSpace;
-    notifyListeners();
   }
 
   void _setChildren(List<ResizableChild> children) {
