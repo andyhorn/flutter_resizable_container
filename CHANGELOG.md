@@ -1,3 +1,7 @@
+## 2.0.0
+
+New major version! See the beta notes below.
+
 ## 2.0.0-beta.4
 
 - Fix a bug in the "available size" initialization that was throwing a "marked dirty during build" exception
@@ -13,8 +17,8 @@
 
 - Added a new `ResizableSize` class that defines a "size" in pixels or as a ratio
 - Changed the `startingRatio` in the `ResizableChild` to `startingSize` that takes an optional `ResizableSize`
-    - This change allows the starting size of a child to be defined as an absolute value (in logical pixels) or as a ratio of the available space
-    - If there is a mixture of pixels and ratio sizes, the pixel sizes will be given priority and then the ratio sizes will be given the remaining available space
+  - This change allows the starting size of a child to be defined as an absolute value (in logical pixels) or as a ratio of the available space
+  - If there is a mixture of pixels and ratio sizes, the pixel sizes will be given priority and then the ratio sizes will be given the remaining available space
 - Added a `setSizes` method to the `ResizableController` that takes a list of optional `ResizableSize`s. These sizes will be applied to the current children following the same rules as noted above
 - Removed the `ratios` setter in favor of the new `setSizes` method
 - Made the controller an optional param in the `ResizableContainer` ctor
@@ -22,24 +26,24 @@
 ## 2.0.0-beta.1
 
 - Renamed `ResizableChildData` to `ResizableChild`
-- Added an `expand` flag to the `ResizableChild` ctor 
-    - If there is a `startingRatio` set and this flag is `true`, the child will automatically expand to fill any remaining available space. If this flag is `false`, the child will only expand to meet its `startingRatio` constraint
-    - If the `startingRatio` is `null`, the child will automatically expand to fill any remaining available space, regardless of whether or not this flag is set
+- Added an `expand` flag to the `ResizableChild` ctor
+  - If there is a `startingRatio` set and this flag is `true`, the child will automatically expand to fill any remaining available space. If this flag is `false`, the child will only expand to meet its `startingRatio` constraint
+  - If the `startingRatio` is `null`, the child will automatically expand to fill any remaining available space, regardless of whether or not this flag is set
 - Move the list of `ResizableChild` objects out of the `ResizableController` and _back_ into the `ResizableContainer` as the `children` parameter
-    - This allows the list of children to be modified on-the-fly without recreating a `ResizableController`
+  - This allows the list of children to be modified on-the-fly without recreating a `ResizableController`
 
 ## 1.0.0
 
 First stable version!
 
 - Encapsulation of divider configuration in a new `ResizableDivider` class
-    - Divider `thickness` and `size` properties, mirroring the Flutter Divider's `thickness` and `width` properties, have been added
-    - `onHoverEnter` and `onHoverExit` callbacks allow you to react to the user's interactions with the divider
+  - Divider `thickness` and `size` properties, mirroring the Flutter Divider's `thickness` and `width` properties, have been added
+  - `onHoverEnter` and `onHoverExit` callbacks allow you to react to the user's interactions with the divider
 - All size tracking and calculations have been moved out of the `ResizableContainer` widget and into the `ResizableController`
-    - This fixed several bugs and improves performance by converting the `ResizableContainer` to a `StatelessWidget` (from stateful)
+  - This fixed several bugs and improves performance by converting the `ResizableContainer` to a `StatelessWidget` (from stateful)
 - `ResizableContainer` now requires a `List<Widget>` as its `children` property, as the `List<ResizableChildData>` have been moved into the `ResizableController`
 - Added and improved tests
-- Added a GH workflow to deploy the example app to GH Pages 
+- Added a GH workflow to deploy the example app to GH Pages
 
 ## 0.5.0
 
@@ -87,12 +91,12 @@ First stable version!
 
 ## 0.1.0
 
-- Rework dividers to lie in-line with child widgets, taking up space 
-  along the primary axis, instead of being placed in a stack and positioned 
+- Rework dividers to lie in-line with child widgets, taking up space
+  along the primary axis, instead of being placed in a stack and positioned
   according to the child sizes
-- Add a custom divider who's width is known and can be controlled to ease 
+- Add a custom divider who's width is known and can be controlled to ease
   calculating the available space for child widgets
-- Remove the optionality of the divider - this widget is now required to be 
+- Remove the optionality of the divider - this widget is now required to be
   visible, as hiding it would disable the resize functionality
 
 ## 0.0.5
@@ -119,5 +123,5 @@ First stable version!
 
 **Initial Release**
 
-  - Container resizes and enforces child size constraints (if present)
-  - Resize cursor responds to user clicks and drags on web
+- Container resizes and enforces child size constraints (if present)
+- Resize cursor responds to user clicks and drags on web
