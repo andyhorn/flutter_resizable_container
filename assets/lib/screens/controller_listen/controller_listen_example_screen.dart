@@ -25,11 +25,9 @@ class _ControllerListenExampleScreenState
     super.initState();
     controller.addListener(() {
       final sizes = controller.sizes;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() {
-          leftWidth = sizes.first;
-          rightWidth = sizes.last;
-        });
+      setState(() {
+        leftWidth = sizes.first;
+        rightWidth = sizes.last;
       });
     });
   }
