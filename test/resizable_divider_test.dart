@@ -20,29 +20,6 @@ void main() {
       });
     });
 
-    group('size', () {
-      test('throws if less than thickness', () {
-        expect(
-          () => ResizableDivider(thickness: 1, length: 0.5),
-          throwsAssertionError,
-        );
-      });
-
-      test('does not throw if the same as thickness', () {
-        expect(
-          () => const ResizableDivider(thickness: 1, length: 1),
-          isNot(throwsAssertionError),
-        );
-      });
-
-      test('does not throw if greater than thickness', () {
-        expect(
-          () => const ResizableDivider(thickness: 1, length: 2),
-          isNot(throwsAssertionError),
-        );
-      });
-    });
-
     group('onHoverEnter', () {
       testWidgets('fires when the divider is hovered', (tester) async {
         bool hovered = false;
@@ -85,6 +62,52 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(hovered, isTrue);
+      });
+
+      testWidgets('Does not fire when hovering over empty padding',
+          (tester) async {
+        bool hovered = false;
+
+        await tester.binding.setSurfaceSize(const Size(1000, 1000));
+        addTearDown(() async => await tester.binding.setSurfaceSize(null));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: ResizableController(),
+                direction: Axis.horizontal,
+                divider: ResizableDivider(
+                  onHoverEnter: () => hovered = true,
+                  length: const ResizableSize.ratio(0.1),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+                children: const [
+                  ResizableChild(
+                    child: SizedBox.expand(),
+                  ),
+                  ResizableChild(
+                    child: SizedBox.expand(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
+
+        // start at bottom right corner of the screen
+        await gesture.addPointer(location: const Offset(1000, 1000));
+        addTearDown(() => gesture.removePointer());
+        await tester.pump();
+
+        await gesture.moveTo(const Offset(500, 1000));
+        await tester.pump();
+
+        expect(hovered, isFalse);
       });
     });
 

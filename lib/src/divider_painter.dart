@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 
+@visibleForTesting
 class DividerPainter extends CustomPainter {
   const DividerPainter({
     required this.color,

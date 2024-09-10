@@ -5,7 +5,7 @@ class ResizableDivider {
   const ResizableDivider({
     this.thickness = 1.0,
     this.length = const ResizableSize.expand(),
-    this.padding = 1.0,
+    this.padding = 0,
     this.color,
     this.onHoverEnter,
     this.onHoverExit,
