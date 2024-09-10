@@ -23,21 +23,21 @@ void main() {
     group('size', () {
       test('throws if less than thickness', () {
         expect(
-          () => ResizableDivider(thickness: 1, size: 0.5),
+          () => ResizableDivider(thickness: 1, length: 0.5),
           throwsAssertionError,
         );
       });
 
       test('does not throw if the same as thickness', () {
         expect(
-          () => const ResizableDivider(thickness: 1, size: 1),
+          () => const ResizableDivider(thickness: 1, length: 1),
           isNot(throwsAssertionError),
         );
       });
 
       test('does not throw if greater than thickness', () {
         expect(
-          () => const ResizableDivider(thickness: 1, size: 2),
+          () => const ResizableDivider(thickness: 1, length: 2),
           isNot(throwsAssertionError),
         );
       });

@@ -1,21 +1,26 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 
 class DividerPainter extends CustomPainter {
   const DividerPainter({
     required this.color,
     required this.direction,
     required this.thickness,
-    this.indent,
-    this.endIndent,
+    required this.padding,
+    required this.length,
+    required this.crossAxisAlignment,
+    required this.mainAxisAlignment,
   });
 
   final Axis direction;
   final double thickness;
+  final double padding;
+  final ResizableSize length;
   final Color color;
-  final double? indent;
-  final double? endIndent;
+  final MainAxisAlignment mainAxisAlignment;
+  final CrossAxisAlignment crossAxisAlignment;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -51,39 +56,73 @@ class DividerPainter extends CustomPainter {
     if (direction == Axis.horizontal) {
       // If the direction is horizontal, the divider is a vertical line and the
       // "start" is at the top.
-      //
-      // The indent should be the lesser of the available height, the specified
-      // indent, or 0.
-      final indentAmount = min(size.height, indent ?? 0.0);
-      return Point(size.width / 2, indentAmount);
+
+      final double xCoord = switch (mainAxisAlignment) {
+        // If the mainAxisAlignment is `start`, the divider should sit at the
+        // very left edge of the available space.
+        MainAxisAlignment.start => thickness / 2,
+        // If the mainAxisAlignment is `end`, we want to draw the line at the
+        // very right edge of the available space.
+        MainAxisAlignment.end => size.width - (thickness / 2),
+        // In all other cases, we want to draw the line down the middle of the
+        // available space.
+        _ => size.width / 2,
+      };
+
+      return Point(xCoord, 0);
     }
 
     // If the direction is vertical, the divider is a horizontal line and the
     // "start" is at the left.
-    //
-    // The indent should be the lesser of the available width, the specified
-    // indent, or 0.
-    final indentAmount = min(size.width, indent ?? 0.0);
-    return Point(indentAmount, size.height / 2);
+
+    final double yCoord = switch (mainAxisAlignment) {
+      // If the mainAxisAlignment is `start`, the divider should be at the very
+      // top of the available space.
+      MainAxisAlignment.start => thickness / 2,
+      // If the mainAxisAlignment is `end`, the divider should sit at the very
+      // bottom edge of the available space.
+      MainAxisAlignment.end => size.height - (thickness / 2),
+      // In all other cases, the divider should sit in the middle of the
+      // available space.
+      _ => size.height / 2,
+    };
+
+    return Point(0, yCoord);
   }
 
   Point<double> _getEndingPoint(Size size) {
     if (direction == Axis.horizontal) {
-      // If the direction is horizontal, the divider is a vertical line and the
-      // "end" is at the bottom.
-      //
-      // The indent should be the available height minus the indent amount,
-      // capped at a minimum of 0.
-      final indentAmount = max(0.0, size.height - (endIndent ?? 0));
-      return Point(size.width / 2, indentAmount);
+      // If the direction is horizontal, the divider is a vertical line.
+
+      final double xCoord = switch (mainAxisAlignment) {
+        // If the mainAxisAlignment is "start", the divider should sit at the
+        // left edge of the available space.
+        MainAxisAlignment.start => thickness / 2,
+        // If the mainAxisAlignment is `end`, the divider should sit at the
+        // right edge of the available space.
+        MainAxisAlignment.end => size.width - (thickness / 2),
+        // In all other cases, the divider should sit in the middle of the
+        // available space.
+        _ => size.width / 2,
+      };
+
+      return Point(xCoord, size.height);
     }
 
-    // If the direction is vertical, the divider is a horizontal line and the
-    // "end" is at the right.
-    //
-    // The indent should be the available width minus the indent amount, capped
-    // at a minimum of 0.
-    final indentAmount = max(0.0, size.width - (endIndent ?? 0));
-    return Point(indentAmount, size.height / 2);
+    // If the direction is vertical, the divider is a horizontal line.
+
+    final double yCoord = switch (mainAxisAlignment) {
+      // If the mainAxisAlignment is `start`, the divider should sit at the top
+      // edge of the available space.
+      MainAxisAlignment.start => thickness / 2,
+      // If the mainAxisAlignment is `end`, the divider should sit at the bottom
+      // edge of the available space.
+      MainAxisAlignment.end => size.height - (thickness / 2),
+      // In all other cases, the divider should sit in the middle of the
+      // available space.
+      _ => size.height / 2,
+    };
+
+    return Point(size.width, yCoord);
   }
 }

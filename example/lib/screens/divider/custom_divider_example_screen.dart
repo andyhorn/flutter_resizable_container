@@ -39,8 +39,11 @@ class _CustomDividerExampleScreenState
           color: hovered
               ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.inversePrimary,
-          thickness: 2,
-          size: 14,
+          thickness: 4,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.end,
+          padding: 10,
+          length: const ResizableSize.ratio(0.2),
           onHoverEnter: () => setState(() => hovered = true),
           onHoverExit: () => setState(() => hovered = false),
         ),

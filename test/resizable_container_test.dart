@@ -18,7 +18,7 @@ void main() {
               controller: controller,
               direction: Axis.horizontal,
               divider: const ResizableDivider(
-                size: dividerWidth,
+                length: dividerWidth,
               ),
               children: const [
                 ResizableChild(
@@ -70,7 +70,7 @@ void main() {
               controller: controller,
               direction: Axis.horizontal,
               divider: const ResizableDivider(
-                size: dividerWidth,
+                length: dividerWidth,
               ),
               children: const [
                 ResizableChild(
@@ -147,7 +147,7 @@ void main() {
           home: Scaffold(
             body: ResizableContainer(
               divider: ResizableDivider(
-                size: dividerWidth,
+                length: dividerWidth,
               ),
               direction: Axis.horizontal,
               children: [
@@ -189,7 +189,7 @@ void main() {
           home: Scaffold(
             body: ResizableContainer(
               divider: ResizableDivider(
-                size: dividerWidth,
+                length: dividerWidth,
               ),
               direction: Axis.horizontal,
               children: [
