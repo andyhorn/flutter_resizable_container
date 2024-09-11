@@ -17,7 +17,7 @@ Each example also comes with an embedded source-code view, so you don't have to 
 ## Features
 
 - `ResizableContainer`s are fully nestable
-- Customize the length, thickness, alignment, and color of the divider)s) between children
+- Customize the length, thickness, alignment, and color of the divider(s) between children
 - Respond to user interactions with `onHoverEnter` and `onHoverExit` callbacks on dividers
 - Programmatically set the ratios of the resizable children through a `ResizableController`
 - Respond to changes in the sizes of the resizable children by listening to the `ResizableController`
