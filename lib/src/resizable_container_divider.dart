@@ -1,7 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/divider_painter.dart';
 import 'package:flutter_resizable_container/src/resizable_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_size.dart';
 
 class ResizableContainerDivider extends StatefulWidget {
   const ResizableContainerDivider({
@@ -26,38 +30,49 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
 
   @override
   Widget build(BuildContext context) {
-    final width = _getWidth();
-    final height = _getHeight();
+    return LayoutBuilder(builder: (context, constraints) {
+      final width = _getWidth(constraints.maxWidth);
+      final height = _getHeight(constraints.maxHeight);
 
-    return MouseRegion(
-      cursor: _getCursor(),
-      onEnter: _onEnter,
-      onExit: _onExit,
-      child: GestureDetector(
-        onVerticalDragStart: _onVerticalDragStart,
-        onVerticalDragUpdate: _onVerticalDragUpdate,
-        onVerticalDragEnd: _onVerticalDragEnd,
-        onHorizontalDragStart: _onHorizontalDragStart,
-        onHorizontalDragUpdate: _onHorizontalDragUpdate,
-        onHorizontalDragEnd: _onHorizontalDragEnd,
-        child: SizedBox(
-          height: height,
-          width: width,
-          child: Center(
+      return Align(
+        alignment: switch (widget.config.crossAxisAlignment) {
+          CrossAxisAlignment.start => switch (widget.direction) {
+              Axis.horizontal => Alignment.topCenter,
+              Axis.vertical => Alignment.centerLeft,
+            },
+          CrossAxisAlignment.end => switch (widget.direction) {
+              Axis.horizontal => Alignment.bottomCenter,
+              Axis.vertical => Alignment.bottomRight,
+            },
+          _ => Alignment.center,
+        },
+        child: MouseRegion(
+          cursor: _getCursor(),
+          onEnter: _onEnter,
+          onExit: _onExit,
+          child: GestureDetector(
+            onVerticalDragStart: _onVerticalDragStart,
+            onVerticalDragUpdate: _onVerticalDragUpdate,
+            onVerticalDragEnd: _onVerticalDragEnd,
+            onHorizontalDragStart: _onHorizontalDragStart,
+            onHorizontalDragUpdate: _onHorizontalDragUpdate,
+            onHorizontalDragEnd: _onHorizontalDragEnd,
             child: CustomPaint(
               size: Size(width, height),
               painter: DividerPainter(
                 direction: widget.direction,
                 color: widget.config.color ?? Theme.of(context).dividerColor,
                 thickness: widget.config.thickness,
-                indent: widget.config.indent,
-                endIndent: widget.config.endIndent,
+                crossAxisAlignment: widget.config.crossAxisAlignment,
+                length: widget.config.length,
+                mainAxisAlignment: widget.config.mainAxisAlignment,
+                padding: widget.config.padding,
               ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   MouseCursor _getCursor() {
@@ -67,17 +82,25 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
     };
   }
 
-  double _getHeight() {
+  double _getHeight(double maxHeight) {
     return switch (widget.direction) {
-      Axis.horizontal => double.infinity,
-      Axis.vertical => widget.config.size,
+      Axis.horizontal => switch (widget.config.length.type) {
+          SizeType.pixels => min(widget.config.length.value, maxHeight),
+          SizeType.expand => maxHeight,
+          SizeType.ratio => maxHeight * widget.config.length.value,
+        },
+      Axis.vertical => widget.config.thickness + widget.config.padding,
     };
   }
 
-  double _getWidth() {
+  double _getWidth(double maxWidth) {
     return switch (widget.direction) {
-      Axis.horizontal => widget.config.size,
-      Axis.vertical => double.infinity,
+      Axis.horizontal => widget.config.thickness + widget.config.padding,
+      Axis.vertical => switch (widget.config.length.type) {
+          SizeType.pixels => min(widget.config.length.value, maxWidth),
+          SizeType.expand => maxWidth,
+          SizeType.ratio => maxWidth * widget.config.length.value,
+        },
     };
   }
 

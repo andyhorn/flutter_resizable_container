@@ -8,19 +8,19 @@ View the interactive example app at [andyhorn.github.io/flutter_resizable_contai
 
 The example app contains multiple examples demonstrating the features of this package and how to use them.
 
-![Multiple Examples](./doc/screenshot_nav_bar.png?raw=true "Multiple Examples")
+![Multiple Examples](./doc/screenshot_nav_bar.png?raw=true 'Multiple Examples')
 
 Each example also comes with an embedded source-code view, so you don't have to bounce between the app and the repo.
 
-![Source Code Preview](./doc/screenshot_source_code.png?raw=true "Source Code Preview")
+![Source Code Preview](./doc/screenshot_source_code.png?raw=true 'Source Code Preview')
 
 ## Features
 
-* `ResizableContainer`s are fully nestable
-* Customize the size/thickness, indentation, and color of the dividers between children
-* Respond to user interactions with `onHoverEnter` and `onHoverExit` callbacks on dividers
-* Programmatically set the ratios of the resizable children through a `ResizableController`
-* Respond to changes in the sizes of the resizable children by listening to the `ResizableController`
+- `ResizableContainer`s are fully nestable
+- Customize the length, thickness, alignment, and color of the divider(s) between children
+- Respond to user interactions with `onHoverEnter` and `onHoverExit` callbacks on dividers
+- Programmatically set the ratios of the resizable children through a `ResizableController`
+- Respond to changes in the sizes of the resizable children by listening to the `ResizableController`
 
 ## Getting started
 
@@ -88,7 +88,7 @@ void dispose() {
 }
 
 // (somewhere else in your code)
-// use the `setSizes` method to programmatically set the sizes of the 
+// use the `setSizes` method to programmatically set the sizes of the
 // container's children.
 //
 // This method takes a list of ResizableSize objects - more on this below.
@@ -243,19 +243,34 @@ In this scenario, the first child would be given 2/3 of the total available spac
 
 Use the `ResizableDivider` class to customize the look and feel of the dividers between each of a container's children.
 
-You can customize the `thickness`, `size`, `indent`, `endIndent`, and `color` of the divider. You can also provide callbacks for the `onHoverEnter` and `onHoverExit` events to respond to user interactions.
+You can customize the `thickness`, `length`, `crossAxisAlignment`, `mainAxisAlignment`, and `color` of the divider. You can also provide callbacks for the `onHoverEnter` and `onHoverExit` events to respond to user interactions.
 
 ```dart
 divider: ResizableDivider(
     thickness: 2,
-    size: 5,
-    indent: 5,
-    endIndent: 5,
+    padding: 5,
+    length: const ResizableSize.ratio(0.25),
     onHoverEnter: () => setState(() => hovered = true),
     onHoverExit: () => setState(() => hovered = false),
     color: hovered ? Colors.blue : Colors.black,
 ),
 ```
+
+# Sizing
+
+The `thickness` and `length` properties control the size of the line drawn on the screen. The `length` determines the cross-axis size - how "long" the line is - while `thickness` determines the main-axis size. The `length` property is of type `ResizableSize`, giving you the flexibility to set a responsive size, using `.ratio`, or a fixed size, using `.pixels`.
+
+Note: If you set an absolute length that is smaller than the available space, the divider will fit to the available space and not overflow.
+
+# Alignment and padding
+
+If the divider's length is less than the total available space, you can use the `crossAxisAlignment` to control its cross-axis position. For example, a vertical divider set to `CrossAxisAlignment.start` will be positioned at the top of its space. The default value is `.center`.
+
+![Cross-Axis Alignment](./doc/screenshot_cross_axis_start.png?raw=true 'Cross-Axis Alignment')
+
+By adding a `padding` value, additional (empty) space will be added around/alongside the divider. The `mainAxisAlignment` property can then be used to control its position within this space on the main axis. For example, a vertical divider set to `MainAxisAlignment.start` will be positioned at the very left edge of its available space.
+
+![Main-Axis Alignment](./doc/screenshot_main_axis_start.png?raw=true 'Main-Axis Alignment')
 
 ## License
 

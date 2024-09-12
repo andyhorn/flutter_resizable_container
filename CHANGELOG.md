@@ -1,3 +1,11 @@
+## 3.0.0
+
+After much feedback, I revised the `ResizableContainerDivider` to be even more customizable. The changes include:
+
+1. Replace the `size`, `indent`, and `endIndent` properties with a `length` property, of type `ResizableSize`, to control how long the dividing line is
+2. Add `crossAxisAlignment` and `mainAxisAlignment` properties to control where the line sits in its available space (if the line does not take up its full length and/or has padding, see below).
+3. Add a `padding` property to add empty space along the main axis - the divider sits within, or alongside, this empty space
+
 ## 2.0.0
 
 New major version! See the beta notes below.

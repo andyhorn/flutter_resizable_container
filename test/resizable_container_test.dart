@@ -18,7 +18,7 @@ void main() {
               controller: controller,
               direction: Axis.horizontal,
               divider: const ResizableDivider(
-                size: dividerWidth,
+                thickness: dividerWidth,
               ),
               children: const [
                 ResizableChild(
@@ -70,7 +70,7 @@ void main() {
               controller: controller,
               direction: Axis.horizontal,
               divider: const ResizableDivider(
-                size: dividerWidth,
+                thickness: dividerWidth,
               ),
               children: const [
                 ResizableChild(
@@ -147,7 +147,7 @@ void main() {
           home: Scaffold(
             body: ResizableContainer(
               divider: ResizableDivider(
-                size: dividerWidth,
+                thickness: dividerWidth,
               ),
               direction: Axis.horizontal,
               children: [
@@ -189,7 +189,7 @@ void main() {
           home: Scaffold(
             body: ResizableContainer(
               divider: ResizableDivider(
-                size: dividerWidth,
+                thickness: dividerWidth,
               ),
               direction: Axis.horizontal,
               children: [
@@ -277,6 +277,10 @@ class __ToggleChildAppState extends State<_ToggleChildApp> {
         ),
         body: ResizableContainer(
           direction: Axis.horizontal,
+          divider: const ResizableDivider(
+            thickness: 2,
+            padding: 0,
+          ),
           children: [
             const ResizableChild(
               size: ResizableSize.expand(flex: 2),

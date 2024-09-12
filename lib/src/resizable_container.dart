@@ -129,7 +129,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   double _getAvailableSpace(BoxConstraints constraints) {
     final totalSpace = constraints.maxForDirection(widget.direction);
-    final dividerSpace = (widget.children.length - 1) * widget.divider.size;
+    final numDividers = widget.children.length - 1;
+    final dividerSpace = numDividers * widget.divider.thickness +
+        numDividers * widget.divider.padding;
     return totalSpace - dividerSpace;
   }
 

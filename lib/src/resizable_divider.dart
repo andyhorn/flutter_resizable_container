@@ -1,44 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 
 class ResizableDivider {
   const ResizableDivider({
     this.thickness = 1.0,
-    this.size = 2.0,
+    this.length = const ResizableSize.expand(),
+    this.padding = 0,
     this.color,
-    this.indent,
-    this.endIndent,
     this.onHoverEnter,
     this.onHoverExit,
-  })  : assert(size >= thickness, '[size] must be >= [thickness].'),
-        assert(thickness > 0, '[thickness] must be > 0.');
+    this.mainAxisAlignment = MainAxisAlignment.center,
+    this.crossAxisAlignment = CrossAxisAlignment.center,
+  }) : assert(thickness > 0, '[thickness] must be > 0.');
 
   /// The thickness of the line drawn within the divider.
   ///
   /// Defaults to 1.0.
   final double thickness;
 
-  /// The divider's size (height/width) extent.
-  /// The divider line will be drawn in the center of this space.
+  /// The length of the divider along the cross-axis.
   ///
-  /// Defaults to 2.0.
-  final double size;
+  /// Defaults to `ResizableSize.expand()`, which will take up the full length.
+  /// If given a pixel value, the length will be the smaller of the provided value
+  /// and the available space.
+  final ResizableSize length;
+
+  /// The main-axis padding around the divider line. The position of the line
+  /// within this padding is dictated by the [alignment] property.
+  final double padding;
+
+  /// The alignment of the divider within its main-axis padding; `spaceAround`,
+  /// `spaceBetween`, and `spaceEvenly` will have no effect.
+  ///
+  /// For example, use [MainAxisAlignment.center] to position the divider in the
+  /// middle of the padding.
+  final MainAxisAlignment mainAxisAlignment;
+
+  /// The alignment of the divider along the cross-axis. If the divider takes up
+  /// the full available space, this setting will have no effect. `stretch` and
+  /// `baseline` will also have no effect.
+  ///
+  /// For example, use [CrossAxisAlignment.center] to position the divider in the
+  /// middle of its cross-axis space. This is useful for creating a small "handle"
+  /// in the middle of the space.
+  final CrossAxisAlignment crossAxisAlignment;
 
   /// The color of the dividers between children.
   ///
   /// Defaults to [ThemeData.dividerColor].
   final Color? color;
-
-  /// The amount of empty space to the leading edge of the divider.
-  ///
-  /// For dividers running from top-to-bottom, this adds empty space at the top.
-  /// For dividers running from left-to-right, this adds empty space to the left.
-  final double? indent;
-
-  /// The amount of empty space to the trailing edge of the divider.
-  ///
-  /// For dividers running from top-to-bottom, this adds empty space at the bottom.
-  /// For dividers running from left-to-right, this adds empty space to the right.
-  final double? endIndent;
 
   /// Triggers when the user's cursor begins hovering over this divider.
   final VoidCallback? onHoverEnter;
