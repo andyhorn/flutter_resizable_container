@@ -148,6 +148,8 @@ class _CustomDividerExampleScreenState
                 length: ResizableSize.ratio(length),
                 onHoverEnter: () => setState(() => hovered = true),
                 onHoverExit: () => setState(() => hovered = false),
+                onTapDown: () => setState(() => hovered = true),
+                onTapUp: () => setState(() => hovered = false),
               ),
               children: [
                 ResizableChild(
