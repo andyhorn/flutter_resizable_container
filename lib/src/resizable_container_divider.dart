@@ -24,7 +24,8 @@ class ResizableContainerDivider extends StatefulWidget {
       _ResizableContainerDividerState();
 }
 
-class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
+class _ResizableContainerDividerState
+    extends State<ResizableContainerDivider> {
   bool isDragging = false;
   bool isHovered = false;
 
@@ -63,7 +64,8 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
               size: Size(width, height),
               painter: DividerPainter(
                 direction: widget.direction,
-                color: widget.config.color ?? Theme.of(context).dividerColor,
+                color: widget.config.color ??
+                    Theme.of(context).dividerColor,
                 thickness: widget.config.thickness,
                 crossAxisAlignment: widget.config.crossAxisAlignment,
                 length: widget.config.length,
@@ -87,19 +89,23 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   double _getHeight(double maxHeight) {
     return switch (widget.direction) {
       Axis.horizontal => switch (widget.config.length.type) {
-          SizeType.pixels => min(widget.config.length.value, maxHeight),
+          SizeType.pixels =>
+            min(widget.config.length.value, maxHeight),
           SizeType.expand => maxHeight,
           SizeType.ratio => maxHeight * widget.config.length.value,
         },
-      Axis.vertical => widget.config.thickness + widget.config.padding,
+      Axis.vertical =>
+        widget.config.thickness + widget.config.padding,
     };
   }
 
   double _getWidth(double maxWidth) {
     return switch (widget.direction) {
-      Axis.horizontal => widget.config.thickness + widget.config.padding,
+      Axis.horizontal =>
+        widget.config.thickness + widget.config.padding,
       Axis.vertical => switch (widget.config.length.type) {
-          SizeType.pixels => min(widget.config.length.value, maxWidth),
+          SizeType.pixels =>
+            min(widget.config.length.value, maxWidth),
           SizeType.expand => maxWidth,
           SizeType.ratio => maxWidth * widget.config.length.value,
         },

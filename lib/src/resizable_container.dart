@@ -36,7 +36,8 @@ class ResizableContainer extends StatefulWidget {
   final ResizableDivider divider;
 
   @override
-  State<ResizableContainer> createState() => _ResizableContainerState();
+  State<ResizableContainer> createState() =>
+      _ResizableContainerState();
 }
 
 class _ResizableContainerState extends State<ResizableContainer> {
@@ -53,7 +54,8 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    final hasChanges = !listEquals(oldWidget.children, widget.children);
+    final hasChanges =
+        !listEquals(oldWidget.children, widget.children);
 
     if (hasChanges) {
       manager.updateChildren(widget.children);
@@ -112,7 +114,8 @@ class _ResizableContainerState extends State<ResizableContainer> {
                     ResizableContainerDivider(
                       config: widget.divider,
                       direction: widget.direction,
-                      onResizeUpdate: (delta) => manager.adjustChildSize(
+                      onResizeUpdate: (delta) =>
+                          manager.adjustChildSize(
                         index: i,
                         delta: delta,
                       ),

@@ -38,7 +38,9 @@ final class ResizableSize {
 
   @override
   operator ==(Object other) =>
-      other is ResizableSize && other.type == type && other._value == _value;
+      other is ResizableSize &&
+      other.type == type &&
+      other._value == _value;
 
   @override
   int get hashCode => Object.hash(type, _value);
