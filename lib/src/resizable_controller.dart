@@ -13,7 +13,8 @@ class ResizableController with ChangeNotifier {
   List<ResizableChild> _children = const [];
 
   /// The size, in pixels, of each child.
-  UnmodifiableListView<double> get sizes => UnmodifiableListView(_sizes);
+  UnmodifiableListView<double> get sizes =>
+      UnmodifiableListView(_sizes);
 
   /// A list of ratios (proportion of total available space taken) for each child.
   UnmodifiableListView<double> get ratios {
@@ -139,7 +140,8 @@ class ResizableController with ChangeNotifier {
     final flexCount = resizableSizes.flexCount;
 
     if (resizableSizes.totalPixels > availableSpace) {
-      throw ArgumentError('Size cannot exceed total available space.');
+      throw ArgumentError(
+          'Size cannot exceed total available space.');
     }
 
     if (resizableSizes.totalRatio > 1.0) {
@@ -206,7 +208,8 @@ class ResizableController with ChangeNotifier {
     final currentSize = sizes[index];
     final minCurrentSize = _children[index].minSize ?? 0;
     final adjacentSize = sizes[index + 1];
-    final maxAdjacentSize = _children[index + 1].maxSize ?? double.infinity;
+    final maxAdjacentSize =
+        _children[index + 1].maxSize ?? double.infinity;
     final maxCurrentDelta = currentSize - minCurrentSize;
     final maxAdjacentDelta = maxAdjacentSize - adjacentSize;
     final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
@@ -223,7 +226,8 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     final currentSize = sizes[index];
-    final maxCurrentSize = _children[index].maxSize ?? double.infinity;
+    final maxCurrentSize =
+        _children[index].maxSize ?? double.infinity;
     final adjacentSize = sizes[index + 1];
     final minAdjacentSize = _children[index + 1].minSize ?? 0;
     final maxAvailableSpace = min(maxCurrentSize, _availableSpace);
@@ -267,6 +271,7 @@ final class ResizableControllerManager {
 abstract class ResizableControllerTestHelper {
   const ResizableControllerTestHelper._();
 
-  static List<ResizableChild> getChildren(ResizableController controller) =>
+  static List<ResizableChild> getChildren(
+          ResizableController controller) =>
       controller._children;
 }
