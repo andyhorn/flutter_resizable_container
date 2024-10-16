@@ -9,6 +9,8 @@ class ResizableDivider {
     this.color,
     this.onHoverEnter,
     this.onHoverExit,
+    this.onDragStart,
+    this.onDragEnd,
     this.mainAxisAlignment = MainAxisAlignment.center,
     this.crossAxisAlignment = CrossAxisAlignment.center,
   }) : assert(thickness > 0, '[thickness] must be > 0.');
@@ -55,4 +57,10 @@ class ResizableDivider {
 
   /// Triggers when the user's cursor ends hovering over this divider.
   final VoidCallback? onHoverExit;
+
+  /// Triggers when the user begins dragging this divider.
+  final VoidCallback? onDragStart;
+
+  /// Triggers when the user stops dragging this divider.
+  final VoidCallback? onDragEnd;
 }

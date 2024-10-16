@@ -18,7 +18,7 @@ Each example also comes with an embedded source-code view, so you don't have to 
 
 - `ResizableContainer`s are fully nestable
 - Customize the length, thickness, alignment, and color of the divider(s) between children
-- Respond to user interactions with `onHoverEnter` and `onHoverExit` callbacks on dividers
+- Respond to user interactions with `onHoverEnter`, `onHoverExit`, `onDragStart`, and `onDragEnd` callbacks on dividers
 - Programmatically set the ratios of the resizable children through a `ResizableController`
 - Respond to changes in the sizes of the resizable children by listening to the `ResizableController`
 
@@ -243,7 +243,7 @@ In this scenario, the first child would be given 2/3 of the total available spac
 
 Use the `ResizableDivider` class to customize the look and feel of the dividers between each of a container's children.
 
-You can customize the `thickness`, `length`, `crossAxisAlignment`, `mainAxisAlignment`, and `color` of the divider. You can also provide callbacks for the `onHoverEnter` and `onHoverExit` events to respond to user interactions.
+You can customize the `thickness`, `length`, `crossAxisAlignment`, `mainAxisAlignment`, and `color` of the divider. You can also provide callbacks for the `onHoverEnter`, `onHoverExit`, `onDragStart`, and `onDragEnd` events to respond to user interactions.
 
 ```dart
 divider: ResizableDivider(
@@ -252,6 +252,8 @@ divider: ResizableDivider(
     length: const ResizableSize.ratio(0.25),
     onHoverEnter: () => setState(() => hovered = true),
     onHoverExit: () => setState(() => hovered = false),
+    onDragStart: () => setState(() => dragging = true),
+    onDragEnd: () => setState(() => dragging = false),
     color: hovered ? Colors.blue : Colors.black,
 ),
 ```
