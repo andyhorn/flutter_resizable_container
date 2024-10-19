@@ -243,11 +243,11 @@ void main() {
 
       expect(
         tester.getSize(find.byKey(const Key('ChildA'))).width,
-        equals((1000 - 2) * 2 / 3),
+        moreOrLessEquals((1000 - 2) * 2 / 3),
       );
       expect(
         tester.getSize(find.byKey(const Key('ChildB'))).width,
-        equals((1000 - 2) * 1 / 3),
+        moreOrLessEquals((1000 - 2) * 1 / 3),
       );
 
       await tester.tap(find.byKey(const Key('ToggleSwitch')));
