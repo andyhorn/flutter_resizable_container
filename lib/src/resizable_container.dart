@@ -43,6 +43,10 @@ class _ResizableContainerState extends State<ResizableContainer> {
   late final controller = widget.controller ?? ResizableController();
   late final isDefaultController = widget.controller == null;
   late final manager = ResizableControllerManager(controller);
+  late final keys = List.generate(
+    widget.children.length,
+    (_) => GlobalKey(),
+  );
 
   var initialized = false;
   var initScheduled = false;
@@ -76,8 +80,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   @override
   Widget build(BuildContext context) {
-    final List<GlobalKey> keys = [];
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableSpace = _getAvailableSpace(constraints);
@@ -94,12 +96,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
                   // build the child
                   Builder(
                     builder: (context) {
-                      final key = GlobalKey();
-                      keys.add(key);
-
                       if (!initScheduled) {
                         Future.delayed(Duration.zero, () {
-                          _sizeInit(keys);
+                          _sizeInit();
                         });
 
                         initScheduled = true;
@@ -107,14 +106,14 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
                       if (widget.children[i].size.isShrink && !initialized) {
                         return UnconstrainedBox(
-                          key: key,
+                          key: keys[i],
                           child: widget.children[i].child,
                         );
                       }
 
                       if (widget.children[i].size.isExpand && !initialized) {
                         return Expanded(
-                          key: key,
+                          key: keys[i],
                           flex: widget.children[i].size.value.toInt(),
                           child: widget.children[i].child,
                         );
@@ -133,7 +132,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                       );
 
                       return SizedBox(
-                        key: key,
+                        key: keys[i],
                         height: height,
                         width: width,
                         child: widget.children[i].child,
@@ -177,7 +176,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
         : controller.sizes[index];
   }
 
-  void _sizeInit(List<GlobalKey> keys) {
+  void _sizeInit() {
     final sizes = keys.map<double>((key) {
       final size = _getRenderBoxSize(key);
 
