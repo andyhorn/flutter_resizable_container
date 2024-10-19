@@ -39,6 +39,8 @@ void main() {
         ),
       );
 
+      await tester.pumpAndSettle();
+
       final resizableContainer = tester.widget(find.byType(ResizableContainer));
       expect(resizableContainer, isNotNull);
 
@@ -89,6 +91,8 @@ void main() {
         ),
       );
 
+      await tester.pumpAndSettle();
+
       const availableSpace = 1000 - dividerWidth;
 
       final resizableContainer = tester.widget(find.byType(ResizableContainer));
@@ -129,6 +133,8 @@ void main() {
         ),
       );
 
+      await tester.pumpAndSettle();
+
       await tester.drag(
         find.byType(ResizableContainerDivider),
         const Offset(-600, 0),
@@ -167,6 +173,8 @@ void main() {
           ),
         ),
       );
+
+      await tester.pumpAndSettle();
 
       await tester.drag(
         find.byType(ResizableContainerDivider),
@@ -210,6 +218,8 @@ void main() {
         ),
       );
 
+      await tester.pumpAndSettle();
+
       await tester.drag(
         find.byType(ResizableContainerDivider),
         const Offset(-600, 0),
@@ -226,6 +236,7 @@ void main() {
     testWidgets('children expand appropriately', (tester) async {
       await tester.binding.setSurfaceSize(const Size(1000, 1000));
       await tester.pumpWidget(const _ToggleChildApp());
+      await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('ChildA')), findsOneWidget);
       expect(find.byKey(const Key('ChildB')), findsOneWidget);

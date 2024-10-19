@@ -95,6 +95,8 @@ void main() {
           ),
         );
 
+        await tester.pumpAndSettle();
+
         final gesture = await tester.createGesture(
           kind: PointerDeviceKind.mouse,
         );
