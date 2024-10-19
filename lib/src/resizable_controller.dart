@@ -238,6 +238,10 @@ class ResizableController with ChangeNotifier {
 
     return delta;
   }
+
+  void _notify() {
+    notifyListeners();
+  }
 }
 
 final class ResizableControllerManager {
@@ -262,6 +266,14 @@ final class ResizableControllerManager {
     required double delta,
   }) {
     _controller._adjustChildSize(index: index, delta: delta);
+  }
+
+  void setSizes(List<double> sizes) {
+    for (var i = 0; i < sizes.length; i++) {
+      _controller._sizes[i] = sizes[i];
+    }
+
+    _controller._notify();
   }
 }
 
