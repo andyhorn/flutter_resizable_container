@@ -45,7 +45,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
   late final manager = ResizableControllerManager(controller);
 
   var initialized = false;
-  var scheduled = false;
+  var initScheduled = false;
 
   @override
   void initState() {
@@ -97,12 +97,12 @@ class _ResizableContainerState extends State<ResizableContainer> {
                       final key = GlobalKey();
                       keys.add(key);
 
-                      if (!scheduled) {
+                      if (!initScheduled) {
                         Future.delayed(Duration.zero, () {
                           _sizeInit(keys);
                         });
 
-                        scheduled = true;
+                        initScheduled = true;
                       }
 
                       if (widget.children[i].size.isShrink && !initialized) {
