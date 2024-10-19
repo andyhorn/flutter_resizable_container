@@ -88,6 +88,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
           SizeType.pixels => min(widget.config.length.value, maxHeight),
           SizeType.expand => maxHeight,
           SizeType.ratio => maxHeight * widget.config.length.value,
+          SizeType.shrink => 0.0,
         },
       Axis.vertical => widget.config.thickness + widget.config.padding,
     };
@@ -100,6 +101,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
           SizeType.pixels => min(widget.config.length.value, maxWidth),
           SizeType.expand => maxWidth,
           SizeType.ratio => maxWidth * widget.config.length.value,
+          SizeType.shrink => 0.0,
         },
     };
   }

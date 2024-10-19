@@ -156,6 +156,7 @@ class ResizableController with ChangeNotifier {
         SizeType.pixels => size.value,
         SizeType.ratio => remainingSpace * size.value,
         SizeType.expand => flexUnitSpace * size.value,
+        SizeType.shrink => 0.0,
       },
     );
 

@@ -2,6 +2,7 @@ enum SizeType {
   ratio,
   pixels,
   expand,
+  shrink,
 }
 
 final class ResizableSize {
@@ -25,6 +26,10 @@ final class ResizableSize {
         type = SizeType.expand,
         assert(flex > 0, 'Flex value must be greater than 0.');
 
+  const ResizableSize.shrink()
+      : _value = 0,
+        type = SizeType.shrink;
+
   final num _value;
   final SizeType type;
 
@@ -32,6 +37,7 @@ final class ResizableSize {
   bool get isRatio => type == SizeType.ratio;
   bool get isPixels => type == SizeType.pixels;
   bool get isExpand => type == SizeType.expand;
+  bool get isShrink => type == SizeType.shrink;
 
   @override
   String toString() => 'ResizableSize(type: $type, value: $_value)';
