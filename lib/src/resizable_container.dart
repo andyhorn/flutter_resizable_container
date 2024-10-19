@@ -178,9 +178,17 @@ class _ResizableContainerState extends State<ResizableContainer> {
   }
 
   void _sizeInit(List<GlobalKey> keys) {
-    final sizes = keys.map((key) {
+    final sizes = keys.map<double>((key) {
       final size = _getRenderBoxSize(key);
-      return size?.width ?? 0;
+
+      if (size == null) {
+        return 0;
+      }
+
+      return switch (widget.direction) {
+        Axis.horizontal => size.width,
+        Axis.vertical => size.height,
+      };
     });
 
     manager.setSizes(sizes.toList());
