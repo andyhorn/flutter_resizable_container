@@ -158,5 +158,174 @@ void main() {
         expect(hovered, isFalse);
       });
     });
+
+    group('onTapDown', () {
+      testWidgets('fires when the divider is tapped down', (tester) async {
+        bool dividerTappedDown = false;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: ResizableController(),
+                direction: Axis.horizontal,
+                divider: ResizableDivider(
+                  onTapDown: () => dividerTappedDown = true,
+                ),
+                children: const [
+                  ResizableChild(
+                    child: SizedBox.expand(),
+                  ),
+                  ResizableChild(
+                    child: SizedBox.expand(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        final dividerFinder = find.byType(ResizableContainerDivider);
+        expect(dividerFinder, findsOneWidget);
+
+        // Simulate tap on the divider
+        await tester.tap(dividerFinder, kind: PointerDeviceKind.touch);
+        await tester.pump();
+
+        expect(dividerTappedDown, isTrue);
+      });
+
+      testWidgets('does not fire when tapping outside the divider',
+          (tester) async {
+        bool dividerTappedDown = false;
+        bool otherTappedDown = false;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Stack(
+                children: [
+                  // Outer GestureDetector to simulate tapping outside the divider
+                  GestureDetector(
+                    onTapDown: (_) => otherTappedDown = true,
+                    child: Container(
+                      color: Colors.transparent,
+                      width: 300,
+                      height: 300,
+                    ),
+                  ),
+                  // ResizableContainer with ResizableDivider
+                  ResizableContainer(
+                    controller: ResizableController(),
+                    direction: Axis.horizontal,
+                    divider: ResizableDivider(
+                      onTapDown: () => dividerTappedDown = true,
+                    ),
+                    children: const [
+                      ResizableChild(
+                        child: SizedBox.expand(),
+                      ),
+                      ResizableChild(
+                        child: SizedBox.expand(),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        // Tap outside the divider
+        await tester.tapAt(const Offset(10, 10), kind: PointerDeviceKind.touch);
+        await tester.pump();
+
+        expect(otherTappedDown, isTrue,
+            reason: 'Outer GestureDetector should detect the tap.');
+        expect(dividerTappedDown, isFalse,
+            reason:
+                'ResizableDivider onTapDown should not be triggered when tapping outside.');
+      });
+    });
+
+    group('onTapUp', () {
+      testWidgets('fires when the divider tap is released', (tester) async {
+        bool tappedUp = false;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: ResizableController(),
+                direction: Axis.horizontal,
+                divider: ResizableDivider(
+                  onTapUp: () => tappedUp = true,
+                ),
+                children: const [
+                  ResizableChild(
+                    child: SizedBox.expand(),
+                  ),
+                  ResizableChild(
+                    child: SizedBox.expand(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        final dividerFinder = find.byType(ResizableContainerDivider);
+        expect(dividerFinder, findsOneWidget);
+
+        // Simulate tap down and tap up gesture
+        final gesture = await tester.startGesture(
+            tester.getCenter(dividerFinder),
+            kind: PointerDeviceKind.touch);
+        await tester.pump();
+        await gesture.up();
+        await tester.pump();
+
+        expect(tappedUp, isTrue);
+      });
+
+      testWidgets('does not fire when tap is canceled', (tester) async {
+        bool tappedUp = false;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: ResizableController(),
+                direction: Axis.horizontal,
+                divider: ResizableDivider(
+                  onTapUp: () => tappedUp = true,
+                ),
+                children: const [
+                  ResizableChild(
+                    child: SizedBox.expand(),
+                  ),
+                  ResizableChild(
+                    child: SizedBox.expand(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        final dividerFinder = find.byType(ResizableContainerDivider);
+        expect(dividerFinder, findsOneWidget);
+
+        // Simulate tap gesture and cancel it
+        final gesture = await tester.startGesture(
+            tester.getCenter(dividerFinder),
+            kind: PointerDeviceKind.touch);
+        await tester.pump();
+        await gesture.cancel();
+        await tester.pump();
+
+        expect(tappedUp, isFalse);
+      });
+    });
   });
 }
