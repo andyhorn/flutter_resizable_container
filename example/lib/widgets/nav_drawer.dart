@@ -37,6 +37,10 @@ class NavDrawer extends StatelessWidget {
             title: const Text('Custom Divider Example'),
             onTap: () => Navigator.of(context).pushReplacementNamed('divider'),
           ),
+          ListTile(
+            title: const Text('Shrink and Flex Example'),
+            onTap: () => Navigator.of(context).pushReplacementNamed('shrink'),
+          ),
           const SizedBox(height: 15),
           const NavSectionHeader(title: 'Controller Examples'),
           ListTile(

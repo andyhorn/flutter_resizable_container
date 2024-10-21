@@ -43,6 +43,13 @@ class _ResizableContainerState extends State<ResizableContainer> {
   late final controller = widget.controller ?? ResizableController();
   late final isDefaultController = widget.controller == null;
   late final manager = ResizableControllerManager(controller);
+  late final keys = List.generate(
+    widget.children.length,
+    (_) => GlobalKey(),
+  );
+
+  var initialized = false;
+  var initScheduled = false;
 
   @override
   void initState() {
@@ -89,6 +96,29 @@ class _ResizableContainerState extends State<ResizableContainer> {
                   // build the child
                   Builder(
                     builder: (context) {
+                      if (!initScheduled) {
+                        Future.delayed(Duration.zero, () {
+                          _sizeInit();
+                        });
+
+                        initScheduled = true;
+                      }
+
+                      if (widget.children[i].size.isShrink && !initialized) {
+                        return UnconstrainedBox(
+                          key: keys[i],
+                          child: widget.children[i].child,
+                        );
+                      }
+
+                      if (widget.children[i].size.isExpand && !initialized) {
+                        return Expanded(
+                          key: keys[i],
+                          flex: widget.children[i].size.value.toInt(),
+                          child: widget.children[i].child,
+                        );
+                      }
+
                       final height = _getChildSize(
                         index: i,
                         direction: Axis.vertical,
@@ -102,6 +132,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                       );
 
                       return SizedBox(
+                        key: keys[i],
                         height: height,
                         width: width,
                         child: widget.children[i].child,
@@ -143,5 +174,28 @@ class _ResizableContainerState extends State<ResizableContainer> {
     return direction != direction
         ? constraints.maxForDirection(direction)
         : controller.sizes[index];
+  }
+
+  void _sizeInit() {
+    final sizes = keys.map<double>((key) {
+      final size = _getRenderBoxSize(key);
+
+      if (size == null) {
+        return 0;
+      }
+
+      return switch (widget.direction) {
+        Axis.horizontal => size.width,
+        Axis.vertical => size.height,
+      };
+    });
+
+    manager.setSizes(sizes.toList());
+    initialized = true;
+  }
+
+  Size? _getRenderBoxSize(GlobalKey key) {
+    final renderBox = key.currentContext?.findRenderObject() as RenderBox?;
+    return renderBox?.size;
   }
 }
