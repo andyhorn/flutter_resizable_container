@@ -187,6 +187,8 @@ void main() {
           ),
         );
 
+        await tester.pumpAndSettle();
+
         final dividerFinder = find.byType(ResizableContainerDivider);
         expect(dividerFinder, findsOneWidget);
 
@@ -238,6 +240,8 @@ void main() {
           ),
         );
 
+        await tester.pumpAndSettle();
+
         // Tap outside the divider
         await tester.tapAt(const Offset(10, 10), kind: PointerDeviceKind.touch);
         await tester.pump();
@@ -275,6 +279,8 @@ void main() {
             ),
           ),
         );
+
+        await tester.pumpAndSettle();
 
         final dividerFinder = find.byType(ResizableContainerDivider);
         expect(dividerFinder, findsOneWidget);
@@ -314,6 +320,8 @@ void main() {
             ),
           ),
         );
+
+        await tester.pumpAndSettle();
 
         final dividerFinder = find.byType(ResizableContainerDivider);
         expect(dividerFinder, findsOneWidget);
