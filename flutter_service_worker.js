@@ -4,13 +4,13 @@ const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
 const RESOURCES = {"flutter.js": "383e55f7f3cce5be08fcf1f3881f585c",
-"main.dart.js": "a38c573ac517d040990b553994d2966e",
+"main.dart.js": "eee3efaf255534e1d97c21a7ac5b0c78",
 "assets/FontManifest.json": "f8c5386378f30b925622abfa4765e0da",
 "assets/AssetManifest.bin": "1d14d42af5021b4138e3d5d77710ffaf",
 "assets/fonts/MaterialIcons-Regular.otf": "10cffa28c74e6282bfb7b80d2ea5b664",
 "assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "e986ebe42ef785b27164c36a9abc7818",
 "assets/assets/fonts/RedditMono-VariableFont_wght.ttf": "3678f8f5122391aa145683c9d7b6af9f",
-"assets/lib/screens/divider/custom_divider_example_screen.dart": "aa0e34dc2f33db499a538ed2464d09e4",
+"assets/lib/screens/divider/custom_divider_example_screen.dart": "4b369f47322ad4783b1be6e61a06a82f",
 "assets/lib/screens/controller_set_sizes/controller_set_sizes_example_screen.dart": "ea800e8c301ea82a055670cb54c56a0c",
 "assets/lib/screens/basic/basic_example_screen.dart": "28c5fda7ca0e46dd7273facadebea7bc",
 "assets/lib/screens/controller_listen/controller_listen_example_screen.dart": "c3c9c74a70bed06feb304224edd63f90",
@@ -39,7 +39,7 @@ const RESOURCES = {"flutter.js": "383e55f7f3cce5be08fcf1f3881f585c",
 "icons/Icon-maskable-512.png": "301a7604d45b3e739efc881eb04896ea",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
 "version.json": "d1a3ec4585d541eb5b82d9faaa36760c",
-"flutter_bootstrap.js": "44c61a462266dd2feb352bbc10bc3231"};
+"flutter_bootstrap.js": "a86a790f4ef95330fa9625890e16acbb"};
 // The application shell files that are downloaded before a service worker can
 // start.
 const CORE = ["main.dart.js",
