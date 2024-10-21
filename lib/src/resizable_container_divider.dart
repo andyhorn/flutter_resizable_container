@@ -57,6 +57,8 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
             onHorizontalDragStart: _onHorizontalDragStart,
             onHorizontalDragUpdate: _onHorizontalDragUpdate,
             onHorizontalDragEnd: _onHorizontalDragEnd,
+            onTapDown: _onTapDown,
+            onTapUp: _onTapUp,
             child: CustomPaint(
               size: Size(width, height),
               painter: DividerPainter(
@@ -161,5 +163,13 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
         widget.config.onHoverExit?.call();
       }
     }
+  }
+
+  void _onTapDown(TapDownDetails _) {
+    widget.config.onTapDown?.call();
+  }
+
+  void _onTapUp(TapUpDetails _) {
+    widget.config.onTapUp?.call();
   }
 }
