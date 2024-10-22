@@ -24,7 +24,7 @@ class _ShrinkAndFlexExampleScreenState
           IconButton(
             onPressed: () => CodeViewDialog.show(
               context: context,
-              filePath: FileAssetPaths.controllerListenScreen,
+              filePath: FileAssetPaths.shrinkAndFlexScreen,
             ),
             icon: const Icon(Icons.code),
           ),
