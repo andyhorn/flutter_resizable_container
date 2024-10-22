@@ -90,31 +90,38 @@ class _ResizableContainerState extends State<ResizableContainer> {
         return AnimatedBuilder(
           animation: controller,
           builder: (context, _) {
+            final hasFlexOrShrink = widget.children.any(
+              (child) => child.size.isShrink || child.size.isExpand,
+            );
+
             return Flex(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               direction: widget.direction,
               children: [
                 for (var i = 0; i < widget.children.length; i++) ...[
-                  // build the child
                   Builder(
                     builder: (context) {
-                      if (!initScheduled) {
+                      if (!initScheduled && hasFlexOrShrink) {
                         Timer.run(_sizeInit);
                         initScheduled = true;
                       }
 
-                      if (widget.children[i].size.isShrink && !initialized) {
+                      final child = widget.children[i].child;
+                      final size = widget.children[i].size;
+                      final key = keys[i];
+
+                      if (size.isShrink && !initialized) {
                         return UnconstrainedBox(
-                          key: keys[i],
-                          child: widget.children[i].child,
+                          key: key,
+                          child: child,
                         );
                       }
 
-                      if (widget.children[i].size.isExpand && !initialized) {
+                      if (size.isExpand && !initialized) {
                         return Expanded(
-                          key: keys[i],
-                          flex: widget.children[i].size.value.toInt(),
-                          child: widget.children[i].child,
+                          key: key,
+                          flex: size.value.toInt(),
+                          child: child,
                         );
                       }
 
@@ -134,7 +141,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                         key: keys[i],
                         height: height,
                         width: width,
-                        child: widget.children[i].child,
+                        child: child,
                       );
                     },
                   ),
