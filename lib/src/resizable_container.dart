@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
@@ -97,10 +99,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                   Builder(
                     builder: (context) {
                       if (!initScheduled) {
-                        Future.delayed(Duration.zero, () {
-                          _sizeInit();
-                        });
-
+                        Timer.run(_sizeInit);
                         initScheduled = true;
                       }
 
