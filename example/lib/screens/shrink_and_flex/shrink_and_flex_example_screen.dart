@@ -1,4 +1,5 @@
 import 'package:example/file_asset_paths.dart';
+import 'package:example/screens/shrink_and_flex/shrink_and_flex_help_dialog.dart';
 import 'package:example/widgets/code_view_dialog.dart';
 import 'package:example/widgets/nav_drawer.dart';
 import 'package:example/widgets/size_label.dart';
@@ -22,6 +23,10 @@ class _ShrinkAndFlexExampleScreenState
         title: const Text('Shrink and flex example'),
         actions: [
           IconButton(
+            onPressed: () => ShrinkAndFlexHelpDialog.show(context: context),
+            icon: const Icon(Icons.help_center),
+          ),
+          IconButton(
             onPressed: () => CodeViewDialog.show(
               context: context,
               filePath: FileAssetPaths.shrinkAndFlexScreen,
@@ -31,24 +36,24 @@ class _ShrinkAndFlexExampleScreenState
         ],
       ),
       drawer: const NavDrawer(),
-      body: const Column(
+      body: Column(
         children: [
           Expanded(
             child: ResizableContainer(
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
-                  size: ResizableSize.expand(),
+                  size: const ResizableSize.expand(),
                   child: ColoredBox(
-                    color: Colors.pink,
-                    child: SizeLabel(),
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    child: const SizeLabel(),
                   ),
                 ),
                 ResizableChild(
-                  size: ResizableSize.shrink(),
+                  size: const ResizableSize.shrink(),
                   child: ColoredBox(
-                    color: Colors.blue,
-                    child: SizeLabel(),
+                    color: Theme.of(context).colorScheme.tertiaryContainer,
+                    child: const SizeLabel(),
                   ),
                 ),
               ],
