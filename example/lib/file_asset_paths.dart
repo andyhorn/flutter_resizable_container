@@ -16,6 +16,9 @@ enum FileAssetPaths {
   ),
   ratioScreen(
     'lib/screens/ratio/ratio_example_screen.dart',
+  ),
+  shrinkAndFlexScreen(
+    'lib/screens/shrink_and_flex/shrink_and_flex_example_screen.dart',
   );
 
   const FileAssetPaths(this.path);

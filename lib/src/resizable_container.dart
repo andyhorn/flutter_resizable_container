@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
@@ -43,6 +45,13 @@ class _ResizableContainerState extends State<ResizableContainer> {
   late final controller = widget.controller ?? ResizableController();
   late final isDefaultController = widget.controller == null;
   late final manager = ResizableControllerManager(controller);
+  late final keys = List.generate(
+    widget.children.length,
+    (_) => GlobalKey(),
+  );
+
+  var initialized = false;
+  var initScheduled = false;
 
   @override
   void initState() {
@@ -81,14 +90,41 @@ class _ResizableContainerState extends State<ResizableContainer> {
         return AnimatedBuilder(
           animation: controller,
           builder: (context, _) {
+            final hasFlexOrShrink = widget.children.any(
+              (child) => child.size.isShrink || child.size.isExpand,
+            );
+
             return Flex(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               direction: widget.direction,
               children: [
                 for (var i = 0; i < widget.children.length; i++) ...[
-                  // build the child
                   Builder(
                     builder: (context) {
+                      if (!initScheduled && hasFlexOrShrink) {
+                        Timer.run(_sizeInit);
+                        initScheduled = true;
+                      }
+
+                      final child = widget.children[i].child;
+                      final size = widget.children[i].size;
+                      final key = keys[i];
+
+                      if (size.isShrink && !initialized) {
+                        return UnconstrainedBox(
+                          key: key,
+                          child: child,
+                        );
+                      }
+
+                      if (size.isExpand && !initialized) {
+                        return Expanded(
+                          key: key,
+                          flex: size.value.toInt(),
+                          child: child,
+                        );
+                      }
+
                       final height = _getChildSize(
                         index: i,
                         direction: Axis.vertical,
@@ -102,9 +138,10 @@ class _ResizableContainerState extends State<ResizableContainer> {
                       );
 
                       return SizedBox(
+                        key: keys[i],
                         height: height,
                         width: width,
-                        child: widget.children[i].child,
+                        child: child,
                       );
                     },
                   ),
@@ -143,5 +180,28 @@ class _ResizableContainerState extends State<ResizableContainer> {
     return direction != direction
         ? constraints.maxForDirection(direction)
         : controller.sizes[index];
+  }
+
+  void _sizeInit() {
+    final sizes = keys.map<double>((key) {
+      final size = _getRenderBoxSize(key);
+
+      if (size == null) {
+        return 0;
+      }
+
+      return switch (widget.direction) {
+        Axis.horizontal => size.width,
+        Axis.vertical => size.height,
+      };
+    });
+
+    manager.setSizes(sizes.toList());
+    initialized = true;
+  }
+
+  Size? _getRenderBoxSize(GlobalKey key) {
+    final renderBox = key.currentContext?.findRenderObject() as RenderBox?;
+    return renderBox?.size;
   }
 }

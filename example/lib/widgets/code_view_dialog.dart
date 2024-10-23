@@ -74,7 +74,10 @@ class CodeViewDialog extends StatelessWidget {
                     focusNode: FocusNode(),
                     selectionControls: DesktopTextSelectionControls(),
                     child: Padding(
-                      padding: const EdgeInsets.all(12.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       child: ListView.builder(
                         itemCount: lines.length,
                         itemBuilder: (context, index) {

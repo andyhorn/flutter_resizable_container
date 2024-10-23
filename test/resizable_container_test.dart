@@ -39,6 +39,8 @@ void main() {
         ),
       );
 
+      await tester.pumpAndSettle();
+
       final resizableContainer = tester.widget(find.byType(ResizableContainer));
       expect(resizableContainer, isNotNull);
 
@@ -89,6 +91,8 @@ void main() {
         ),
       );
 
+      await tester.pumpAndSettle();
+
       const availableSpace = 1000 - dividerWidth;
 
       final resizableContainer = tester.widget(find.byType(ResizableContainer));
@@ -129,6 +133,8 @@ void main() {
         ),
       );
 
+      await tester.pumpAndSettle();
+
       await tester.drag(
         find.byType(ResizableContainerDivider),
         const Offset(-600, 0),
@@ -167,6 +173,8 @@ void main() {
           ),
         ),
       );
+
+      await tester.pumpAndSettle();
 
       await tester.drag(
         find.byType(ResizableContainerDivider),
@@ -210,6 +218,8 @@ void main() {
         ),
       );
 
+      await tester.pumpAndSettle();
+
       await tester.drag(
         find.byType(ResizableContainerDivider),
         const Offset(-600, 0),
@@ -226,17 +236,18 @@ void main() {
     testWidgets('children expand appropriately', (tester) async {
       await tester.binding.setSurfaceSize(const Size(1000, 1000));
       await tester.pumpWidget(const _ToggleChildApp());
+      await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('ChildA')), findsOneWidget);
       expect(find.byKey(const Key('ChildB')), findsOneWidget);
 
       expect(
         tester.getSize(find.byKey(const Key('ChildA'))).width,
-        equals((1000 - 2) * 2 / 3),
+        moreOrLessEquals((1000 - 2) * 2 / 3),
       );
       expect(
         tester.getSize(find.byKey(const Key('ChildB'))).width,
-        equals((1000 - 2) * 1 / 3),
+        moreOrLessEquals((1000 - 2) * 1 / 3),
       );
 
       await tester.tap(find.byKey(const Key('ToggleSwitch')));
@@ -248,6 +259,57 @@ void main() {
         tester.getSize(find.byKey(const Key('ChildA'))).width,
         equals(1000),
       );
+    });
+
+    testWidgets('children shrink appropriately', (tester) async {
+      final controller = ResizableController();
+      await tester.binding.setSurfaceSize(const Size(1000, 1000));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResizableContainer(
+              controller: controller,
+              direction: Axis.horizontal,
+              divider: const ResizableDivider(
+                thickness: 1,
+                padding: 0,
+              ),
+              children: const [
+                ResizableChild(
+                  size: ResizableSize.expand(),
+                  child: SizedBox.expand(
+                    key: Key('BoxA'),
+                  ),
+                ),
+                ResizableChild(
+                  size: ResizableSize.shrink(),
+                  child: SizedBox(
+                    width: 200,
+                    key: Key('BoxB'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final boxAFinder = find.byKey(const Key('BoxA'));
+      final boxBFinder = find.byKey(const Key('BoxB'));
+
+      expect(boxAFinder, findsOneWidget);
+      expect(boxBFinder, findsOneWidget);
+
+      final boxASize = tester.getSize(boxAFinder);
+      final boxBSize = tester.getSize(boxBFinder);
+
+      expect(boxASize.width, moreOrLessEquals(800, epsilon: 2));
+      expect(boxBSize.width, moreOrLessEquals(200, epsilon: 2));
+
+      expect(controller.sizes.first, moreOrLessEquals(800, epsilon: 2));
+      expect(controller.sizes.last, moreOrLessEquals(200, epsilon: 2));
     });
   });
 }
