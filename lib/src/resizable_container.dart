@@ -138,7 +138,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                       );
 
                       return SizedBox(
-                        key: keys[i],
+                        key: key,
                         height: height,
                         width: width,
                         child: child,
