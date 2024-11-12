@@ -101,23 +101,31 @@ class _ResizableContainerState extends State<ResizableContainer> {
                 for (var i = 0; i < widget.children.length; i++) ...[
                   Builder(
                     builder: (context) {
-                      if (!initScheduled && hasFlexOrShrink) {
-                        Timer.run(_sizeInit);
-                        initScheduled = true;
-                      }
-
                       final child = widget.children[i].child;
                       final size = widget.children[i].size;
                       final key = keys[i];
 
-                      if (size.isShrink && !initialized) {
+                      final scheduleInit = hasFlexOrShrink && !initScheduled;
+                      final shrink = !initialized && size.isShrink;
+                      final expand = !initialized && size.isExpand;
+
+                      if (scheduleInit) {
+                        Timer.run(_sizeInit);
+                        initScheduled = true;
+                      }
+
+                      if (shrink) {
+                        // Use UnconstrainedBox to allow the child to shrink
+                        // to its minimum size.
                         return UnconstrainedBox(
                           key: key,
                           child: child,
                         );
                       }
 
-                      if (size.isExpand && !initialized) {
+                      if (expand) {
+                        // Use Expanded to allow the child to expand to fill
+                        // the available space, mediated by its "flex" value.
                         return Expanded(
                           key: key,
                           flex: size.value.toInt(),
