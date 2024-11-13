@@ -4,6 +4,7 @@ import 'package:example/screens/controller_set_sizes/controller_set_sizes_exampl
 import 'package:example/screens/divider/custom_divider_example_screen.dart';
 import 'package:example/screens/pixels/pixels_example_screen.dart';
 import 'package:example/screens/ratio/ratio_example_screen.dart';
+import 'package:example/screens/shrink_and_flex/shrink_and_flex_example_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -26,6 +27,7 @@ class ExampleApp extends StatelessWidget {
         'listen': (context) => const ControllerListenExampleScreen(),
         'sizes': (context) => const ControllerSetSizesExampleScreen(),
         'divider': (context) => const CustomDividerExampleScreen(),
+        'shrink': (context) => const ShrinkAndFlexExampleScreen(),
       },
     );
   }
