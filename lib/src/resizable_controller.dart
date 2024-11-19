@@ -67,7 +67,7 @@ class ResizableController with ChangeNotifier {
   /// * The sum of all ratio values exceeds 1.0
   void setSizes(List<ResizableSize> values) {
     if (values.length != _children.length) {
-      throw ArgumentError('Must contain a value for every child. Children: ${_children.length}, Ratios: ${values.length}');
+      throw ArgumentError('Must contain a value for every child. Children: ${_children.length}, Sizes: ${values.length}');
     }
 
     _sizes = _mapSizesToAvailableSpace(
@@ -114,7 +114,7 @@ class ResizableController with ChangeNotifier {
     _children = children;
   }
 
-  void updateChildren(List<ResizableChild> children) {
+  void _updateChildren(List<ResizableChild> children) {
     _children = children;
     _initializeChildSizes(_availableSpace);
   }
@@ -238,7 +238,7 @@ class ResizableController with ChangeNotifier {
     return delta;
   }
 
-  void notify() {
+  void _notify() {
     notifyListeners();
   }
 }
@@ -253,7 +253,7 @@ final class ResizableControllerManager {
   }
 
   void updateChildren(List<ResizableChild> children) {
-    _controller.updateChildren(children);
+    _controller._updateChildren(children);
   }
 
   void adjustChildSize({
@@ -268,7 +268,7 @@ final class ResizableControllerManager {
       _controller._sizes[i] = sizes[i];
     }
 
-    _controller.notify();
+    _controller._notify();
   }
 }
 

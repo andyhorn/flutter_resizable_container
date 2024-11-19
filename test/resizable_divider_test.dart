@@ -6,7 +6,6 @@ import 'package:flutter_resizable_container/src/resizable_container_divider.dart
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  // WidgetsFlutterBinding.ensureInitialized();
   group(ResizableDivider, () {
     group('thickness', () {
       test('must be greater than 0', () {
