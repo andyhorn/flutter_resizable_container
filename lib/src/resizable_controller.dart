@@ -67,8 +67,6 @@ class ResizableController with ChangeNotifier {
   /// * The sum of all ratio values exceeds 1.0
   void setSizes(List<ResizableSize> values) {
     if (values.length != _children.length) {
-      print(values.length);
-      print(_children.length);
       throw ArgumentError('Must contain a value for every child');
     }
 
