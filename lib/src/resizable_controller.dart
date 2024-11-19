@@ -110,8 +110,9 @@ class ResizableController with ChangeNotifier {
     }
   }
 
-  void _setChildren(List<ResizableChild> children) {
+  void setChildren(List<ResizableChild> children) {
     _children = children;
+    notifyListeners();
   }
 
   void _updateChildren(List<ResizableChild> children) {
@@ -251,10 +252,6 @@ final class ResizableControllerManager {
 
   void setAvailableSpace(double availableSpace) {
     _controller._setAvailableSpace(availableSpace);
-  }
-
-  void setChildren(List<ResizableChild> children) {
-    _controller._setChildren(children);
   }
 
   void updateChildren(List<ResizableChild> children) {

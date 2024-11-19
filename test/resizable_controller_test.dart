@@ -17,7 +17,7 @@ void main() {
 
     group('.sizes', () {
       setUp(() {
-        manager.setChildren(const [
+        controller.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -38,7 +38,7 @@ void main() {
 
     group('.ratios', () {
       setUp(() {
-        manager.setChildren(const [
+        controller.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -60,7 +60,7 @@ void main() {
     group('#setAvailableSpace', () {
       group('when the new value is the same', () {
         setUp(() {
-          manager.setChildren(const [
+          controller.setChildren(const [
             ResizableChild(
               size: ResizableSize.pixels(100),
               child: SizedBox.shrink(),
@@ -86,7 +86,7 @@ void main() {
 
       group('when setting the value for the first time', () {
         setUp(() {
-          manager.setChildren(const [
+          controller.setChildren(const [
             ResizableChild(
               size: ResizableSize.pixels(100),
               child: SizedBox.shrink(),
@@ -114,7 +114,7 @@ void main() {
 
       group('when updating the available space', () {
         setUp(() {
-          manager.setChildren(const [
+          controller.setChildren(const [
             ResizableChild(
               size: ResizableSize.pixels(100),
               child: SizedBox.shrink(),
@@ -149,7 +149,7 @@ void main() {
 
     group('#setChildren', () {
       test('sets the list of ResizableChild', () {
-        manager.setChildren(const [
+        controller.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -172,7 +172,7 @@ void main() {
       test('does not notify listeners', () {
         var notified = false;
         controller.addListener(() => notified = true);
-        manager.setChildren(const [
+        controller.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -184,7 +184,7 @@ void main() {
 
     group('#updateChildren', () {
       setUp(() {
-        manager.setChildren(const [
+        controller.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -256,7 +256,7 @@ void main() {
 
     group('#adjustChildSize', () {
       setUp(() {
-        manager.setChildren(const [
+        controller.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -294,7 +294,7 @@ void main() {
 
     group('#setSizes', () {
       setUp(() {
-        manager.setChildren(const [
+        controller.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
