@@ -2,7 +2,6 @@ import "dart:collection";
 import "dart:math";
 
 import 'package:flutter/material.dart';
-import "package:flutter/scheduler.dart";
 import "package:flutter_resizable_container/flutter_resizable_container.dart";
 import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
 import "package:flutter_resizable_container/src/resizable_size.dart";
