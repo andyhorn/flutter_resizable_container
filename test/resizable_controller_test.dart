@@ -4,6 +4,7 @@ import 'package:flutter_resizable_container/src/resizable_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   group(ResizableController, () {
     late ResizableController controller;
     late ResizableControllerManager manager;

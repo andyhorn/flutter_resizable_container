@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/src/resizable_size.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   group(ResizableSize, () {
     group('constructor', () {
       group('ratio', () {

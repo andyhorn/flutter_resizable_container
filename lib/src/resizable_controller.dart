@@ -2,6 +2,7 @@ import "dart:collection";
 import "dart:math";
 
 import 'package:flutter/material.dart';
+import "package:flutter/scheduler.dart";
 import "package:flutter_resizable_container/flutter_resizable_container.dart";
 import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
 import "package:flutter_resizable_container/src/resizable_size.dart";
@@ -67,7 +68,7 @@ class ResizableController with ChangeNotifier {
   /// * The sum of all ratio values exceeds 1.0
   void setSizes(List<ResizableSize> values) {
     if (values.length != _children.length) {
-      throw ArgumentError('Must contain a value for every child');
+      throw ArgumentError('Must contain a value for every child. Children: ${_children.length}, Ratios: ${values.length}');
     }
 
     _sizes = _mapSizesToAvailableSpace(
@@ -114,7 +115,7 @@ class ResizableController with ChangeNotifier {
     _children = children;
   }
 
-  void _updateChildren(List<ResizableChild> children) {
+  void updateChildren(List<ResizableChild> children) {
     _children = children;
     _initializeChildSizes(_availableSpace);
   }
@@ -142,7 +143,7 @@ class ResizableController with ChangeNotifier {
       throw ArgumentError('Size cannot exceed total available space.');
     }
 
-    if (resizableSizes.totalRatio > 1.0) {
+    if (resizableSizes.totalRatio > 1.01) {
       throw ArgumentError('Ratios cannot exceed 1.0');
     }
 
@@ -165,7 +166,6 @@ class ResizableController with ChangeNotifier {
 
   void _updateChildSizes(double availableSpace) {
     final flexCount = _children.map((child) => child.size).flexCount;
-
     if (flexCount > 0) {
       // If any children are set to expand, adjust them instead of any
       // statically-sized children
@@ -239,7 +239,7 @@ class ResizableController with ChangeNotifier {
     return delta;
   }
 
-  void _notify() {
+  void notify() {
     notifyListeners();
   }
 }
@@ -254,7 +254,7 @@ final class ResizableControllerManager {
   }
 
   void updateChildren(List<ResizableChild> children) {
-    _controller._updateChildren(children);
+    _controller.updateChildren(children);
   }
 
   void adjustChildSize({
@@ -269,7 +269,7 @@ final class ResizableControllerManager {
       _controller._sizes[i] = sizes[i];
     }
 
-    _controller._notify();
+    _controller.notify();
   }
 }
 
