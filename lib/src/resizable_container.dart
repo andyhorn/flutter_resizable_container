@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -190,9 +191,15 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required Axis direction,
     required BoxConstraints constraints,
   }) {
-    return direction != direction
-        ? constraints.maxForDirection(direction)
-        : controller.sizes[index];
+    if (direction != direction) {
+      return constraints.maxForDirection(direction);
+    } else {
+      var size = controller.sizes[index];
+      final child = widget.children[index];
+      size = min(size, child.maxSize ?? double.infinity);
+      size = max(size, child.minSize ?? 0);
+      return size;
+    }
   }
 
   void _sizeInit() {
