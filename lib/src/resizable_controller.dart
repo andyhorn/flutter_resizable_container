@@ -80,7 +80,13 @@ class ResizableController with ChangeNotifier {
     // constraint) should be uniformly distributed among the remaining
     // non-shrink children, taking into account their minimum & maximum size
     // constraints.
-    final delta = availableSpace - _availableSpace;
+    final delta = _getDelta(availableSpace);
+
+    if (delta == 0.0) {
+      _availableSpace = availableSpace;
+      return;
+    }
+
     final distributed = _distributeDelta(
       delta: delta,
       sizes: _pixels,
@@ -91,6 +97,31 @@ class ResizableController with ChangeNotifier {
     }
 
     _availableSpace = availableSpace;
+  }
+
+  double _getDelta(double availableSpace) {
+    var delta = availableSpace - _availableSpace;
+
+    if (delta == 0.0) {
+      return 0.0;
+    }
+
+    if (delta > 0) {
+      final minimumNecessarySize = _getMinimumNecessarySize();
+
+      if (minimumNecessarySize >= availableSpace) {
+        return 0.0;
+      }
+
+      delta = min(delta, availableSpace - minimumNecessarySize);
+    }
+
+    return delta;
+  }
+
+  double _getMinimumNecessarySize() {
+    final minimums = _children.map((child) => child.minSize ?? 0.0).toList();
+    return minimums.fold(0.0, (sum, curr) => sum + curr);
   }
 
   List<double> _distributeDelta({
