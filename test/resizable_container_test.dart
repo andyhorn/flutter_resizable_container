@@ -55,8 +55,8 @@ void main() {
       final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
       final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
 
-      expect(boxASize.width, equals(controller.sizes.first));
-      expect(boxBSize.width, equals(controller.sizes.last));
+      expect(boxASize.width, equals(controller.pixels.first));
+      expect(boxBSize.width, equals(controller.pixels.last));
     });
 
     testWidgets('can resize using the controller', (tester) async {
@@ -308,8 +308,8 @@ void main() {
       expect(boxASize.width, moreOrLessEquals(800, epsilon: 2));
       expect(boxBSize.width, moreOrLessEquals(200, epsilon: 2));
 
-      expect(controller.sizes.first, moreOrLessEquals(800, epsilon: 2));
-      expect(controller.sizes.last, moreOrLessEquals(200, epsilon: 2));
+      expect(controller.pixels.first, moreOrLessEquals(800, epsilon: 2));
+      expect(controller.pixels.last, moreOrLessEquals(200, epsilon: 2));
     });
   });
 }

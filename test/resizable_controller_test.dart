@@ -33,7 +33,7 @@ void main() {
       });
 
       test('returns a list of sizes', () {
-        expect(controller.sizes, equals([100, 200]));
+        expect(controller.pixels, equals([100, 200]));
       });
     });
 
@@ -102,7 +102,7 @@ void main() {
 
         test('sets sizes based on child starting size', () {
           manager.setAvailableSpace(300);
-          expect(controller.sizes, equals([100, 100, 100]));
+          expect(controller.pixels, equals([100, 100, 100]));
         });
 
         test('does not notify listeners', () {
@@ -132,11 +132,11 @@ void main() {
 
         test('adjusts child sizes', () {
           // only the "expandable" child (last) should change
-          final expected = [...controller.sizes];
+          final expected = [...controller.pixels];
           expected.last += 300;
 
           manager.setAvailableSpace(600);
-          expect(controller.sizes, equals(expected));
+          expect(controller.pixels, equals(expected));
         });
 
         test('notifies listeners', () {
@@ -232,7 +232,7 @@ void main() {
           ),
         ]);
 
-        expect(controller.sizes, equals([100, 50, 50]));
+        expect(controller.pixels, equals([100, 50, 50]));
       });
 
       test('does not notify listeners', () {
@@ -276,12 +276,12 @@ void main() {
       group('when increasing the size', () {
         test('increases the size of the target child', () {
           manager.adjustChildSize(index: 1, delta: 10);
-          expect(controller.sizes[1], equals(60));
+          expect(controller.pixels[1], equals(60));
         });
 
         test('decreases the size of the adjacent child', () {
           manager.adjustChildSize(index: 1, delta: 10);
-          expect(controller.sizes[2], equals(40));
+          expect(controller.pixels[2], equals(40));
         });
 
         test('notifies listeners', () {
@@ -356,7 +356,7 @@ void main() {
           ResizableSize.expand(),
         ]);
 
-        expect(controller.sizes, equals([100, 50, 50]));
+        expect(controller.pixels, equals([100, 50, 50]));
       });
     });
   });
