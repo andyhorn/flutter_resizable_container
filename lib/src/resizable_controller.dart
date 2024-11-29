@@ -207,7 +207,8 @@ class ResizableController with ChangeNotifier {
   }
 
   List<int> _getChangeableIndices(int direction, List<double> sizes) {
-    final List<int> indices = [];
+    final indices = List.generate(_children.length, (i) => i);
+    final List<int> changeableIndices = [];
 
     bool shouldAdd(index) {
       final minSize = _children[index].minSize ?? 0.0;
@@ -222,27 +223,27 @@ class ResizableController with ChangeNotifier {
       }
     }
 
-    for (final index in List.generate(_children.length, (i) => i)) {
+    for (final index in indices) {
       if (!_children[index].size.isExpand) {
         continue;
       }
 
       if (shouldAdd(index)) {
-        indices.add(index);
+        changeableIndices.add(index);
       }
     }
 
-    if (indices.isNotEmpty) {
-      return indices;
+    if (changeableIndices.isNotEmpty) {
+      return changeableIndices;
     }
 
-    for (final index in List.generate(_children.length, (i) => i)) {
+    for (final index in indices) {
       if (shouldAdd(index)) {
-        indices.add(index);
+        changeableIndices.add(index);
       }
     }
 
-    return indices;
+    return changeableIndices;
   }
 
   double _getAdjustedReducingDelta({
