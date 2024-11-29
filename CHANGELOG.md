@@ -1,3 +1,7 @@
+## 3.0.1
+
+- Fix a bug causing negative values in a BoxConstraint, which was throwing an AssertionError.
+
 ## 3.0.0
 
 After much feedback, I revised the `ResizableContainerDivider` to be even more customizable. The changes include:
