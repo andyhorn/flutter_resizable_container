@@ -102,12 +102,13 @@ void main() {
         ResizableSize.ratio(0.6),
         ResizableSize.ratio(0.4),
       ]);
+
       await tester.pump();
+      await tester.pumpAndSettle();
 
       final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
       final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
 
-      // The sizes are not exactly their ratio because the divider width is 2.0
       expect(boxASize, const Size(availableSpace * 0.6, 1000));
       expect(boxBSize, const Size(availableSpace * 0.4, 1000));
     });
@@ -252,6 +253,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('ToggleSwitch')));
       await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('ChildA')), findsOneWidget);
       expect(find.byKey(const Key('ChildB')), findsNothing);
