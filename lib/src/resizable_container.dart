@@ -59,7 +59,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
     super.initState();
 
     controller.setChildren(widget.children);
-    controller.setChildren(widget.children);
   }
 
   @override

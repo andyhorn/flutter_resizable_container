@@ -34,6 +34,24 @@ class ResizableController with ChangeNotifier {
       throw ArgumentError('Must contain a value for every child');
     }
 
+    final totalPixels = sizes
+        .where((size) => size.isPixels)
+        .fold(0.0, (sum, curr) => sum + curr.value);
+
+    if (totalPixels > _availableSpace) {
+      throw ArgumentError(
+        'Total pixels must be less than or equal to available space',
+      );
+    }
+
+    final totalRatio = sizes
+        .where((size) => size.isRatio)
+        .fold(0.0, (sum, curr) => sum + curr.value);
+
+    if (totalRatio > 1.0) {
+      throw ArgumentError('Total ratio must be less than or equal to 1.0');
+    }
+
     _sizes = sizes;
     _needsLayout = true;
     notifyListeners();
@@ -70,6 +88,10 @@ class ResizableController with ChangeNotifier {
     if (_availableSpace == -1) {
       _needsLayout = true;
       _availableSpace = availableSpace;
+      return;
+    }
+
+    if (availableSpace == _availableSpace) {
       return;
     }
 
@@ -304,9 +326,9 @@ final class ResizableControllerManager {
   }
 }
 
-// abstract class ResizableControllerTestHelper {
-//   const ResizableControllerTestHelper._();
+abstract class ResizableControllerTestHelper {
+  const ResizableControllerTestHelper._();
 
-//   static List<ResizableChild> getChildren(ResizableController controller) =>
-//       controller._children;
-// }
+  static List<ResizableChild> getChildren(ResizableController controller) =>
+      controller._children;
+}

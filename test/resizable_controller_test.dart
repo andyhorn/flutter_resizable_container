@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
   group(ResizableController, () {
     late ResizableController controller;
     late ResizableControllerManager manager;
@@ -16,7 +17,7 @@ void main() {
 
     tearDown(() => controller.dispose());
 
-    group('.sizes', () {
+    group('.pixels', () {
       setUp(() {
         controller.setChildren(const [
           ResizableChild(
@@ -30,9 +31,10 @@ void main() {
         ]);
 
         manager.setAvailableSpace(300);
+        manager.setRenderedSizes([100, 200]);
       });
 
-      test('returns a list of sizes', () {
+      test('returns a list of pixel sizes', () {
         expect(controller.pixels, equals([100, 200]));
       });
     });
@@ -51,6 +53,7 @@ void main() {
         ]);
 
         manager.setAvailableSpace(300);
+        manager.setRenderedSizes([100, 200]);
       });
 
       test('returns a list of ratios', () {
@@ -73,6 +76,7 @@ void main() {
           ]);
 
           manager.setAvailableSpace(300);
+          manager.setRenderedSizes([100, 200]);
         });
 
         test('does not notify listeners', () {
@@ -81,34 +85,6 @@ void main() {
 
           manager.setAvailableSpace(300);
 
-          expect(notified, isFalse);
-        });
-      });
-
-      group('when setting the value for the first time', () {
-        setUp(() {
-          controller.setChildren(const [
-            ResizableChild(
-              size: ResizableSize.pixels(100),
-              child: SizedBox.shrink(),
-            ),
-            ResizableChild(
-              size: ResizableSize.ratio(1 / 2),
-              child: SizedBox.shrink(),
-            ),
-            ResizableChild(child: SizedBox.shrink()),
-          ]);
-        });
-
-        test('sets sizes based on child starting size', () {
-          manager.setAvailableSpace(300);
-          expect(controller.pixels, equals([100, 100, 100]));
-        });
-
-        test('does not notify listeners', () {
-          var notified = false;
-          controller.addListener(() => notified = true);
-          manager.setAvailableSpace(300);
           expect(notified, isFalse);
         });
       });
@@ -128,6 +104,7 @@ void main() {
           ]);
 
           manager.setAvailableSpace(300);
+          manager.setRenderedSizes([100, 150, 50]);
         });
 
         test('adjusts child sizes', () {
@@ -139,11 +116,11 @@ void main() {
           expect(controller.pixels, equals(expected));
         });
 
-        test('notifies listeners', () {
+        test('does not notify listeners', () {
           var notified = false;
           controller.addListener(() => notified = true);
           manager.setAvailableSpace(600);
-          expect(notified, isTrue);
+          expect(notified, isFalse);
         });
       });
     });
@@ -170,7 +147,7 @@ void main() {
         );
       });
 
-      test('does not notify listeners', () {
+      test('notifies listeners', () {
         var notified = false;
         controller.addListener(() => notified = true);
         controller.setChildren(const [
@@ -179,27 +156,11 @@ void main() {
             child: SizedBox.shrink(),
           ),
         ]);
-        expect(notified, isFalse);
-      });
-    });
-
-    group('#updateChildren', () {
-      setUp(() {
-        controller.setChildren(const [
-          ResizableChild(
-            size: ResizableSize.pixels(100),
-            child: SizedBox.shrink(),
-          ),
-          ResizableChild(
-            child: SizedBox.shrink(),
-          ),
-        ]);
-
-        manager.setAvailableSpace(200);
+        expect(notified, isTrue);
       });
 
       test('sets the list of children', () {
-        manager.updateChildren(const [
+        controller.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -218,40 +179,12 @@ void main() {
         );
       });
 
-      test('updates children sizes', () {
-        manager.updateChildren(const [
-          ResizableChild(
-            size: ResizableSize.pixels(100),
-            child: SizedBox.shrink(),
-          ),
-          ResizableChild(
-            child: SizedBox.shrink(),
-          ),
-          ResizableChild(
-            child: SizedBox.shrink(),
-          ),
+      test('requests a new layout', () {
+        controller.setChildren([
+          ResizableChild(child: SizedBox.shrink()),
         ]);
 
-        expect(controller.pixels, equals([100, 50, 50]));
-      });
-
-      test('does not notify listeners', () {
-        var notified = false;
-        controller.addListener(() => notified = true);
-        manager.updateChildren(const [
-          ResizableChild(
-            size: ResizableSize.pixels(100),
-            child: SizedBox.shrink(),
-          ),
-          ResizableChild(
-            child: SizedBox.shrink(),
-          ),
-          ResizableChild(
-            child: SizedBox.shrink(),
-          ),
-        ]);
-
-        expect(notified, isFalse);
+        expect(controller.needsLayout, isTrue);
       });
     });
 
@@ -271,6 +204,7 @@ void main() {
         ]);
 
         manager.setAvailableSpace(200);
+        manager.setRenderedSizes([100, 50, 50]);
       });
 
       group('when increasing the size', () {
@@ -309,6 +243,7 @@ void main() {
         ]);
 
         manager.setAvailableSpace(200);
+        manager.setRenderedSizes([100, 50, 50]);
       });
 
       group('when the list is the wrong length', () {
