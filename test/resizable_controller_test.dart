@@ -300,14 +300,14 @@ void main() {
         });
       });
 
-      test('sets child sizes', () {
+      test('requests a new layout', () {
         controller.setSizes(const [
           ResizableSize.pixels(100),
-          ResizableSize.ratio(0.5),
-          ResizableSize.expand(),
+          ResizableSize.pixels(50),
+          ResizableSize.pixels(50),
         ]);
 
-        expect(controller.pixels, equals([100, 50, 50]));
+        expect(controller.needsLayout, isTrue);
       });
     });
   });
