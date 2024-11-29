@@ -67,7 +67,7 @@ class ResizableController with ChangeNotifier {
   /// * The sum of all ratio values exceeds 1.0
   void setSizes(List<ResizableSize> values) {
     if (values.length != _children.length) {
-      throw ArgumentError('Must contain a value for every child');
+      throw ArgumentError('Must contain a value for every child. Children: ${_children.length}, Sizes: ${values.length}');
     }
 
     _sizes = _mapSizesToAvailableSpace(
@@ -110,7 +110,7 @@ class ResizableController with ChangeNotifier {
     }
   }
 
-  void _setChildren(List<ResizableChild> children) {
+  void setChildren(List<ResizableChild> children) {
     _children = children;
   }
 
@@ -142,7 +142,7 @@ class ResizableController with ChangeNotifier {
       throw ArgumentError('Size cannot exceed total available space.');
     }
 
-    if (resizableSizes.totalRatio > 1.0) {
+    if (resizableSizes.totalRatio > 1.01) {
       throw ArgumentError('Ratios cannot exceed 1.0');
     }
 
@@ -165,7 +165,6 @@ class ResizableController with ChangeNotifier {
 
   void _updateChildSizes(double availableSpace) {
     final flexCount = _children.map((child) => child.size).flexCount;
-
     if (flexCount > 0) {
       // If any children are set to expand, adjust them instead of any
       // statically-sized children
@@ -251,10 +250,6 @@ final class ResizableControllerManager {
 
   void setAvailableSpace(double availableSpace) {
     _controller._setAvailableSpace(availableSpace);
-  }
-
-  void setChildren(List<ResizableChild> children) {
-    _controller._setChildren(children);
   }
 
   void updateChildren(List<ResizableChild> children) {

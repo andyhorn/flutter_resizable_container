@@ -46,7 +46,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
   late final controller = widget.controller ?? ResizableController();
   late final isDefaultController = widget.controller == null;
   late final manager = ResizableControllerManager(controller);
-  late final keys = List.generate(
+  late List<GlobalKey> keys = List.generate(
     widget.children.length,
     (_) => GlobalKey(),
   );
@@ -58,15 +58,20 @@ class _ResizableContainerState extends State<ResizableContainer> {
   void initState() {
     super.initState();
 
-    manager.setChildren(widget.children);
+    controller.setChildren(widget.children);
   }
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    final hasChanges = !listEquals(oldWidget.children, widget.children);
+    final hasChanges = !listEquals(oldWidget.children, widget.children)
+      || oldWidget.direction != widget.direction;
 
     if (hasChanges) {
       manager.updateChildren(widget.children);
+      keys = List.generate(
+        widget.children.length,
+        (_) => GlobalKey(),
+      );
     }
 
     super.didUpdateWidget(oldWidget);
