@@ -1,6 +1,10 @@
+## 3.0.2
+
+- Make the "setChildren" method of the ResizableContainer public to address a limitation that was causing the "children length equals sizes length" assertions to fail (#61).
+
 ## 3.0.1
 
-- Fix a bug causing negative values in a BoxConstraint, which was throwing an AssertionError.
+- Fix a bug causing negative values in a BoxConstraint, which was throwing an AssertionError (#60).
 
 ## 3.0.0
 
