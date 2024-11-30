@@ -1,3 +1,10 @@
+## 4.0.0-beta.1
+
+- Rewrite the Controller/Container logic to allow Flutter to handle the initial layout of all widgets, updating the rendered sizes in the controller after the first frame. This _shouldn't_ have any major impact to the API, but it does introduce the use of Timers, which could affect tests.
+- Rename `ResizableController.sizes` to `ResizableController.pixels` to more clearly indicate its value.
+- Store, expose, and utilize the current list of `ResizableSize` values in the controller. This enables the values to be used even after manually updating them.
+
+
 ## 3.0.3
 
 - Reinstate the removed `ResizableControllerManager#setChildren` method. This method was removed because the method it targets on the controller was made public. However, the package version was incorrectly bumped since this could be a breaking change. This patch reinstates the method, fixing the breaking change, but adds a deprecation warning in favor of the public controller method.
