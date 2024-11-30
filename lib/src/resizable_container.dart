@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -98,7 +97,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
           animation: controller,
           builder: (context, _) {
             if (controller.needsLayout) {
-              Timer.run(_readSizesAfterLayout);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _readSizesAfterLayout();
+              });
 
               return PreLayout(
                 availableSpace: availableSpace,
