@@ -1,3 +1,7 @@
+## 3.0.3
+
+- Reinstate the removed `ResizableControllerManager#setChildren` method. This method was removed because the method it targets on the controller was made public. However, the package version was incorrectly bumped since this could be a breaking change. This patch reinstates the method, fixing the breaking change, but adds a deprecation warning in favor of the public controller method.
+
 ## 3.0.2
 
 - Make the "setChildren" method of the ResizableContainer public to address a limitation that was causing the "children length equals sizes length" assertions to fail (#61).
