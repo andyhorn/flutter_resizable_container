@@ -99,40 +99,115 @@ void main() {
         });
       });
 
-      group('when updating the available space', () {
-        setUp(() {
-          controller.setChildren(const [
-            ResizableChild(
-              size: ResizableSize.pixels(100),
-              child: SizedBox.shrink(),
-            ),
-            ResizableChild(
-              size: ResizableSize.ratio(1 / 2),
-              child: SizedBox.shrink(),
-            ),
-            ResizableChild(child: SizedBox.shrink()),
-          ]);
+      group('when changing the available space', () {
+        group('when only pixel sizes are present', () {
+          setUp(() {
+            controller.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.pixels(100),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.pixels(200),
+                child: SizedBox.shrink(),
+              ),
+            ]);
 
-          fakeAsync((async) {
-            manager.setAvailableSpace(300);
-            manager.setRenderedSizes([100, 150, 50]);
+            fakeAsync((async) {
+              manager.setAvailableSpace(300);
+              manager.setRenderedSizes([100, 200]);
+              async.flushTimers();
+            });
+          });
+
+          test('adjusts child sizes', () {
+            manager.setAvailableSpace(400);
+            expect(controller.pixels, equals([150.0, 250.0]));
           });
         });
 
-        test('adjusts child sizes', () {
-          // only the "expandable" child (last) should change
-          final expected = [...controller.pixels];
-          expected.last += 300;
+        group('when an expand child is present', () {
+          setUp(() {
+            controller.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.pixels(100),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.expand(),
+                child: SizedBox.shrink(),
+              ),
+            ]);
 
-          manager.setAvailableSpace(600);
-          expect(controller.pixels, equals(expected));
+            fakeAsync((async) {
+              manager.setAvailableSpace(300);
+              manager.setRenderedSizes([100, 200]);
+              async.flushTimers();
+            });
+          });
+
+          test('only adjusts the expandable child', () {
+            manager.setAvailableSpace(400);
+            expect(controller.pixels, equals([100.0, 300.0]));
+          });
         });
 
-        test('does not notify listeners', () {
-          var notified = false;
-          controller.addListener(() => notified = true);
-          manager.setAvailableSpace(600);
-          expect(notified, isFalse);
+        group('when an expandable is present and has a constraint', () {
+          setUp(() {
+            controller.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.pixels(100),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                maxSize: 225.0,
+                size: ResizableSize.expand(),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            fakeAsync((async) {
+              manager.setAvailableSpace(300);
+              manager.setRenderedSizes([100, 200]);
+              async.flushTimers();
+            });
+          });
+
+          test('adjusts the expandable child to its maximum size', () {
+            manager.setAvailableSpace(400);
+            expect(controller.pixels.last, equals(225.0));
+          });
+
+          test('distributes remaining delta to other children', () {
+            manager.setAvailableSpace(400);
+            expect(controller.pixels.first, equals(175.0));
+          });
+        });
+
+        group('when a shrink size is present', () {
+          setUp(() {
+            controller.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.pixels(100),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.shrink(),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            fakeAsync((async) {
+              manager.setAvailableSpace(300);
+              manager.setRenderedSizes([100, 200]);
+              async.flushTimers();
+            });
+          });
+
+          test('adjusts the children equally', () {
+            manager.setAvailableSpace(400);
+            expect(controller.pixels, equals([150.0, 250.0]));
+          });
         });
       });
     });
