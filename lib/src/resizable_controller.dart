@@ -67,7 +67,9 @@ class ResizableController with ChangeNotifier {
   /// * The sum of all ratio values exceeds 1.0
   void setSizes(List<ResizableSize> values) {
     if (values.length != _children.length) {
-      throw ArgumentError('Must contain a value for every child. Children: ${_children.length}, Sizes: ${values.length}');
+      throw ArgumentError(
+        'Must contain a value for every child. Children: ${_children.length}, Sizes: ${values.length}',
+      );
     }
 
     _sizes = _mapSizesToAvailableSpace(
@@ -254,6 +256,13 @@ final class ResizableControllerManager {
 
   void updateChildren(List<ResizableChild> children) {
     _controller._updateChildren(children);
+  }
+
+  @Deprecated(
+    'This method is deprecated and will be removed in the next major version. Use ResizableController#setChildren instead.',
+  )
+  void setChildren(List<ResizableChild> children) {
+    _controller.setChildren(children);
   }
 
   void adjustChildSize({
