@@ -174,11 +174,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
       return constraints.maxForDirection(direction);
     } else {
       return controller.pixels[index];
-      // var size = controller.pixels[index];
-      // final child = widget.children[index];
-      // size = min(size, child.maxSize ?? double.infinity);
-      // size = max(size, child.minSize ?? 0);
-      // return size;
     }
   }
 
