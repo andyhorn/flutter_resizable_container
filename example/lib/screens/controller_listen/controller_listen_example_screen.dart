@@ -24,7 +24,7 @@ class _ControllerListenExampleScreenState
   void initState() {
     super.initState();
     controller.addListener(() {
-      final sizes = controller.sizes;
+      final sizes = controller.pixels;
       setState(() {
         leftWidth = sizes.first;
         rightWidth = sizes.last;

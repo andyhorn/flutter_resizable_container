@@ -1,82 +1,59 @@
+import "dart:async";
 import "dart:collection";
 import "dart:math";
 
 import 'package:flutter/material.dart';
 import "package:flutter_resizable_container/flutter_resizable_container.dart";
-import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
-import "package:flutter_resizable_container/src/resizable_size.dart";
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
   double _availableSpace = -1;
-  List<double> _sizes = [];
+  List<double> _pixels = [];
+  List<ResizableSize> _sizes = const [];
   List<ResizableChild> _children = const [];
+  bool _needsLayout = false;
+
+  bool get needsLayout => _needsLayout;
 
   /// The size, in pixels, of each child.
-  UnmodifiableListView<double> get sizes => UnmodifiableListView(_sizes);
+  UnmodifiableListView<double> get pixels => UnmodifiableListView(_pixels);
+
+  UnmodifiableListView<ResizableSize> get sizes => UnmodifiableListView(_sizes);
 
   /// A list of ratios (proportion of total available space taken) for each child.
   UnmodifiableListView<double> get ratios {
     return UnmodifiableListView([
-      for (final size in sizes) ...[
+      for (final size in pixels) ...[
         size / _availableSpace,
       ],
     ]);
   }
 
-  /// Programmatically set the sizes of the children.
-  ///
-  /// Each child must have a corresponding index in the [values] list.
-  /// The value at each index may be a pixel value, a ratio, or "expand".
-  ///
-  /// Sizes are allocated based on the following hierarchy:
-  /// 1. ResizeSize.pixels
-  /// 2. ResizeSize.ratio
-  /// 3. ResizeSize.expand
-  ///
-  /// * If the value is a ResizeSize.pixels, the child will be given that size
-  /// in logical pixels
-  /// * If the value is a ResizeSize.ratio, the child will be given that portion
-  /// of the remaining available space, after all ResizeSize.pixel values have
-  /// been allocated
-  /// * If the value is a ResizeSize.expand, the child will be given the
-  /// remaining available space, after all pixel and ratio values have been
-  /// allocated
-  /// * If there are multiple "expand" values, each child will be given an equal
-  /// portion of the remaining available space, after all pixel and ratio values
-  /// have been allocated
-  ///
-  /// For example,
-  ///
-  /// ```dart
-  /// controller.setSizes(const [
-  ///   ResizableSize.pixels(100),
-  ///   ResizableSize.ratio(0.5),
-  ///   ResizableSize.expand(),
-  /// ]);
-  /// ```
-  ///
-  /// In this scenario:
-  /// * the first child will be given 100 logical pixels of space
-  /// * the second child will be given 50% of the remaining available space
-  /// * the third child will be given whatever remaining space is left
-  ///
-  /// This method throws an `ArgumentError` in any of the following scenarios:
-  /// * The length of [values] is different from the length of [children]
-  /// * The total amount of pixels is greater than the total available space
-  /// * The sum of all ratio values exceeds 1.0
-  void setSizes(List<ResizableSize> values) {
-    if (values.length != _children.length) {
+  void setSizes(List<ResizableSize> sizes) {
+    if (sizes.length != _children.length) {
+      throw ArgumentError('Must contain a value for every child');
+    }
+
+    final totalPixels = sizes
+        .where((size) => size.isPixels)
+        .fold(0.0, (sum, curr) => sum + curr.value);
+
+    if (totalPixels > _availableSpace) {
       throw ArgumentError(
-        'Must contain a value for every child. Children: ${_children.length}, Sizes: ${values.length}',
+        'Total pixels must be less than or equal to available space',
       );
     }
 
-    _sizes = _mapSizesToAvailableSpace(
-      resizableSizes: values,
-      availableSpace: _availableSpace,
-    );
+    final totalRatio = sizes
+        .where((size) => size.isRatio)
+        .fold(0.0, (sum, curr) => sum + curr.value);
 
+    if (totalRatio > 1.0) {
+      throw ArgumentError('Total ratio must be less than or equal to 1.0');
+    }
+
+    _sizes = sizes;
+    _needsLayout = true;
     notifyListeners();
   }
 
@@ -88,126 +65,216 @@ class ResizableController with ChangeNotifier {
         ? _getAdjustedReducingDelta(index: index, delta: delta)
         : _getAdjustedIncreasingDelta(index: index, delta: delta);
 
-    _sizes[index] += adjustedDelta;
-    _sizes[index + 1] -= adjustedDelta;
+    _pixels[index] += adjustedDelta;
+    _pixels[index + 1] -= adjustedDelta;
     notifyListeners();
-  }
-
-  void _setAvailableSpace(double availableSpace) {
-    if (availableSpace == _availableSpace) {
-      return;
-    }
-
-    if (_availableSpace == -1) {
-      // Initialize the child sizes and available space, but do not notify
-      // listeners; this step only occurs during the initial build, so we do
-      // not need to trigger another build
-      _initializeChildSizes(availableSpace);
-      _availableSpace = availableSpace;
-    } else {
-      // Update the child sizes to the new space and notify listeners
-      _updateChildSizes(availableSpace);
-      _availableSpace = availableSpace;
-      notifyListeners();
-    }
   }
 
   void setChildren(List<ResizableChild> children) {
     _children = children;
+    _sizes = children.map((child) => child.size).toList();
+    _pixels = List.filled(children.length, 0);
+    _needsLayout = true;
+    notifyListeners();
   }
 
-  void _updateChildren(List<ResizableChild> children) {
-    _children = children;
-    _initializeChildSizes(_availableSpace);
+  void _setRenderedSizes(List<double> pixels) {
+    _pixels = pixels;
+    _needsLayout = false;
+    Timer.run(notifyListeners);
   }
 
-  void _initializeChildSizes(double availableSpace) {
-    _sizes = _getInitialChildSizes(availableSpace);
-  }
+  void _setAvailableSpace(double availableSpace) {
+    if (_availableSpace == -1) {
+      _needsLayout = true;
+      _availableSpace = availableSpace;
+      return;
+    }
 
-  List<double> _getInitialChildSizes(double availableSpace) {
-    return _mapSizesToAvailableSpace(
-      resizableSizes: _children.map((child) => child.size),
-      availableSpace: availableSpace,
+    if (availableSpace == _availableSpace) {
+      return;
+    }
+
+    // Adjust the sizes of all children based on the new available space.
+    //
+    // Prioritize adjusting "expand" children first. Any remaining change in
+    // available space (if the "expand" children have reached 0 or a size
+    // constraint) should be uniformly distributed among the remaining
+    // non-shrink children, taking into account their minimum & maximum size
+    // constraints.
+    final delta = _getDelta(availableSpace);
+
+    if (delta == 0.0) {
+      _availableSpace = availableSpace;
+      return;
+    }
+
+    final distributed = _distributeDelta(
+      delta: delta,
+      sizes: _pixels,
     );
+
+    for (var i = 0; i < sizes.length; i++) {
+      _pixels[i] += distributed[i];
+    }
+
+    _availableSpace = availableSpace;
   }
 
-  List<double> _mapSizesToAvailableSpace({
-    required Iterable<ResizableSize> resizableSizes,
-    required double availableSpace,
+  double _getDelta(double availableSpace) {
+    var delta = availableSpace - _availableSpace;
+
+    if (delta == 0.0) {
+      return 0.0;
+    }
+
+    if (delta > 0) {
+      final minimumNecessarySize = _getMinimumNecessarySize();
+
+      if (minimumNecessarySize >= availableSpace) {
+        return 0.0;
+      }
+
+      delta = min(delta, availableSpace - minimumNecessarySize);
+    }
+
+    return delta;
+  }
+
+  double _getMinimumNecessarySize() {
+    final minimums = _children.map((child) => child.minSize ?? 0.0).toList();
+    return minimums.fold(0.0, (sum, curr) => sum + curr);
+  }
+
+  List<double> _distributeDelta({
+    required double delta,
+    required List<double> sizes,
   }) {
-    final totalPixels = resizableSizes.totalPixels;
-    final totalRatio = resizableSizes.totalRatio;
-    final flexCount = resizableSizes.flexCount;
+    final indices = List.generate(_children.length, (i) => i);
+    final changeableIndices = _getChangeableIndices(delta < 0 ? -1 : 1, sizes);
 
-    if (resizableSizes.totalPixels > availableSpace) {
-      throw ArgumentError('Size cannot exceed total available space.');
+    if (changeableIndices.isEmpty) {
+      return List.filled(sizes.length, 0.0);
     }
 
-    if (resizableSizes.totalRatio > 1.01) {
-      throw ArgumentError('Ratios cannot exceed 1.0');
-    }
+    final changePerItem = delta / changeableIndices.length;
 
-    final remainingSpace = availableSpace - totalPixels;
-    final ratioSpace = remainingSpace * totalRatio;
-    final totalFlexSpace = remainingSpace - ratioSpace;
-    final flexUnitSpace = totalFlexSpace / max(1, flexCount);
+    final maximums = indices.map((i) {
+      if (changeableIndices.contains(i)) {
+        return _getAllowableChange(delta: delta, index: i, sizes: sizes);
+      }
 
-    final sizes = resizableSizes.map(
-      (size) => switch (size.type) {
-        SizeType.pixels => size.value,
-        SizeType.ratio => remainingSpace * size.value,
-        SizeType.expand => flexUnitSpace * size.value,
-        SizeType.shrink => 0.0,
-      },
-    );
+      return 0.0;
+    }).toList();
 
-    return sizes.toList();
-  }
+    final changes = indices.map((index) {
+      if (!changeableIndices.contains(index)) {
+        return 0.0;
+      }
 
-  void _updateChildSizes(double availableSpace) {
-    final flexCount = _children.map((child) => child.size).flexCount;
-    if (flexCount > 0) {
-      // If any children are set to expand, adjust them instead of any
-      // statically-sized children
-      _flexExpandableChildren(
-        availableSpace: availableSpace,
-        flexCount: flexCount,
+      final max = maximums[index];
+
+      if (max.abs() < changePerItem.abs()) {
+        return max;
+      }
+
+      return changePerItem;
+    }).toList();
+
+    final changesSum = changes.fold(0.0, (sum, curr) => sum + curr);
+    final remainingChange = delta - changesSum;
+
+    if (remainingChange.abs() > 0) {
+      final adjustedSizes = indices.map(
+        (index) => sizes[index] + changes[index],
       );
-    } else {
-      // If no children are set to expand, then scale each child uniformly
-      _adjustChildrenUniformly(availableSpace);
-    }
-  }
 
-  void _flexExpandableChildren({
-    required double availableSpace,
-    required int flexCount,
-  }) {
-    final delta = availableSpace - _availableSpace;
-    final deltaPerExpandable = delta / flexCount;
+      final redistributed = _distributeDelta(
+        delta: remainingChange,
+        sizes: adjustedSizes.toList(),
+      );
 
-    for (var i = 0; i < _children.length; i++) {
-      if (_children[i].size.isExpand) {
-        _sizes[i] += deltaPerExpandable * _children[i].size.value;
+      for (var i = 0; i < changes.length; i++) {
+        changes[i] += redistributed[i];
       }
     }
+
+    return changes;
   }
 
-  void _adjustChildrenUniformly(double availableSpace) {
-    for (var i = 0; i < _children.length; i++) {
-      final currentRatio = _sizes[i] / _availableSpace;
-      _sizes[i] = currentRatio * availableSpace;
+  double _getAllowableChange({
+    required double delta,
+    required int index,
+    required List<double> sizes,
+  }) {
+    final targetSize = sizes[index] + delta;
+
+    if (delta < 0) {
+      final minimumSize = _children[index].minSize ?? 0;
+
+      if (targetSize <= minimumSize) {
+        return minimumSize - sizes[index];
+      }
+
+      return delta;
     }
+
+    final maximumSize = _children[index].maxSize ?? double.infinity;
+
+    if (targetSize >= maximumSize) {
+      return maximumSize - sizes[index];
+    }
+
+    return delta;
+  }
+
+  List<int> _getChangeableIndices(int direction, List<double> sizes) {
+    final indices = List.generate(_children.length, (i) => i);
+    final List<int> changeableIndices = [];
+
+    bool shouldAdd(index) {
+      final minSize = _children[index].minSize ?? 0.0;
+      final maxSize = _children[index].maxSize ?? double.infinity;
+
+      if (direction < 0 && sizes[index] > minSize) {
+        return true;
+      } else if (direction > 0 && sizes[index] < maxSize) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    for (final index in indices) {
+      if (!_children[index].size.isExpand) {
+        continue;
+      }
+
+      if (shouldAdd(index)) {
+        changeableIndices.add(index);
+      }
+    }
+
+    if (changeableIndices.isNotEmpty) {
+      return changeableIndices;
+    }
+
+    for (final index in indices) {
+      if (shouldAdd(index)) {
+        changeableIndices.add(index);
+      }
+    }
+
+    return changeableIndices;
   }
 
   double _getAdjustedReducingDelta({
     required int index,
     required double delta,
   }) {
-    final currentSize = sizes[index];
+    final currentSize = pixels[index];
     final minCurrentSize = _children[index].minSize ?? 0;
-    final adjacentSize = sizes[index + 1];
+    final adjacentSize = pixels[index + 1];
     final maxAdjacentSize = _children[index + 1].maxSize ?? double.infinity;
     final maxCurrentDelta = currentSize - minCurrentSize;
     final maxAdjacentDelta = maxAdjacentSize - adjacentSize;
@@ -224,9 +291,9 @@ class ResizableController with ChangeNotifier {
     required int index,
     required double delta,
   }) {
-    final currentSize = sizes[index];
+    final currentSize = pixels[index];
     final maxCurrentSize = _children[index].maxSize ?? double.infinity;
-    final adjacentSize = sizes[index + 1];
+    final adjacentSize = pixels[index + 1];
     final minAdjacentSize = _children[index + 1].minSize ?? 0;
     final maxAvailableSpace = min(maxCurrentSize, _availableSpace);
     final maxCurrentDelta = maxAvailableSpace - currentSize;
@@ -239,10 +306,6 @@ class ResizableController with ChangeNotifier {
 
     return delta;
   }
-
-  void _notify() {
-    notifyListeners();
-  }
 }
 
 final class ResizableControllerManager {
@@ -250,34 +313,16 @@ final class ResizableControllerManager {
 
   final ResizableController _controller;
 
-  void setAvailableSpace(double availableSpace) {
-    _controller._setAvailableSpace(availableSpace);
-  }
-
-  void updateChildren(List<ResizableChild> children) {
-    _controller._updateChildren(children);
-  }
-
-  @Deprecated(
-    'This method is deprecated and will be removed in the next major version. Use ResizableController#setChildren instead.',
-  )
-  void setChildren(List<ResizableChild> children) {
-    _controller.setChildren(children);
-  }
-
-  void adjustChildSize({
-    required int index,
-    required double delta,
-  }) {
+  void adjustChildSize({required int index, required double delta}) {
     _controller._adjustChildSize(index: index, delta: delta);
   }
 
-  void setSizes(List<double> sizes) {
-    for (var i = 0; i < sizes.length; i++) {
-      _controller._sizes[i] = sizes[i];
-    }
+  void setRenderedSizes(List<double> sizes) {
+    _controller._setRenderedSizes(sizes);
+  }
 
-    _controller._notify();
+  void setAvailableSpace(double availableSpace) {
+    _controller._setAvailableSpace(availableSpace);
   }
 }
 
