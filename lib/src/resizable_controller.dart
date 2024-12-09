@@ -4,7 +4,6 @@ import "dart:math";
 
 import 'package:flutter/material.dart';
 import "package:flutter_resizable_container/flutter_resizable_container.dart";
-import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
@@ -58,6 +57,14 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
+  void setChildren(List<ResizableChild> children) {
+    _children = children;
+    _sizes = children.map((child) => child.size).toList();
+    _pixels = List.filled(children.length, 0);
+    _needsLayout = true;
+    notifyListeners();
+  }
+
   void _adjustChildSize({
     required int index,
     required double delta,
@@ -71,30 +78,82 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  void setChildren(List<ResizableChild> children) {
-    _children = children;
-    _sizes = children.map((child) => child.size).toList();
-    _pixels = List.filled(children.length, 0);
-    _needsLayout = true;
-    notifyListeners();
-  }
-
   void _setRenderedSizes(List<double> pixels) {
-    _pixels = pixels;
+    pixels = _constrainRenderedSizes(pixels);
+    _pixels = _expandRenderedSizes(pixels);
     _needsLayout = false;
 
-    final total = pixels.sum((x) => x);
+    Timer.run(notifyListeners);
+  }
 
-    if (total < _availableSpace) {
-      final delta = _availableSpace - total;
-      final distributed = _distributeDelta(delta: delta, sizes: pixels);
+  List<double> _constrainRenderedSizes(List<double> pixels) {
+    if (!_checkShouldConstrainRenderedSizes(pixels)) {
+      return pixels;
+    }
 
-      for (var i = 0; i < pixels.length; i++) {
-        _pixels[i] += distributed[i];
+    for (var i = 0; i < _children.length; i++) {
+      final renderedSize = pixels[i];
+      final min = _children[i].minSize ?? 0.0;
+      final max = _children[i].maxSize ?? double.infinity;
+      final delta = renderedSize < min
+          ? min - renderedSize
+          : renderedSize > max
+              ? renderedSize - max
+              : 0.0;
+
+      if (delta != 0) {
+        pixels[i] += delta;
+
+        final distributedDeltas = _distributeDelta(
+          delta: -delta,
+          sizes: pixels,
+        );
+
+        for (var j = 0; j < pixels.length; j++) {
+          pixels[j] += distributedDeltas[j];
+        }
       }
     }
 
-    Timer.run(notifyListeners);
+    return pixels;
+  }
+
+  bool _checkShouldConstrainRenderedSizes(List<double> pixels) {
+    for (var i = 0; i < pixels.length; i++) {
+      var min = _children[i].minSize;
+      var max = _children[i].maxSize;
+
+      if (min == null && max == null) {
+        continue;
+      }
+
+      min = min ?? 0.0;
+      max = max ?? double.infinity;
+
+      return pixels[i] < min || pixels[i] > max;
+    }
+
+    return false;
+  }
+
+  List<double> _expandRenderedSizes(List<double> pixels) {
+    final total = pixels.fold(0.0, (sum, curr) => sum + curr);
+    final delta = _availableSpace - total;
+
+    if (delta == 0.0) {
+      return pixels;
+    }
+
+    final distributedDeltas = _distributeDelta(
+      delta: delta,
+      sizes: pixels,
+    );
+
+    for (var i = 0; i < pixels.length; i++) {
+      pixels[i] += distributedDeltas[i];
+    }
+
+    return pixels;
   }
 
   void _setAvailableSpace(double availableSpace) {
