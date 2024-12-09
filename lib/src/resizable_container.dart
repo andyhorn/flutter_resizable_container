@@ -272,9 +272,21 @@ class PreLayout extends StatelessWidget {
             }
 
             return Expanded(
-              key: keys[i],
               flex: value.toInt(),
-              child: children[i].child,
+              child: Align(
+                alignment: direction == Axis.horizontal
+                    ? Alignment.centerLeft
+                    : Alignment.topCenter,
+                child: ConstrainedBox(
+                  key: keys[i],
+                  constraints: _getExpandedConstraints(
+                    value: value,
+                    minimum: children[i].minSize,
+                    maximum: children[i].maxSize,
+                  ),
+                  child: children[i].child,
+                ),
+              ),
             );
           }),
           if (i < children.length - 1) ...[
@@ -302,5 +314,21 @@ class PreLayout extends StatelessWidget {
     adjustedSize = max(adjustedSize, 0);
 
     return adjustedSize;
+  }
+
+  BoxConstraints _getExpandedConstraints({
+    required double value,
+    required double? minimum,
+    required double? maximum,
+  }) {
+    final min = minimum ?? 0.0;
+    final max = maximum ?? double.infinity;
+
+    return BoxConstraints(
+      minHeight: direction == Axis.horizontal ? 0 : min,
+      maxHeight: direction == Axis.horizontal ? double.infinity : max,
+      minWidth: direction == Axis.vertical ? 0 : min,
+      maxWidth: direction == Axis.vertical ? double.infinity : max,
+    );
   }
 }

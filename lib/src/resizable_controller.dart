@@ -4,6 +4,7 @@ import "dart:math";
 
 import 'package:flutter/material.dart';
 import "package:flutter_resizable_container/flutter_resizable_container.dart";
+import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
@@ -81,6 +82,18 @@ class ResizableController with ChangeNotifier {
   void _setRenderedSizes(List<double> pixels) {
     _pixels = pixels;
     _needsLayout = false;
+
+    final total = pixels.sum((x) => x);
+
+    if (total < _availableSpace) {
+      final delta = _availableSpace - total;
+      final distributed = _distributeDelta(delta: delta, sizes: pixels);
+
+      for (var i = 0; i < pixels.length; i++) {
+        _pixels[i] += distributed[i];
+      }
+    }
+
     Timer.run(notifyListeners);
   }
 
