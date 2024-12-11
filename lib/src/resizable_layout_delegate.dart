@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
+import 'package:flutter_resizable_container/src/layout_key.dart';
 
 typedef OnLayoutCompleteNotifier = void Function(List<double> pixels);
 
@@ -45,13 +46,13 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
     // Lay out dividers.
     var totalDividerPixels = 0.0;
     for (var i = 0; i < dividers.length; i++) {
-      final key = 'divider_$i';
+      final key = DividerKey(i);
       final layout = layoutChild(
         key,
         getDividerConstraints(i, size),
       );
       totalDividerPixels += getLayoutPixels(layout);
-      pixels[key] = getLayoutPixels(layout);
+      pixels[key.key] = getLayoutPixels(layout);
     }
 
     // Lay out shrink children.
@@ -62,10 +63,10 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
       final child = children[i];
 
       if (child.size.isShrink) {
-        final key = 'child_$i';
+        final key = ChildKey(i);
         final layout = layoutChild(key, getShrinkConstraints(i, size));
-        pixels[key] = getLayoutPixels(layout);
-        totalShrinkPixels += pixels[key]!;
+        pixels[key.key] = getLayoutPixels(layout);
+        totalShrinkPixels += pixels[key.key]!;
       }
     }
 
@@ -83,7 +84,7 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
         continue;
       }
 
-      final key = 'child_$i';
+      final key = ChildKey(i);
       final dimension = child.size.isPixels
           ? child.size.value
           : child.size.isRatio
@@ -91,11 +92,11 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
               : pixelsPerFlex * child.size.value;
 
       final layout = layoutChild(key, getConstraints(i, size, dimension));
-      pixels[key] = getLayoutPixels(layout);
+      pixels[key.key] = getLayoutPixels(layout);
     }
 
     for (var i = 0; i < children.length; i++) {
-      final childKey = 'child_$i';
+      final childKey = ChildKey(i);
 
       positionChild(
         childKey,
@@ -104,7 +105,7 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
     }
 
     for (var i = 0; i < dividers.length; i++) {
-      final dividerKey = 'divider_$i';
+      final dividerKey = DividerKey(i);
 
       positionChild(
         dividerKey,
@@ -160,8 +161,8 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
     final List<double> finalSizes = [];
 
     for (var i = 0; i < children.length; i++) {
-      final childKey = 'child_$i';
-      finalSizes.add(pixels[childKey] ?? 0.0);
+      final childKey = ChildKey(i);
+      finalSizes.add(pixels[childKey.key] ?? 0.0);
     }
 
     return finalSizes;
@@ -171,11 +172,11 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
     var sum = 0.0;
 
     for (var j = 0; j < i; j++) {
-      final childKey = 'child_$j';
-      final dividerKey = 'divider_$j';
+      final childKey = ChildKey(j);
+      final dividerKey = DividerKey(j);
 
-      sum += pixels[childKey] ?? 0.0;
-      sum += pixels[dividerKey] ?? 0.0;
+      sum += pixels[childKey.key] ?? 0.0;
+      sum += pixels[dividerKey.key] ?? 0.0;
     }
 
     return sum;
@@ -188,16 +189,16 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
     var sum = 0.0;
 
     for (var j = 0; j <= i; j++) {
-      final childKey = 'child_$j';
-      final dividerKey = 'divider_$j';
+      final childKey = ChildKey(j);
 
-      sum += pixels[childKey] ?? 0.0;
+      sum += pixels[childKey.key] ?? 0.0;
 
       if (j == i) {
         break;
       }
 
-      sum += pixels[dividerKey] ?? 0.0;
+      final dividerKey = DividerKey(j);
+      sum += pixels[dividerKey.key] ?? 0.0;
     }
 
     return sum;

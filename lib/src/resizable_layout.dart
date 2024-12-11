@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:flutter_resizable_container/src/layout_key.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_layout_delegate.dart';
 
@@ -24,12 +25,12 @@ class ResizableLayout extends StatelessWidget {
       children: [
         for (var i = 0; i < children.length; i++) ...[
           LayoutId(
-            id: 'child_$i',
+            id: ChildKey(i),
             child: children[i].child,
           ),
           if (i < children.length - 1) ...[
             LayoutId(
-              id: 'divider_$i',
+              id: DividerKey(i),
               child: ResizableContainerDivider(
                 config: divider,
                 direction: direction,
