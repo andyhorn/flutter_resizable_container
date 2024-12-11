@@ -99,7 +99,7 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
 
       positionChild(
         childKey,
-        getPosition(childKey, pixels),
+        getPosition(i, pixels),
       );
     }
 
@@ -108,7 +108,7 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
 
       positionChild(
         dividerKey,
-        getDividerPosition(dividerKey, pixels),
+        getDividerPosition(i, pixels),
       );
     }
 
@@ -126,8 +126,8 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
   BoxConstraints getConstraints(int i, Size size, double dimension);
   BoxConstraints getShrinkConstraints(int i, Size size);
   BoxConstraints getDividerConstraints(int i, Size size);
-  Offset getPosition(String key, Map<String, double> pixels);
-  Offset getDividerPosition(String key, Map<String, double> pixels);
+  Offset getPosition(int i, Map<String, double> pixels);
+  Offset getDividerPosition(int i, Map<String, double> pixels);
 
   double? _getChildMin(int i) =>
       i < children.length - 1 ? children[i].minSize : null;
@@ -175,6 +175,28 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
       final dividerKey = 'divider_$j';
 
       sum += pixels[childKey] ?? 0.0;
+      sum += pixels[dividerKey] ?? 0.0;
+    }
+
+    return sum;
+  }
+
+  double _getSumOfPreviousPixelsExcludingCurrentDivider(
+    Map<String, double> pixels,
+    int i,
+  ) {
+    var sum = 0.0;
+
+    for (var j = 0; j <= i; j++) {
+      final childKey = 'child_$j';
+      final dividerKey = 'divider_$j';
+
+      sum += pixels[childKey] ?? 0.0;
+
+      if (j == i) {
+        break;
+      }
+
       sum += pixels[dividerKey] ?? 0.0;
     }
 
@@ -238,9 +260,7 @@ final class _VerticalLayoutDelegate extends ResizableLayoutDelegate {
   }
 
   @override
-  Offset getPosition(String key, Map<String, double> pixels) {
-    final i = int.parse(key.split('_').last);
-
+  Offset getPosition(int i, Map<String, double> pixels) {
     if (i == 0) {
       return const Offset(0, 0);
     }
@@ -251,25 +271,10 @@ final class _VerticalLayoutDelegate extends ResizableLayoutDelegate {
   }
 
   @override
-  Offset getDividerPosition(String key, Map<String, double> pixels) {
-    final i = int.parse(key.split('_').last);
+  Offset getDividerPosition(int i, Map<String, double> pixels) {
+    final sum = _getSumOfPreviousPixelsExcludingCurrentDivider(pixels, i);
 
-    var offset = Offset(0, 0);
-
-    for (var j = 0; j <= i; j++) {
-      final childKey = 'child_$j';
-      final dividerKey = 'divider_$j';
-
-      offset += Offset(0, pixels[childKey] ?? 0.0);
-
-      if (j == i) {
-        break;
-      }
-
-      offset += Offset(0, pixels[dividerKey] ?? 0.0);
-    }
-
-    return offset;
+    return Offset(0, sum);
   }
 }
 
@@ -329,9 +334,7 @@ final class _HorizontalLayoutDelegate extends ResizableLayoutDelegate {
   }
 
   @override
-  Offset getPosition(String key, Map<String, double> pixels) {
-    final i = int.parse(key.split('_').last);
-
+  Offset getPosition(int i, Map<String, double> pixels) {
     if (i == 0) {
       return const Offset(0, 0);
     }
@@ -342,24 +345,9 @@ final class _HorizontalLayoutDelegate extends ResizableLayoutDelegate {
   }
 
   @override
-  Offset getDividerPosition(String key, Map<String, double> pixels) {
-    final i = int.parse(key.split('_').last);
+  Offset getDividerPosition(int i, Map<String, double> pixels) {
+    final sum = _getSumOfPreviousPixelsExcludingCurrentDivider(pixels, i);
 
-    var offset = Offset(0, 0);
-
-    for (var j = 0; j <= i; j++) {
-      final childKey = 'child_$j';
-      final dividerKey = 'divider_$j';
-
-      offset += Offset(pixels[childKey] ?? 0.0, 0);
-
-      if (j == i) {
-        break;
-      }
-
-      offset += Offset(pixels[dividerKey] ?? 0.0, 0);
-    }
-
-    return offset;
+    return Offset(sum, 0);
   }
 }
