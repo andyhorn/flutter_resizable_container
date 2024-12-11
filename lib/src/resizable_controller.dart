@@ -1,4 +1,3 @@
-import "dart:async";
 import "dart:collection";
 import "dart:math";
 
@@ -79,81 +78,9 @@ class ResizableController with ChangeNotifier {
   }
 
   void _setRenderedSizes(List<double> pixels) {
-    pixels = _constrainRenderedSizes(pixels);
-    _pixels = _expandRenderedSizes(pixels);
+    _pixels = pixels;
     _needsLayout = false;
-
-    Timer.run(notifyListeners);
-  }
-
-  List<double> _constrainRenderedSizes(List<double> pixels) {
-    if (!_checkShouldConstrainRenderedSizes(pixels)) {
-      return pixels;
-    }
-
-    for (var i = 0; i < _children.length; i++) {
-      final renderedSize = pixels[i];
-      final min = _children[i].minSize ?? 0.0;
-      final max = _children[i].maxSize ?? double.infinity;
-      final delta = renderedSize < min
-          ? min - renderedSize
-          : renderedSize > max
-              ? renderedSize - max
-              : 0.0;
-
-      if (delta != 0) {
-        pixels[i] += delta;
-
-        final distributedDeltas = _distributeDelta(
-          delta: -delta,
-          sizes: pixels,
-        );
-
-        for (var j = 0; j < pixels.length; j++) {
-          pixels[j] += distributedDeltas[j];
-        }
-      }
-    }
-
-    return pixels;
-  }
-
-  bool _checkShouldConstrainRenderedSizes(List<double> pixels) {
-    for (var i = 0; i < pixels.length; i++) {
-      var min = _children[i].minSize;
-      var max = _children[i].maxSize;
-
-      if (min == null && max == null) {
-        continue;
-      }
-
-      min = min ?? 0.0;
-      max = max ?? double.infinity;
-
-      return pixels[i] < min || pixels[i] > max;
-    }
-
-    return false;
-  }
-
-  List<double> _expandRenderedSizes(List<double> pixels) {
-    final total = pixels.fold(0.0, (sum, curr) => sum + curr);
-    final delta = _availableSpace - total;
-
-    if (delta == 0.0) {
-      return pixels;
-    }
-
-    final distributedDeltas = _distributeDelta(
-      delta: delta,
-      sizes: pixels,
-    );
-
-    for (var i = 0; i < pixels.length; i++) {
-      pixels[i] += distributedDeltas[i];
-    }
-
-    return pixels;
+    notifyListeners();
   }
 
   void _setAvailableSpace(double availableSpace) {
