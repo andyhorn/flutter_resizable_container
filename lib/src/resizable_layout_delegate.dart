@@ -181,28 +181,6 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
 
     return sum;
   }
-
-  double _getSumOfPreviousPixelsExcludingCurrentDivider(
-    Map<String, double> pixels,
-    int i,
-  ) {
-    var sum = 0.0;
-
-    for (var j = 0; j <= i; j++) {
-      final childKey = ChildKey(j);
-
-      sum += pixels[childKey.key] ?? 0.0;
-
-      if (j == i) {
-        break;
-      }
-
-      final dividerKey = DividerKey(j);
-      sum += pixels[dividerKey.key] ?? 0.0;
-    }
-
-    return sum;
-  }
 }
 
 final class _VerticalLayoutDelegate extends ResizableLayoutDelegate {
@@ -273,9 +251,12 @@ final class _VerticalLayoutDelegate extends ResizableLayoutDelegate {
 
   @override
   Offset getDividerPosition(int i, Map<String, double> pixels) {
-    final sum = _getSumOfPreviousPixelsExcludingCurrentDivider(pixels, i);
+    final dividerKey = DividerKey(i);
+    final dividerHeight = pixels[dividerKey.key] ?? 0.0;
+    final sum = _getSumOfPreviousPixels(pixels, i);
+    final height = sum - dividerHeight;
 
-    return Offset(0, sum);
+    return Offset(0, height);
   }
 }
 
@@ -347,8 +328,11 @@ final class _HorizontalLayoutDelegate extends ResizableLayoutDelegate {
 
   @override
   Offset getDividerPosition(int i, Map<String, double> pixels) {
-    final sum = _getSumOfPreviousPixelsExcludingCurrentDivider(pixels, i);
+    final dividerKey = DividerKey(i);
+    final dividerWidth = pixels[dividerKey.key] ?? 0.0;
+    final sum = _getSumOfPreviousPixels(pixels, i);
+    final width = sum - dividerWidth;
 
-    return Offset(sum, 0);
+    return Offset(width, 0);
   }
 }
