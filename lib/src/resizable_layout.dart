@@ -44,9 +44,7 @@ class ResizableLayout extends StatelessWidget {
   }
 
   ResizableLayoutDelegate _getLayoutDelegate() {
-    final dividers = [
-      for (var i = 0; i < children.length - 1; i++) ResizableDivider(),
-    ];
+    final dividers = List.generate(children.length - 1, (i) => divider);
 
     return switch (direction) {
       Axis.vertical => ResizableLayoutDelegate.vertical(
