@@ -49,7 +49,7 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
     final totalPixels = getLayoutPixels(size);
     final Map<String, double> pixels = {};
 
-    // Lay out dividers.
+    // Step 1. Lay out the dividers and read their sizes.
     var totalDividerPixels = 0.0;
     for (var i = 0; i < dividers.length; i++) {
       final key = DividerKey(i);
@@ -61,14 +61,11 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
       pixels[key.key] = getLayoutPixels(layout);
     }
 
-    // Lay out shrink children.
-    // This is necessary to calculate the total available space for the flex
-    // and ratio children.
+    // Step 2. Lay out "shrink" children and read their size.
+    // These widgets require unconstrained space to determine their "natural" size.
     var totalShrinkPixels = 0.0;
-    for (var i = 0; i < children.length; i++) {
-      final child = children[i];
-
-      if (child.size.isShrink) {
+    for (var i = 0; i < sizes.length; i++) {
+      if (sizes[i].isShrink) {
         final key = ChildKey(i);
         final layout = layoutChild(key, getShrinkConstraints(i, size));
         pixels[key.key] = getLayoutPixels(layout);
@@ -76,31 +73,35 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
       }
     }
 
-    final pixelPixels = _getTotalPixelSpace();
+    // Step 3. Calculate the remaining space available for "expand" children.
+    // This involves deducting the total pixels used by the dividers and shrink children,
+    // (which is why they were laid out first)
+    // along with the total space needed for "ratio" and "pixel" children.
+    final pixelPixels = _getTotalPixelPixels();
     final flexPixels =
         totalPixels - totalShrinkPixels - totalDividerPixels - pixelPixels;
-    final ratioPixels = flexPixels * _getTotalRatio();
+    final ratioPixels = flexPixels * _getTotalRatioPixels();
     final expandPixels = flexPixels - ratioPixels;
-    final pixelsPerFlex = expandPixels / _getTotalFlex();
+    final pixelsPerFlex = expandPixels / _getTotalFlexCount();
 
-    for (var i = 0; i < children.length; i++) {
-      final child = children[i];
-
-      if (child.size.isShrink) {
+    // Step 4. Lay out each non-"shrink" child and read its size.
+    for (var i = 0; i < sizes.length; i++) {
+      if (sizes[i].isShrink) {
         continue;
       }
 
       final key = ChildKey(i);
-      final dimension = child.size.isPixels
-          ? child.size.value
-          : child.size.isRatio
-              ? child.size.value * ratioPixels
-              : pixelsPerFlex * child.size.value;
+      final dimension = sizes[i].isPixels
+          ? sizes[i].value
+          : sizes[i].isRatio
+              ? sizes[i].value * ratioPixels
+              : pixelsPerFlex * sizes[i].value;
 
       final layout = layoutChild(key, getConstraints(i, size, dimension));
       pixels[key.key] = getLayoutPixels(layout);
     }
 
+    // Step 5. Position each child and divider.
     for (var i = 0; i < children.length; i++) {
       final childKey = ChildKey(i);
 
@@ -108,17 +109,18 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
         childKey,
         getPosition(i, pixels),
       );
+
+      if (i < dividers.length) {
+        final dividerKey = DividerKey(i);
+
+        positionChild(
+          dividerKey,
+          getDividerPosition(i, pixels),
+        );
+      }
     }
 
-    for (var i = 0; i < dividers.length; i++) {
-      final dividerKey = DividerKey(i);
-
-      positionChild(
-        dividerKey,
-        getDividerPosition(i, pixels),
-      );
-    }
-
+    // Step 6. Read the final sizes of all children and notify the parent.
     final finalSizes = _getFinalSizes(pixels);
     onLayoutComplete(finalSizes);
   }
@@ -142,24 +144,24 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
   double? _getChildMax(int i) =>
       i < children.length - 1 ? children[i].maxSize : null;
 
-  double _getTotalPixelSpace() {
-    return children
-        .where((child) => child.size.isPixels)
-        .sum((child) => child.size.value)
+  double _getTotalPixelPixels() {
+    return sizes
+        .where((size) => size.isPixels)
+        .sum((size) => size.value)
         .toDouble();
   }
 
-  double _getTotalRatio() {
-    return children
-        .where((child) => child.size.isRatio)
-        .sum((child) => child.size.value)
+  double _getTotalRatioPixels() {
+    return sizes
+        .where((size) => size.isRatio)
+        .sum((size) => size.value)
         .toDouble();
   }
 
-  int _getTotalFlex() {
-    return children
-        .where((child) => child.size.isExpand)
-        .sum((child) => child.size.value)
+  int _getTotalFlexCount() {
+    return sizes
+        .where((size) => size.isExpand)
+        .sum((size) => size.value)
         .toInt();
   }
 
