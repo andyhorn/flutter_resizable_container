@@ -201,14 +201,16 @@ final class _VerticalLayoutDelegate extends ResizableLayoutDelegate {
 
   @override
   BoxConstraints getConstraints(int i, Size size, double dimension) {
-    final min = _getChildMin(i) ?? dimension;
-    final max = _getChildMax(i) ?? dimension;
+    final constraint = dimension.clamp(
+      _getChildMin(i) ?? 0.0,
+      _getChildMax(i) ?? double.infinity,
+    );
 
     return BoxConstraints(
       minWidth: size.width,
       maxWidth: size.width,
-      minHeight: min,
-      maxHeight: max,
+      minHeight: constraint,
+      maxHeight: constraint,
     );
   }
 
@@ -279,12 +281,14 @@ final class _HorizontalLayoutDelegate extends ResizableLayoutDelegate {
 
   @override
   BoxConstraints getConstraints(int i, Size size, double dimension) {
-    final min = _getChildMin(i) ?? dimension;
-    final max = _getChildMax(i) ?? dimension;
+    final constraint = dimension.clamp(
+      _getChildMin(i) ?? 0.0,
+      _getChildMax(i) ?? double.infinity,
+    );
 
     return BoxConstraints(
-      minWidth: min,
-      maxWidth: max,
+      minWidth: constraint,
+      maxWidth: constraint,
       minHeight: size.height,
       maxHeight: size.height,
     );
