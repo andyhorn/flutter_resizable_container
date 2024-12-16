@@ -8,33 +8,39 @@ typedef OnLayoutCompleteNotifier = void Function(List<double> pixels);
 abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
   ResizableLayoutDelegate._({
     required this.children,
+    required this.sizes,
     required this.dividers,
     required this.onLayoutComplete,
   });
 
   factory ResizableLayoutDelegate.horizontal({
     required List<ResizableChild> children,
+    required List<ResizableSize> sizes,
     required List<ResizableDivider> dividers,
     required OnLayoutCompleteNotifier onLayoutComplete,
   }) =>
       _HorizontalLayoutDelegate(
         children: children,
+        sizes: sizes,
         dividers: dividers,
         onLayoutComplete: onLayoutComplete,
       );
 
   factory ResizableLayoutDelegate.vertical({
     required List<ResizableChild> children,
+    required List<ResizableSize> sizes,
     required List<ResizableDivider> dividers,
     required OnLayoutCompleteNotifier onLayoutComplete,
   }) =>
       _VerticalLayoutDelegate(
         children: children,
+        sizes: sizes,
         dividers: dividers,
         onLayoutComplete: onLayoutComplete,
       );
 
   final List<ResizableChild> children;
+  final List<ResizableSize> sizes;
   final List<ResizableDivider> dividers;
   final OnLayoutCompleteNotifier onLayoutComplete;
 
@@ -186,6 +192,7 @@ abstract base class ResizableLayoutDelegate extends MultiChildLayoutDelegate {
 final class _VerticalLayoutDelegate extends ResizableLayoutDelegate {
   _VerticalLayoutDelegate({
     required super.children,
+    required super.sizes,
     required super.dividers,
     required super.onLayoutComplete,
   }) : super._();
@@ -263,6 +270,7 @@ final class _VerticalLayoutDelegate extends ResizableLayoutDelegate {
 final class _HorizontalLayoutDelegate extends ResizableLayoutDelegate {
   _HorizontalLayoutDelegate({
     required super.children,
+    required super.sizes,
     required super.dividers,
     required super.onLayoutComplete,
   }) : super._();

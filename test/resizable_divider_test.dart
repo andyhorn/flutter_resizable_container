@@ -328,8 +328,10 @@ void main() {
 
         // Simulate tap gesture and cancel it
         final gesture = await tester.startGesture(
-            tester.getCenter(dividerFinder),
-            kind: PointerDeviceKind.touch);
+          tester.getCenter(dividerFinder),
+          kind: PointerDeviceKind.touch,
+        );
+
         await tester.pump();
         await gesture.cancel();
         await tester.pump();

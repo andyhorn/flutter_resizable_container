@@ -8,12 +8,14 @@ class ResizableLayout extends StatelessWidget {
   const ResizableLayout({
     super.key,
     required this.children,
+    required this.sizes,
     required this.direction,
     required this.divider,
     required this.onLayoutComplete,
   });
 
   final List<ResizableChild> children;
+  final List<ResizableSize> sizes;
   final Axis direction;
   final ResizableDivider divider;
   final Function(List<double>) onLayoutComplete;
@@ -49,11 +51,13 @@ class ResizableLayout extends StatelessWidget {
     return switch (direction) {
       Axis.vertical => ResizableLayoutDelegate.vertical(
           children: children,
+          sizes: sizes,
           dividers: dividers,
           onLayoutComplete: onLayoutComplete,
         ),
       Axis.horizontal => ResizableLayoutDelegate.horizontal(
           children: children,
+          sizes: sizes,
           dividers: dividers,
           onLayoutComplete: onLayoutComplete,
         ),

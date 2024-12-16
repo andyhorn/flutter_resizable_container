@@ -85,6 +85,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
             if (controller.needsLayout) {
               return ResizableLayout(
                 children: widget.children,
+                sizes: controller.sizes,
                 direction: widget.direction,
                 divider: widget.divider,
                 onLayoutComplete: (sizes) =>
