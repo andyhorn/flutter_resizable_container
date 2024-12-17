@@ -412,6 +412,79 @@ void main() {
         expect(boxBSize.width, equals(699));
       });
 
+      testWidgets('respects min size of expand', (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1000, 1000));
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                direction: Axis.horizontal,
+                children: [
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    minSize: 700,
+                    child: SizedBox.expand(
+                      key: Key('BoxA'),
+                    ),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(
+                      key: Key('BoxB'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
+        final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
+
+        expect(boxASize.width, equals(700));
+        expect(boxBSize.width, equals(299));
+      });
+
+      testWidgets('respects max size of expand', (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1000, 1000));
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                direction: Axis.horizontal,
+                children: [
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    maxSize: 300,
+                    child: SizedBox.expand(
+                      key: Key('BoxA'),
+                    ),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(
+                      key: Key('BoxB'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
+        final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
+
+        expect(boxASize.width, equals(300));
+        expect(boxBSize.width, equals(699));
+      });
     });
 
     testWidgets('can resize by dragging divider', (tester) async {
