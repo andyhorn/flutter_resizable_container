@@ -182,7 +182,8 @@ class _ResizableLayoutRenderObject extends RenderBox
 
   double _getDividerSpace() {
     final dividerThickness = divider.thickness + divider.padding;
-    return dividerThickness * (childCount - 1);
+    final dividerCount = childCount ~/ 2;
+    return dividerThickness * dividerCount;
   }
 
   double _getRatioSpace({
