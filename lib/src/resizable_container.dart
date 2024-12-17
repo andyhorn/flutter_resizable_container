@@ -84,6 +84,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
           builder: (context, _) {
             if (controller.needsLayout) {
               return ResizableLayout(
+                direction: widget.direction,
                 onComplete: (sizes) => manager.setRenderedSizes(
                   _getEvenIndexValues(sizes),
                 ),
