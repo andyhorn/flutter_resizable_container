@@ -71,30 +71,15 @@ class _ResizableLayoutRenderObject extends RenderBox
     for (var i = 0, j = 1; i < childCount; i += 2, j += 2) {
       final child = children[i];
       final size = sizes[i ~/ 2];
+      final constraints = _getConstraintsForChild(
+        size: size,
+        child: child,
+        ratioSpace: ratioSpace,
+        expandSpace: expandSpace,
+        flexCount: flexCount,
+      );
 
-      switch (size.type) {
-        case SizeType.pixels:
-          final width = size.value;
-          final c = BoxConstraints.tight(Size(width, constraints.maxHeight));
-          child.layout(c, parentUsesSize: true);
-          break;
-        case SizeType.ratio:
-          final width = size.value * ratioSpace;
-          final c = BoxConstraints.tight(Size(width, constraints.maxHeight));
-          child.layout(c, parentUsesSize: true);
-          break;
-        case SizeType.shrink:
-          final width = child.getMinIntrinsicWidth(double.infinity);
-          final c = BoxConstraints.tight(Size(width, constraints.maxHeight));
-          child.layout(c, parentUsesSize: true);
-          break;
-        case SizeType.expand:
-          final width = size.value * (expandSpace / flexCount);
-          final c = BoxConstraints.tight(Size(width, constraints.maxHeight));
-          child.layout(c, parentUsesSize: true);
-          break;
-      }
-
+      child.layout(constraints, parentUsesSize: true);
       finalSizes.add(child.size.width);
 
       if (j < childCount) {
@@ -110,6 +95,27 @@ class _ResizableLayoutRenderObject extends RenderBox
 
     size = constraints.biggest;
     onComplete(finalSizes);
+  }
+
+  BoxConstraints _getConstraintsForChild({
+    required ResizableSize size,
+    required RenderBox child,
+    required double ratioSpace,
+    required double expandSpace,
+    required int flexCount,
+  }) {
+    final width = switch (size.type) {
+      SizeType.pixels => size.value,
+      SizeType.ratio => size.value * ratioSpace,
+      SizeType.shrink => child.getMinIntrinsicWidth(double.infinity),
+      SizeType.expand => size.value * (expandSpace / flexCount),
+    };
+
+    final constraints = BoxConstraints.tight(
+      Size(width, this.constraints.maxHeight),
+    );
+
+    return constraints;
   }
 
   @override
