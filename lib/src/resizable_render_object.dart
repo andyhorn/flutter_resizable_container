@@ -78,37 +78,23 @@ class _ResizableLayoutRenderObject extends RenderBox
 
       switch (size.type) {
         case SizeType.pixels:
-          final c = constraints.copyWith(
-            minWidth: size.value,
-            maxWidth: size.value,
-            minHeight: constraints.maxHeight,
-          );
+          final width = size.value;
+          final c = BoxConstraints.tight(Size(width, constraints.maxHeight));
           child.layout(c, parentUsesSize: true);
           break;
         case SizeType.ratio:
-          final c = constraints.copyWith(
-            minWidth: size.value * ratioSpace,
-            maxWidth: size.value * ratioSpace,
-            minHeight: constraints.maxHeight,
-          );
+          final width = size.value * ratioSpace;
+          final c = BoxConstraints.tight(Size(width, constraints.maxHeight));
           child.layout(c, parentUsesSize: true);
           break;
         case SizeType.shrink:
           final width = child.getMinIntrinsicWidth(double.infinity);
-          final c = constraints.copyWith(
-            minWidth: width,
-            maxWidth: width,
-            minHeight: constraints.maxHeight,
-          );
+          final c = BoxConstraints.tight(Size(width, constraints.maxHeight));
           child.layout(c, parentUsesSize: true);
           break;
         case SizeType.expand:
           final width = size.value * (expandSpace / expandCount);
-          final c = constraints.copyWith(
-            minWidth: width,
-            maxWidth: width,
-            minHeight: constraints.maxHeight,
-          );
+          final c = BoxConstraints.tight(Size(width, constraints.maxHeight));
           child.layout(c, parentUsesSize: true);
           break;
       }
@@ -117,11 +103,10 @@ class _ResizableLayoutRenderObject extends RenderBox
 
       if (j < childCount) {
         final divider = children[j];
-        final c = constraints.copyWith(
-          minWidth: this.divider.thickness + this.divider.padding,
-          maxWidth: this.divider.thickness + this.divider.padding,
-          minHeight: constraints.maxHeight,
-        );
+        final c = BoxConstraints.tight(Size(
+          this.divider.thickness + this.divider.padding,
+          constraints.maxHeight,
+        ));
         divider.layout(c, parentUsesSize: true);
         finalSizes.add(divider.size.width);
       }
