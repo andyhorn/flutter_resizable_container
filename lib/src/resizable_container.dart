@@ -1,10 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
-import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
 import 'package:flutter_resizable_container/src/resizable_layout.dart';
@@ -87,13 +84,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
           builder: (context, _) {
             if (controller.needsLayout) {
               return ResizableLayout(
-                onComplete: (sizes) => manager.setRenderedSizes([
-                  for (var i = 0; i < sizes.length; i++) ...[
-                    if (i % 2 == 0) ...[
-                      sizes[i],
-                    ],
-                  ],
-                ]),
+                onComplete: (sizes) => manager.setRenderedSizes(
+                  _getEvenIndexValues(sizes),
+                ),
                 sizes: controller.sizes,
                 divider: widget.divider,
                 resizableChildren: widget.children,
@@ -181,108 +174,14 @@ class _ResizableContainerState extends State<ResizableContainer> {
       return controller.pixels[index];
     }
   }
-}
 
-class PreLayout extends StatelessWidget {
-  const PreLayout({
-    super.key,
-    required this.availableSpace,
-    required this.children,
-    required this.direction,
-    required this.divider,
-    required this.keys,
-    required this.sizes,
-  });
-
-  final double availableSpace;
-  final List<ResizableChild> children;
-  final Axis direction;
-  final ResizableDivider divider;
-  final List<GlobalKey> keys;
-  final List<ResizableSize> sizes;
-
-  @override
-  Widget build(BuildContext context) {
-    final totalPixels =
-        sizes.where((size) => size.isPixels).sum((size) => size.value);
-
-    return Flex(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      direction: direction,
-      children: [
-        for (var i = 0; i < children.length; i++) ...[
-          Builder(builder: (context) {
-            final size = sizes[i];
-            final value = size.value;
-
-            if (size.isPixels) {
-              final constrained = _getConstrainedSize(
-                value: value,
-                minimum: children[i].minSize,
-                maximum: children[i].maxSize,
-              );
-
-              return SizedBox(
-                key: keys[i],
-                height: direction == Axis.horizontal ? null : constrained,
-                width: direction == Axis.horizontal ? constrained : null,
-                child: children[i].child,
-              );
-            }
-
-            if (size.isRatio) {
-              final size = (availableSpace - totalPixels) * value;
-              final constrained = _getConstrainedSize(
-                value: size,
-                minimum: children[i].minSize,
-                maximum: children[i].maxSize,
-              );
-
-              return SizedBox(
-                key: keys[i],
-                height: direction == Axis.horizontal ? null : constrained,
-                width: direction == Axis.horizontal ? constrained : null,
-                child: children[i].child,
-              );
-            }
-
-            if (size.isShrink) {
-              return UnconstrainedBox(
-                key: keys[i],
-                child: children[i].child,
-              );
-            }
-
-            return Expanded(
-              key: keys[i],
-              flex: value.toInt(),
-              child: children[i].child,
-            );
-          }),
-          if (i < children.length - 1) ...[
-            ResizableContainerDivider(
-              config: divider,
-              direction: direction,
-              onResizeUpdate: (_) {},
-            ),
-          ],
+  List<double> _getEvenIndexValues(List<double> sizes) {
+    return [
+      for (var i = 0; i < sizes.length; i++) ...[
+        if (i % 2 == 0) ...[
+          sizes[i],
         ],
       ],
-    );
-  }
-
-  double _getConstrainedSize({
-    required double value,
-    required double? minimum,
-    required double? maximum,
-  }) {
-    if (minimum == null && maximum == null) {
-      return value;
-    }
-
-    var adjustedSize = min(value, maximum ?? double.infinity);
-    adjustedSize = max(adjustedSize, 0);
-
-    return adjustedSize;
+    ];
   }
 }
