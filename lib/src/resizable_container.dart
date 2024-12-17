@@ -87,14 +87,13 @@ class _ResizableContainerState extends State<ResizableContainer> {
           builder: (context, _) {
             if (controller.needsLayout) {
               return ResizableLayout(
-                onComplete: (sizes) {},
-                // onComplete: (sizes) => manager.setRenderedSizes([
-                //   for (var i = 0; i < sizes.length; i++) ...[
-                //     if (i % 2 == 0) ...[
-                //       sizes[i],
-                //     ],
-                //   ],
-                // ]),
+                onComplete: (sizes) => manager.setRenderedSizes([
+                  for (var i = 0; i < sizes.length; i++) ...[
+                    if (i % 2 == 0) ...[
+                      sizes[i],
+                    ],
+                  ],
+                ]),
                 sizes: controller.sizes,
                 divider: widget.divider,
                 children: [
