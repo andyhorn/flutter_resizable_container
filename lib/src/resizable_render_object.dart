@@ -63,22 +63,19 @@ class _ResizableLayoutRenderObject extends RenderBox
     final pixelSpace = _getPixelsSpace();
     final shrinkSpace = _getShrinkSpace(children);
     final dividerSpace = _getDividerSpace();
+    final dividerConstraints = _getDividerConstraints();
+    final flexCount = _getFlexCount();
     final ratioSpace = _getRatioSpace(
       pixelSpace: pixelSpace,
       shrinkSpace: shrinkSpace,
       dividerSpace: dividerSpace,
     );
-    final flexCount = _getFlexCount();
     final expandSpace = _getExpandSpace(
       pixelSpace: pixelSpace,
       shrinkSpace: shrinkSpace,
       ratioSpace: ratioSpace,
       dividerSpace: dividerSpace,
     );
-    final dividerConstraints = BoxConstraints.tight(Size(
-      divider.thickness + divider.padding,
-      constraints.maxHeight,
-    ));
 
     final List<double> finalSizes = [];
 
@@ -151,6 +148,13 @@ class _ResizableLayoutRenderObject extends RenderBox
     parentData.offset = Offset(currentXPosition, 0.0);
   }
 
+  BoxConstraints _getDividerConstraints() {
+    return BoxConstraints.tight(Size(
+      divider.thickness + divider.padding,
+      constraints.maxHeight,
+    ));
+  }
+
   double _getPixelsSpace() {
     final pixels = [
       for (var i = 0; i < sizes.length; i++) ...[
@@ -170,7 +174,7 @@ class _ResizableLayoutRenderObject extends RenderBox
           _clamp(
             children[i].getMinIntrinsicWidth(double.infinity),
             resizableChildren[i],
-              ),
+          ),
         ]
       ],
     ].fold(0.0, (sum, curr) => sum + curr);
