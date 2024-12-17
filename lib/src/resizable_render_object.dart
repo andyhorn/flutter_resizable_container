@@ -59,11 +59,7 @@ class _ResizableLayoutRenderObject extends RenderBox
       shrinkSpace: shrinkSpace,
       dividerSpace: dividerSpace,
     );
-    final expandCount = sizes
-        .where((s) => s.isExpand)
-        .map((s) => s.value)
-        .reduce((sum, curr) => sum + curr)
-        .toInt();
+    final flexCount = _getFlexCount();
     final expandSpace = _getExpandSpace(
       pixelSpace: pixelSpace,
       shrinkSpace: shrinkSpace,
@@ -93,7 +89,7 @@ class _ResizableLayoutRenderObject extends RenderBox
           child.layout(c, parentUsesSize: true);
           break;
         case SizeType.expand:
-          final width = size.value * (expandSpace / expandCount);
+          final width = size.value * (expandSpace / flexCount);
           final c = BoxConstraints.tight(Size(width, constraints.maxHeight));
           child.layout(c, parentUsesSize: true);
           break;
@@ -160,6 +156,14 @@ class _ResizableLayoutRenderObject extends RenderBox
 
     return totalRatio *
         (constraints.maxWidth - pixelSpace - shrinkSpace - dividerSpace);
+  }
+
+  int _getFlexCount() {
+    return sizes
+        .where((s) => s.isExpand)
+        .map((s) => s.value)
+        .fold(0.0, (sum, curr) => sum + curr)
+        .toInt();
   }
 
   double _getExpandSpace({
