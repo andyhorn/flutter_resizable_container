@@ -82,7 +82,7 @@ class _ResizableLayoutRenderObject extends RenderBox
 
     final List<double> finalSizes = [];
 
-    for (var i = 0, j = 1; i < childCount; i += 2, j += 2) {
+    for (var i = 0; i < childCount; i += 2) {
       final child = children[i];
       final size = sizes[i ~/ 2];
       final constraints = _getConstraintsForChild(
@@ -97,8 +97,8 @@ class _ResizableLayoutRenderObject extends RenderBox
       _layoutChild(child, constraints);
       finalSizes.add(child.size.width);
 
-      if (j < childCount) {
-        final divider = children[j];
+      if (i < childCount - 1) {
+        final divider = children[i + 1];
         _layoutChild(divider, dividerConstraints);
         finalSizes.add(divider.size.width);
       }
