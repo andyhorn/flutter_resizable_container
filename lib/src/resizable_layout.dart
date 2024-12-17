@@ -3,16 +3,186 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/resizable_size.dart';
 
+sealed class ResizableLayoutDirectionHelper {
+  BoxConstraints? _constraints;
+  double _currentPosition = 0.0;
+
+  double get currentPosition => _currentPosition;
+
+  void adjustCurrentPosition(Size size);
+
+  void reset(BoxConstraints constraints) {
+    _constraints = constraints;
+    _currentPosition = 0.0;
+  }
+
+  BoxConstraints getConstraintsForChild({
+    required ResizableSize size,
+    required ResizableChild resizableChild,
+    required RenderBox child,
+    required double availableRatioSpace,
+    required double expandSpace,
+    required int flexCount,
+  });
+
+  BoxConstraints getDividerConstraints(
+    BoxConstraints constraints,
+    ResizableDivider divider,
+  );
+
+  double getMaxConstraintDimension();
+  double getSizeDimension(Size size);
+  void layoutChild(RenderBox child, BoxConstraints constraints);
+  void setChildOffset(RenderBox child);
+
+  double _clamp(double value, ResizableChild resizableChild) {
+    return value.clamp(
+      resizableChild.minSize ?? 0,
+      resizableChild.maxSize ?? double.infinity,
+    );
+  }
+}
+
+class ResizableHorizontalLayoutHelper extends ResizableLayoutDirectionHelper {
+  @override
+  void adjustCurrentPosition(Size size) {
+    _currentPosition += size.width;
+  }
+
+  @override
+  BoxConstraints getConstraintsForChild({
+    required ResizableSize size,
+    required ResizableChild resizableChild,
+    required RenderBox child,
+    required double availableRatioSpace,
+    required double expandSpace,
+    required int flexCount,
+  }) {
+    final width = switch (size.type) {
+      SizeType.pixels => size.value,
+      SizeType.ratio => size.value * availableRatioSpace,
+      SizeType.shrink => child.getMinIntrinsicWidth(double.infinity),
+      SizeType.expand => size.value * (expandSpace / flexCount),
+    };
+
+    final constraints = BoxConstraints.tight(
+      Size(_clamp(width, resizableChild), _constraints!.maxHeight),
+    );
+
+    return constraints;
+  }
+
+  @override
+  BoxConstraints getDividerConstraints(
+    BoxConstraints constraints,
+    ResizableDivider divider,
+  ) {
+    return BoxConstraints.tight(Size(
+      divider.thickness + divider.padding,
+      constraints.maxHeight,
+    ));
+  }
+
+  @override
+  double getMaxConstraintDimension() {
+    return _constraints!.maxWidth;
+  }
+
+  @override
+  void layoutChild(RenderBox child, BoxConstraints constraints) {
+    child.layout(constraints, parentUsesSize: true);
+    setChildOffset(child);
+    adjustCurrentPosition(child.size);
+  }
+
+  @override
+  void setChildOffset(RenderBox child) {
+    final parentData = child.parentData as _ResizableLayoutParentData;
+    parentData.offset = Offset(currentPosition, 0.0);
+  }
+
+  @override
+  double getSizeDimension(Size size) {
+    return size.width;
+  }
+}
+
+class ResizableVerticalLayoutHelper extends ResizableLayoutDirectionHelper {
+  @override
+  void adjustCurrentPosition(Size size) {
+    _currentPosition += size.height;
+  }
+
+  @override
+  BoxConstraints getConstraintsForChild({
+    required ResizableSize size,
+    required ResizableChild resizableChild,
+    required RenderBox child,
+    required double availableRatioSpace,
+    required double expandSpace,
+    required int flexCount,
+  }) {
+    final height = switch (size.type) {
+      SizeType.pixels => size.value,
+      SizeType.ratio => size.value * availableRatioSpace,
+      SizeType.shrink => child.getMinIntrinsicHeight(double.infinity),
+      SizeType.expand => size.value * (expandSpace / flexCount),
+    };
+
+    final constraints = BoxConstraints.tight(
+      Size(_constraints!.maxWidth, _clamp(height, resizableChild)),
+    );
+
+    return constraints;
+  }
+
+  @override
+  BoxConstraints getDividerConstraints(
+    BoxConstraints constraints,
+    ResizableDivider divider,
+  ) {
+    return BoxConstraints.tight(Size(
+      constraints.maxWidth,
+      divider.thickness + divider.padding,
+    ));
+  }
+
+  @override
+  double getMaxConstraintDimension() {
+    return _constraints!.maxHeight;
+  }
+
+  @override
+  void layoutChild(RenderBox child, BoxConstraints constraints) {
+    child.layout(constraints, parentUsesSize: true);
+    setChildOffset(child);
+    adjustCurrentPosition(child.size);
+  }
+
+  @override
+  void setChildOffset(RenderBox child) {
+    final parentData = child.parentData as _ResizableLayoutParentData;
+    parentData.offset = Offset(0.0, currentPosition);
+  }
+
+  @override
+  double getSizeDimension(Size size) {
+    return size.height;
+  }
+}
+
 class ResizableLayout extends MultiChildRenderObjectWidget {
   const ResizableLayout({
     super.key,
     required super.children,
+    required this.direction,
     required this.divider,
     required this.onComplete,
     required this.sizes,
     required this.resizableChildren,
   });
 
+  final Axis direction;
   final ResizableDivider divider;
   final ValueChanged<List<double>> onComplete;
   final List<ResizableSize> sizes;
@@ -21,6 +191,9 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
   @override
   RenderObject createRenderObject(BuildContext context) {
     return _ResizableLayoutRenderObject(
+      direction: direction == Axis.horizontal
+          ? ResizableHorizontalLayoutHelper()
+          : ResizableVerticalLayoutHelper(),
       divider: divider,
       sizes: sizes,
       onComplete: onComplete,
@@ -37,18 +210,18 @@ typedef _DefaultsMixin
 class _ResizableLayoutRenderObject extends RenderBox
     with _ContainerMixin, _DefaultsMixin {
   _ResizableLayoutRenderObject({
+    required this.direction,
     required this.divider,
     required this.sizes,
     required this.onComplete,
     required this.resizableChildren,
   });
 
+  final ResizableLayoutDirectionHelper direction;
   final ResizableDivider divider;
   final List<ResizableSize> sizes;
   final ValueChanged<List<double>> onComplete;
   final List<ResizableChild> resizableChildren;
-
-  var _currentXPosition = 0.0;
 
   @override
   void setupParentData(covariant RenderObject child) {
@@ -57,11 +230,15 @@ class _ResizableLayoutRenderObject extends RenderBox
 
   @override
   void performLayout() {
-    _currentXPosition = 0.0;
+    direction.reset(constraints);
 
-    final dividerConstraints = _getDividerConstraints();
     final children = getChildrenAsList();
     final dividerSpace = _getDividerSpace();
+    final dividerConstraints = direction.getDividerConstraints(
+      constraints,
+      divider,
+    );
+
     final pixelSpace = _getPixelsSpace();
     final shrinkSpace = _getShrinkSpace(children);
     final availableRatioSpace = _getAvailableRatioSpace(
@@ -84,7 +261,7 @@ class _ResizableLayoutRenderObject extends RenderBox
     for (var i = 0; i < childCount; i += 2) {
       final child = children[i];
       final size = sizes[i ~/ 2];
-      final constraints = _getConstraintsForChild(
+      final constraints = direction.getConstraintsForChild(
         size: size,
         child: child,
         resizableChild: resizableChildren[i ~/ 2],
@@ -93,18 +270,18 @@ class _ResizableLayoutRenderObject extends RenderBox
         flexCount: flexCount,
       );
 
-      _layoutChild(child, constraints);
-      finalSizes.add(child.size.width);
+      direction.layoutChild(child, constraints);
+      finalSizes.add(direction.getSizeDimension(child.size));
 
       if (size.type == SizeType.expand) {
         flexCount -= size.value.toInt();
-        remainingExpandSpace -= child.size.width;
+        remainingExpandSpace -= direction.getSizeDimension(child.size);
       }
 
       if (i < childCount - 1) {
         final divider = children[i + 1];
-        _layoutChild(divider, dividerConstraints);
-        finalSizes.add(divider.size.width);
+        direction.layoutChild(divider, dividerConstraints);
+        finalSizes.add(direction.getSizeDimension(divider.size));
       }
     }
 
@@ -120,46 +297,6 @@ class _ResizableLayoutRenderObject extends RenderBox
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
     return defaultHitTestChildren(result, position: position);
-  }
-
-  BoxConstraints _getConstraintsForChild({
-    required ResizableSize size,
-    required ResizableChild resizableChild,
-    required RenderBox child,
-    required double availableRatioSpace,
-    required double expandSpace,
-    required int flexCount,
-  }) {
-    final width = switch (size.type) {
-      SizeType.pixels => size.value,
-      SizeType.ratio => size.value * availableRatioSpace,
-      SizeType.shrink => child.getMinIntrinsicWidth(double.infinity),
-      SizeType.expand => size.value * (expandSpace / flexCount),
-    };
-
-    final constraints = BoxConstraints.tight(
-      Size(_clamp(width, resizableChild), this.constraints.maxHeight),
-    );
-
-    return constraints;
-  }
-
-  void _layoutChild(RenderBox child, BoxConstraints constraints) {
-    child.layout(constraints, parentUsesSize: true);
-    _setChildOffset(child, _currentXPosition);
-    _currentXPosition += child.size.width;
-  }
-
-  void _setChildOffset(RenderBox child, double currentXPosition) {
-    final parentData = child.parentData as _ResizableLayoutParentData;
-    parentData.offset = Offset(currentXPosition, 0.0);
-  }
-
-  BoxConstraints _getDividerConstraints() {
-    return BoxConstraints.tight(Size(
-      divider.thickness + divider.padding,
-      constraints.maxHeight,
-    ));
   }
 
   double _getPixelsSpace() {
@@ -198,7 +335,10 @@ class _ResizableLayoutRenderObject extends RenderBox
     required double shrinkSpace,
     required double dividerSpace,
   }) {
-    return constraints.maxWidth - pixelSpace - shrinkSpace - dividerSpace;
+    return direction.getMaxConstraintDimension() -
+        pixelSpace -
+        shrinkSpace -
+        dividerSpace;
   }
 
   double _getRequiredRatioSpace(double availableSpace) {
@@ -230,7 +370,7 @@ class _ResizableLayoutRenderObject extends RenderBox
     required double requiredRatioSpace,
     required double dividerSpace,
   }) {
-    return constraints.maxWidth -
+    return direction.getMaxConstraintDimension() -
         pixelSpace -
         shrinkSpace -
         requiredRatioSpace -
