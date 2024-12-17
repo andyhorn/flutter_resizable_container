@@ -60,9 +60,7 @@ class _ResizableLayoutRenderObject extends RenderBox
     _currentXPosition = 0.0;
 
     final dividerConstraints = _getDividerConstraints();
-    final flexCount = _getFlexCount();
     final children = getChildrenAsList();
-
     final dividerSpace = _getDividerSpace();
     final pixelSpace = _getPixelsSpace();
     final shrinkSpace = _getShrinkSpace(children);
@@ -72,7 +70,9 @@ class _ResizableLayoutRenderObject extends RenderBox
       dividerSpace: dividerSpace,
     );
     final requiredRatioSpace = _getRequiredRatioSpace(availableRatioSpace);
-    final expandSpace = _getExpandSpace(
+
+    var flexCount = _getFlexCount();
+    var remainingExpandSpace = _getExpandSpace(
       pixelSpace: pixelSpace,
       shrinkSpace: shrinkSpace,
       requiredRatioSpace: requiredRatioSpace,
@@ -89,12 +89,17 @@ class _ResizableLayoutRenderObject extends RenderBox
         child: child,
         resizableChild: resizableChildren[i ~/ 2],
         availableRatioSpace: availableRatioSpace,
-        expandSpace: expandSpace,
+        expandSpace: remainingExpandSpace,
         flexCount: flexCount,
       );
 
       _layoutChild(child, constraints);
       finalSizes.add(child.size.width);
+
+      if (size.type == SizeType.expand) {
+        flexCount -= size.value.toInt();
+        remainingExpandSpace -= child.size.width;
+      }
 
       if (i < childCount - 1) {
         final divider = children[i + 1];
