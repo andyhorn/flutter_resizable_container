@@ -10,11 +10,13 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
     required this.divider,
     required this.onComplete,
     required this.sizes,
+    required this.resizableChildren,
   });
 
   final ResizableDivider divider;
   final ValueChanged<List<double>> onComplete;
   final List<ResizableSize> sizes;
+  final List<ResizableChild> resizableChildren;
 
   @override
   RenderObject createRenderObject(BuildContext context) {
@@ -22,6 +24,7 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
       divider: divider,
       sizes: sizes,
       onComplete: onComplete,
+      resizableChildren: resizableChildren,
     );
   }
 }
@@ -37,11 +40,13 @@ class _ResizableLayoutRenderObject extends RenderBox
     required this.divider,
     required this.sizes,
     required this.onComplete,
+    required this.resizableChildren,
   });
 
   final ResizableDivider divider;
   final List<ResizableSize> sizes;
   final ValueChanged<List<double>> onComplete;
+  final List<ResizableChild> resizableChildren;
 
   var _currentXPosition = 0.0;
 
@@ -79,6 +84,7 @@ class _ResizableLayoutRenderObject extends RenderBox
       final constraints = _getConstraintsForChild(
         size: size,
         child: child,
+        resizableChild: resizableChildren[i ~/ 2],
         ratioSpace: ratioSpace,
         expandSpace: expandSpace,
         flexCount: flexCount,
@@ -115,6 +121,7 @@ class _ResizableLayoutRenderObject extends RenderBox
 
   BoxConstraints _getConstraintsForChild({
     required ResizableSize size,
+    required ResizableChild resizableChild,
     required RenderBox child,
     required double ratioSpace,
     required double expandSpace,
@@ -128,7 +135,13 @@ class _ResizableLayoutRenderObject extends RenderBox
     };
 
     final constraints = BoxConstraints.tight(
-      Size(width, this.constraints.maxHeight),
+      Size(
+        width.clamp(
+          resizableChild.minSize ?? 0,
+          resizableChild.maxSize ?? double.infinity,
+        ),
+        this.constraints.maxHeight,
+      ),
     );
 
     return constraints;
@@ -146,17 +159,28 @@ class _ResizableLayoutRenderObject extends RenderBox
   }
 
   double _getPixelsSpace() {
-    return sizes
-        .where((s) => s.isPixels)
-        .map((s) => s.value)
-        .fold(0.0, (sum, curr) => sum + curr);
+    final pixels = [
+      for (var i = 0; i < sizes.length; i++) ...[
+        if (sizes[i].isPixels) ...[
+          sizes[i].value.clamp(
+                resizableChildren[i].minSize ?? 0,
+                resizableChildren[i].maxSize ?? double.infinity,
+              ),
+        ],
+      ],
+    ];
+
+    return pixels.fold(0.0, (sum, curr) => sum + curr);
   }
 
   double _getShrinkSpace(List<RenderBox> children) {
     return [
       for (var i = 0; i < sizes.length; i++) ...[
         if (sizes[i].isShrink) ...[
-          children[i].getMinIntrinsicWidth(double.infinity),
+          children[i].getMinIntrinsicWidth(double.infinity).clamp(
+                resizableChildren[i].minSize ?? 0,
+                resizableChildren[i].maxSize ?? double.infinity,
+              ),
         ]
       ],
     ].fold(0.0, (sum, curr) => sum + curr);
@@ -172,13 +196,20 @@ class _ResizableLayoutRenderObject extends RenderBox
     required double shrinkSpace,
     required double dividerSpace,
   }) {
-    final totalRatio = sizes
-        .where((s) => s.isRatio)
-        .map((s) => s.value)
-        .fold(0.0, (sum, curr) => sum + curr);
+    final availableSpace =
+        constraints.maxWidth - pixelSpace - shrinkSpace - dividerSpace;
+    final sizes = [
+      for (var i = 0; i < this.sizes.length; i++) ...[
+        if (this.sizes[i].isRatio) ...[
+          (this.sizes[i].value * availableSpace).clamp(
+            resizableChildren[i].minSize ?? 0,
+            resizableChildren[i].maxSize ?? double.infinity,
+          ),
+        ],
+      ],
+    ];
 
-    return totalRatio *
-        (constraints.maxWidth - pixelSpace - shrinkSpace - dividerSpace);
+    return sizes.fold(0.0, (sum, curr) => sum + curr);
   }
 
   int _getFlexCount() {

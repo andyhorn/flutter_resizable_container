@@ -96,6 +96,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                 ]),
                 sizes: controller.sizes,
                 divider: widget.divider,
+                resizableChildren: widget.children,
                 children: [
                   for (var i = 0; i < widget.children.length; i++) ...[
                     widget.children[i].child,
