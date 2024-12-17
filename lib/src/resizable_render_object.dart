@@ -43,6 +43,8 @@ class _ResizableLayoutRenderObject extends RenderBox
   final List<ResizableSize> sizes;
   final ValueChanged<List<double>> onComplete;
 
+  var _currentXPosition = 0.0;
+
   @override
   void setupParentData(covariant RenderObject child) {
     child.parentData = _ResizableLayoutParentData();
@@ -50,6 +52,8 @@ class _ResizableLayoutRenderObject extends RenderBox
 
   @override
   void performLayout() {
+    _currentXPosition = 0.0;
+
     final children = getChildrenAsList();
     final pixelSpace = _getPixelsSpace();
     final shrinkSpace = _getShrinkSpace(children);
@@ -68,6 +72,7 @@ class _ResizableLayoutRenderObject extends RenderBox
     );
 
     final List<double> finalSizes = [];
+
     for (var i = 0, j = 1; i < childCount; i += 2, j += 2) {
       final child = children[i];
       final size = sizes[i ~/ 2];
@@ -79,7 +84,7 @@ class _ResizableLayoutRenderObject extends RenderBox
         flexCount: flexCount,
       );
 
-      child.layout(constraints, parentUsesSize: true);
+      _layoutChild(child, constraints);
       finalSizes.add(child.size.width);
 
       if (j < childCount) {
@@ -88,13 +93,24 @@ class _ResizableLayoutRenderObject extends RenderBox
           this.divider.thickness + this.divider.padding,
           constraints.maxHeight,
         ));
-        divider.layout(c, parentUsesSize: true);
+
+        _layoutChild(divider, c);
         finalSizes.add(divider.size.width);
       }
     }
 
     size = constraints.biggest;
     onComplete(finalSizes);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    defaultPaint(context, offset);
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    return defaultHitTestChildren(result, position: position);
   }
 
   BoxConstraints _getConstraintsForChild({
@@ -118,14 +134,15 @@ class _ResizableLayoutRenderObject extends RenderBox
     return constraints;
   }
 
-  @override
-  void paint(PaintingContext context, Offset offset) {
-    defaultPaint(context, offset);
+  void _layoutChild(RenderBox child, BoxConstraints constraints) {
+    child.layout(constraints, parentUsesSize: true);
+    _setChildOffset(child, _currentXPosition);
+    _currentXPosition += child.size.width;
   }
 
-  @override
-  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
-    return defaultHitTestChildren(result, position: position);
+  void _setChildOffset(RenderBox child, double currentXPosition) {
+    final parentData = child.parentData as _ResizableLayoutParentData;
+    parentData.offset = Offset(currentXPosition, 0.0);
   }
 
   double _getPixelsSpace() {
