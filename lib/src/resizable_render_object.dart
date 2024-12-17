@@ -75,6 +75,10 @@ class _ResizableLayoutRenderObject extends RenderBox
       ratioSpace: ratioSpace,
       dividerSpace: dividerSpace,
     );
+    final dividerConstraints = BoxConstraints.tight(Size(
+      divider.thickness + divider.padding,
+      constraints.maxHeight,
+    ));
 
     final List<double> finalSizes = [];
 
@@ -95,12 +99,7 @@ class _ResizableLayoutRenderObject extends RenderBox
 
       if (j < childCount) {
         final divider = children[j];
-        final c = BoxConstraints.tight(Size(
-          this.divider.thickness + this.divider.padding,
-          constraints.maxHeight,
-        ));
-
-        _layoutChild(divider, c);
+        _layoutChild(divider, dividerConstraints);
         finalSizes.add(divider.size.width);
       }
     }
