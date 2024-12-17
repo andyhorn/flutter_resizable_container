@@ -172,7 +172,7 @@ class _ResizableLayoutRenderObject extends RenderBox
       for (var i = 0; i < sizes.length; i++) ...[
         if (sizes[i].isShrink) ...[
           _clamp(
-            children[i].getMinIntrinsicWidth(double.infinity),
+            children[i * 2].getMinIntrinsicWidth(double.infinity),
             resizableChildren[i],
           ),
         ]
@@ -196,7 +196,10 @@ class _ResizableLayoutRenderObject extends RenderBox
     final sizes = [
       for (var i = 0; i < this.sizes.length; i++) ...[
         if (this.sizes[i].isRatio) ...[
-          _clamp(this.sizes[i].value * availableSpace, resizableChildren[i]),
+          _clamp(
+            this.sizes[i].value * availableSpace,
+            resizableChildren[i],
+          ),
         ],
       ],
     ];
