@@ -134,13 +134,7 @@ class _ResizableLayoutRenderObject extends RenderBox
     };
 
     final constraints = BoxConstraints.tight(
-      Size(
-        width.clamp(
-          resizableChild.minSize ?? 0,
-          resizableChild.maxSize ?? double.infinity,
-        ),
-        this.constraints.maxHeight,
-      ),
+      Size(_clamp(width, resizableChild), this.constraints.maxHeight),
     );
 
     return constraints;
@@ -161,10 +155,7 @@ class _ResizableLayoutRenderObject extends RenderBox
     final pixels = [
       for (var i = 0; i < sizes.length; i++) ...[
         if (sizes[i].isPixels) ...[
-          sizes[i].value.clamp(
-                resizableChildren[i].minSize ?? 0,
-                resizableChildren[i].maxSize ?? double.infinity,
-              ),
+          _clamp(sizes[i].value, resizableChildren[i]),
         ],
       ],
     ];
@@ -176,9 +167,9 @@ class _ResizableLayoutRenderObject extends RenderBox
     return [
       for (var i = 0; i < sizes.length; i++) ...[
         if (sizes[i].isShrink) ...[
-          children[i].getMinIntrinsicWidth(double.infinity).clamp(
-                resizableChildren[i].minSize ?? 0,
-                resizableChildren[i].maxSize ?? double.infinity,
+          _clamp(
+            children[i].getMinIntrinsicWidth(double.infinity),
+            resizableChildren[i],
               ),
         ]
       ],
@@ -200,10 +191,7 @@ class _ResizableLayoutRenderObject extends RenderBox
     final sizes = [
       for (var i = 0; i < this.sizes.length; i++) ...[
         if (this.sizes[i].isRatio) ...[
-          (this.sizes[i].value * availableSpace).clamp(
-            resizableChildren[i].minSize ?? 0,
-            resizableChildren[i].maxSize ?? double.infinity,
-          ),
+          _clamp(this.sizes[i].value * availableSpace, resizableChildren[i]),
         ],
       ],
     ];
@@ -230,6 +218,13 @@ class _ResizableLayoutRenderObject extends RenderBox
         shrinkSpace -
         ratioSpace -
         dividerSpace;
+  }
+
+  double _clamp(double value, ResizableChild resizableChild) {
+    return value.clamp(
+      resizableChild.minSize ?? 0,
+      resizableChild.maxSize ?? double.infinity,
+    );
   }
 }
 
