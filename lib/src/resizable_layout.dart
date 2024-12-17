@@ -59,21 +59,23 @@ class _ResizableLayoutRenderObject extends RenderBox
   void performLayout() {
     _currentXPosition = 0.0;
 
-    final children = getChildrenAsList();
-    final pixelSpace = _getPixelsSpace();
-    final shrinkSpace = _getShrinkSpace(children);
-    final dividerSpace = _getDividerSpace();
     final dividerConstraints = _getDividerConstraints();
     final flexCount = _getFlexCount();
-    final ratioSpace = _getRatioSpace(
+    final children = getChildrenAsList();
+
+    final dividerSpace = _getDividerSpace();
+    final pixelSpace = _getPixelsSpace();
+    final shrinkSpace = _getShrinkSpace(children);
+    final availableRatioSpace = _getAvailableRatioSpace(
       pixelSpace: pixelSpace,
       shrinkSpace: shrinkSpace,
       dividerSpace: dividerSpace,
     );
+    final requiredRatioSpace = _getRequiredRatioSpace(availableRatioSpace);
     final expandSpace = _getExpandSpace(
       pixelSpace: pixelSpace,
       shrinkSpace: shrinkSpace,
-      ratioSpace: ratioSpace,
+      requiredRatioSpace: requiredRatioSpace,
       dividerSpace: dividerSpace,
     );
 
@@ -86,7 +88,7 @@ class _ResizableLayoutRenderObject extends RenderBox
         size: size,
         child: child,
         resizableChild: resizableChildren[i ~/ 2],
-        ratioSpace: ratioSpace,
+        availableRatioSpace: availableRatioSpace,
         expandSpace: expandSpace,
         flexCount: flexCount,
       );
@@ -119,13 +121,13 @@ class _ResizableLayoutRenderObject extends RenderBox
     required ResizableSize size,
     required ResizableChild resizableChild,
     required RenderBox child,
-    required double ratioSpace,
+    required double availableRatioSpace,
     required double expandSpace,
     required int flexCount,
   }) {
     final width = switch (size.type) {
       SizeType.pixels => size.value,
-      SizeType.ratio => size.value * ratioSpace,
+      SizeType.ratio => size.value * availableRatioSpace,
       SizeType.shrink => child.getMinIntrinsicWidth(double.infinity),
       SizeType.expand => size.value * (expandSpace / flexCount),
     };
@@ -186,13 +188,15 @@ class _ResizableLayoutRenderObject extends RenderBox
     return dividerThickness * dividerCount;
   }
 
-  double _getRatioSpace({
+  double _getAvailableRatioSpace({
     required double pixelSpace,
     required double shrinkSpace,
     required double dividerSpace,
   }) {
-    final availableSpace =
-        constraints.maxWidth - pixelSpace - shrinkSpace - dividerSpace;
+    return constraints.maxWidth - pixelSpace - shrinkSpace - dividerSpace;
+  }
+
+  double _getRequiredRatioSpace(double availableSpace) {
     final sizes = [
       for (var i = 0; i < this.sizes.length; i++) ...[
         if (this.sizes[i].isRatio) ...[
@@ -218,13 +222,13 @@ class _ResizableLayoutRenderObject extends RenderBox
   double _getExpandSpace({
     required double pixelSpace,
     required double shrinkSpace,
-    required double ratioSpace,
+    required double requiredRatioSpace,
     required double dividerSpace,
   }) {
     return constraints.maxWidth -
         pixelSpace -
         shrinkSpace -
-        ratioSpace -
+        requiredRatioSpace -
         dividerSpace;
   }
 
