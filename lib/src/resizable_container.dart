@@ -7,6 +7,7 @@ import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.d
 import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
+import 'package:flutter_resizable_container/src/resizable_render_object.dart';
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///
@@ -46,12 +47,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
   late final controller = widget.controller ?? ResizableController();
   late final isDefaultController = widget.controller == null;
   late final manager = ResizableControllerManager(controller);
-  late var keys = _generateKeys();
-
-  List<GlobalKey> _generateKeys() => List.generate(
-        widget.children.length,
-        (_) => GlobalKey(),
-      );
 
   @override
   void initState() {
@@ -63,15 +58,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
     final didChildrenChange = !listEquals(oldWidget.children, widget.children);
-    final didDirectionChange = widget.direction != oldWidget.direction;
-    final hasChanges = didChildrenChange || didDirectionChange;
 
     if (didChildrenChange) {
       controller.setChildren(widget.children);
-    }
-
-    if (hasChanges) {
-      keys = _generateKeys();
     }
 
     super.didUpdateWidget(oldWidget);
@@ -97,17 +86,32 @@ class _ResizableContainerState extends State<ResizableContainer> {
           animation: controller,
           builder: (context, _) {
             if (controller.needsLayout) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _readSizesAfterLayout();
-              });
-
-              return PreLayout(
-                availableSpace: availableSpace,
-                children: widget.children,
-                direction: widget.direction,
-                divider: widget.divider,
-                keys: keys,
+              return ResizableLayout(
+                onComplete: (sizes) {},
+                // onComplete: (sizes) => manager.setRenderedSizes([
+                //   for (var i = 0; i < sizes.length; i++) ...[
+                //     if (i % 2 == 0) ...[
+                //       sizes[i],
+                //     ],
+                //   ],
+                // ]),
                 sizes: controller.sizes,
+                divider: widget.divider,
+                children: [
+                  for (var i = 0; i < widget.children.length; i++) ...[
+                    widget.children[i].child,
+                    if (i < widget.children.length - 1) ...[
+                      ResizableContainerDivider(
+                        config: widget.divider,
+                        direction: widget.direction,
+                        onResizeUpdate: (delta) => manager.adjustChildSize(
+                          index: i,
+                          delta: delta,
+                        ),
+                      ),
+                    ],
+                  ],
+                ],
               );
             } else {
               return Flex(
@@ -176,28 +180,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
     } else {
       return controller.pixels[index];
     }
-  }
-
-  void _readSizesAfterLayout() {
-    final sizes = keys.map<double>((key) {
-      final size = _getRenderBoxSize(key);
-
-      if (size == null) {
-        return 0;
-      }
-
-      return switch (widget.direction) {
-        Axis.horizontal => size.width,
-        Axis.vertical => size.height,
-      };
-    });
-
-    manager.setRenderedSizes(sizes.toList());
-  }
-
-  Size? _getRenderBoxSize(GlobalKey key) {
-    final renderBox = key.currentContext?.findRenderObject() as RenderBox?;
-    return renderBox?.size;
   }
 }
 
