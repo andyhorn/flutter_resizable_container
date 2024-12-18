@@ -323,6 +323,10 @@ final class ResizableControllerManager {
   void setAvailableSpace(double availableSpace) {
     _controller._setAvailableSpace(availableSpace);
   }
+
+  void setNeedsLayout() {
+    _controller._needsLayout = true;
+  }
 }
 
 abstract class ResizableControllerTestHelper {

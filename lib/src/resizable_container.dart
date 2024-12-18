@@ -56,9 +56,15 @@ class _ResizableContainerState extends State<ResizableContainer> {
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
     final didChildrenChange = !listEquals(oldWidget.children, widget.children);
+    final didDirectionChange = oldWidget.direction != widget.direction;
+    final didDividerChange = oldWidget.divider != widget.divider;
 
     if (didChildrenChange) {
       controller.setChildren(widget.children);
+    }
+
+    if (didChildrenChange || didDirectionChange || didDividerChange) {
+      manager.setNeedsLayout();
     }
 
     super.didUpdateWidget(oldWidget);

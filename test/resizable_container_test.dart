@@ -1158,6 +1158,81 @@ void main() {
       expect(boxASizeAfter.width, lessThan(boxASize.width));
       expect(boxBSizeAfter.width, greaterThan(boxBSize.width));
     });
+
+    group('when changing direction', () {
+      testWidgets('children are resized correctly', (tester) async {
+        final controller = ResizableController();
+        var direction = Axis.horizontal;
+        await tester.binding.setSurfaceSize(const Size(1000, 1000));
+        await tester.pumpWidget(
+          MaterialApp(
+            home: StatefulBuilder(
+              builder: (context, setState) {
+                return Scaffold(
+                  appBar: AppBar(
+                    actions: [
+                      MaterialButton(
+                        onPressed: () {
+                          setState(() => direction = Axis.vertical);
+                        },
+                        child: const Text('Click Me!'),
+                      ),
+                    ],
+                  ),
+                  body: ResizableContainer(
+                    controller: controller,
+                    direction: direction,
+                    divider: const ResizableDivider(
+                      thickness: 1,
+                      padding: 0,
+                    ),
+                    children: const [
+                      ResizableChild(
+                        size: ResizableSize.expand(),
+                        child: SizedBox.expand(
+                          key: Key('BoxA'),
+                        ),
+                      ),
+                      ResizableChild(
+                        size: ResizableSize.shrink(),
+                        child: SizedBox(
+                          width: 200,
+                          key: Key('BoxB'),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        final boxAFinder = find.byKey(const Key('BoxA'));
+        final boxBFinder = find.byKey(const Key('BoxB'));
+
+        expect(boxAFinder, findsOneWidget);
+        expect(boxBFinder, findsOneWidget);
+
+        final boxASize = tester.getSize(boxAFinder);
+        final boxBSize = tester.getSize(boxBFinder);
+
+        expect(boxASize.width, moreOrLessEquals(800, epsilon: 2));
+        expect(boxBSize.width, moreOrLessEquals(200, epsilon: 2));
+
+        await tester.tap(find.text('Click Me!'));
+        await tester.pumpAndSettle();
+
+        final newBoxASize = tester.getSize(boxAFinder);
+        final newBoxBSize = tester.getSize(boxBFinder);
+
+        expect(newBoxASize.height,
+            moreOrLessEquals(1000 - kToolbarHeight, epsilon: 2));
+        expect(newBoxBSize.height, moreOrLessEquals(0, epsilon: 2));
+      });
+    });
   });
 }
 
