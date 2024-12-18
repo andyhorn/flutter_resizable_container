@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
+import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
 import 'package:flutter_resizable_container/src/resizable_layout.dart';
@@ -86,7 +87,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
               return ResizableLayout(
                 direction: widget.direction,
                 onComplete: (sizes) => manager.setRenderedSizes(
-                  _getEvenIndexValues(sizes),
+                  sizes.evenIndices().toList(),
                 ),
                 sizes: controller.sizes,
                 divider: widget.divider,
