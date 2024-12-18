@@ -1,4 +1,3 @@
-import 'package:fake_async/fake_async.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
@@ -31,11 +30,8 @@ void main() {
           ),
         ]);
 
-        fakeAsync((async) {
-          manager.setAvailableSpace(300);
-          manager.setRenderedSizes([100, 200]);
-          async.flushTimers();
-        });
+        manager.setAvailableSpace(300);
+        manager.setRenderedSizes([100, 200]);
       });
 
       test('returns a list of pixel sizes', () {
@@ -56,11 +52,8 @@ void main() {
           ),
         ]);
 
-        fakeAsync((async) {
-          manager.setAvailableSpace(300);
-          manager.setRenderedSizes([100, 200]);
-          async.flushTimers();
-        });
+        manager.setAvailableSpace(300);
+        manager.setRenderedSizes([100, 200]);
       });
 
       test('returns a list of ratios', () {
@@ -82,11 +75,8 @@ void main() {
             ),
           ]);
 
-          fakeAsync((async) {
-            manager.setAvailableSpace(300);
-            manager.setRenderedSizes([100, 200]);
-            async.flushTimers();
-          });
+          manager.setAvailableSpace(300);
+          manager.setRenderedSizes([100, 200]);
         });
 
         test('does not notify listeners', () {
@@ -113,11 +103,8 @@ void main() {
               ),
             ]);
 
-            fakeAsync((async) {
-              manager.setAvailableSpace(300);
-              manager.setRenderedSizes([100, 200]);
-              async.flushTimers();
-            });
+            manager.setAvailableSpace(300);
+            manager.setRenderedSizes([100, 200]);
           });
 
           test('adjusts child sizes', () {
@@ -139,11 +126,8 @@ void main() {
               ),
             ]);
 
-            fakeAsync((async) {
-              manager.setAvailableSpace(300);
-              manager.setRenderedSizes([100, 200]);
-              async.flushTimers();
-            });
+            manager.setAvailableSpace(300);
+            manager.setRenderedSizes([100, 200]);
           });
 
           test('only adjusts the expandable child', () {
@@ -166,11 +150,8 @@ void main() {
               ),
             ]);
 
-            fakeAsync((async) {
-              manager.setAvailableSpace(300);
-              manager.setRenderedSizes([100, 200]);
-              async.flushTimers();
-            });
+            manager.setAvailableSpace(300);
+            manager.setRenderedSizes([100, 200]);
           });
 
           test('adjusts the expandable child to its maximum size', () {
@@ -197,11 +178,8 @@ void main() {
               ),
             ]);
 
-            fakeAsync((async) {
-              manager.setAvailableSpace(300);
-              manager.setRenderedSizes([100, 200]);
-              async.flushTimers();
-            });
+            manager.setAvailableSpace(300);
+            manager.setRenderedSizes([100, 200]);
           });
 
           test('adjusts the children equally', () {
@@ -290,10 +268,8 @@ void main() {
           ),
         ]);
 
-        fakeAsync((async) {
-          manager.setAvailableSpace(200);
-          manager.setRenderedSizes([100, 50, 50]);
-        });
+        manager.setAvailableSpace(200);
+        manager.setRenderedSizes([100, 50, 50]);
       });
 
       group('when increasing the size', () {
@@ -331,10 +307,8 @@ void main() {
           ),
         ]);
 
-        fakeAsync((async) {
-          manager.setAvailableSpace(200);
-          manager.setRenderedSizes([100, 50, 50]);
-        });
+        manager.setAvailableSpace(200);
+        manager.setRenderedSizes([100, 50, 50]);
       });
 
       group('when the list is the wrong length', () {
