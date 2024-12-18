@@ -179,14 +179,4 @@ class _ResizableContainerState extends State<ResizableContainer> {
       return controller.pixels[index];
     }
   }
-
-  List<double> _getEvenIndexValues(List<double> sizes) {
-    return [
-      for (var i = 0; i < sizes.length; i++) ...[
-        if (i % 2 == 0) ...[
-          sizes[i],
-        ],
-      ],
-    ];
-  }
 }
