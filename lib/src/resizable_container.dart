@@ -5,7 +5,7 @@ import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.d
 import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
-import 'package:flutter_resizable_container/src/resizable_layout.dart';
+import 'package:flutter_resizable_container/src/layout/resizable_layout.dart';
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///

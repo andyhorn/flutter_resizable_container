@@ -1,7 +1,7 @@
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/resizable_layout_direction.dart';
+import 'package:flutter_resizable_container/src/layout/resizable_layout_direction.dart';
 import 'package:flutter_resizable_container/src/resizable_size.dart';
 
 typedef _ContainerMixin
