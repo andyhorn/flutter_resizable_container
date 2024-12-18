@@ -586,7 +586,6 @@ void main() {
       ]);
 
       await tester.pump();
-      await tester.pumpAndSettle();
 
       final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
       final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
@@ -28,7 +29,7 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    return _ResizableLayoutRenderObject(
+    return ResizableLayoutRenderObject(
       layoutDirection: ResizableLayoutDirection.forAxis(direction),
       divider: divider,
       sizes: sizes,
@@ -36,25 +37,92 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
       resizableChildren: resizableChildren,
     );
   }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    ResizableLayoutRenderObject renderObject,
+  ) {
+    renderObject
+      ..layoutDirection = ResizableLayoutDirection.forAxis(direction)
+      ..divider = divider
+      ..sizes = sizes
+      ..onComplete = onComplete
+      ..resizableChildren = resizableChildren;
+  }
 }
 
-class _ResizableLayoutRenderObject extends RenderBox
+class ResizableLayoutRenderObject extends RenderBox
     with _ContainerMixin, _DefaultsMixin {
-  _ResizableLayoutRenderObject({
-    required this.layoutDirection,
-    required this.divider,
-    required this.sizes,
-    required this.onComplete,
-    required this.resizableChildren,
-  });
+  ResizableLayoutRenderObject({
+    required ResizableLayoutDirection layoutDirection,
+    required ResizableDivider divider,
+    required List<ResizableSize> sizes,
+    required ValueChanged<List<double>> onComplete,
+    required List<ResizableChild> resizableChildren,
+  })  : _layoutDirection = layoutDirection,
+        _divider = divider,
+        _sizes = sizes,
+        _onComplete = onComplete,
+        _resizableChildren = resizableChildren;
 
-  final ResizableLayoutDirection layoutDirection;
-  final ResizableDivider divider;
-  final List<ResizableSize> sizes;
-  final ValueChanged<List<double>> onComplete;
-  final List<ResizableChild> resizableChildren;
+  ResizableLayoutDirection _layoutDirection;
+  ResizableDivider _divider;
+  List<ResizableSize> _sizes;
+  ValueChanged<List<double>> _onComplete;
+  List<ResizableChild> _resizableChildren;
+  double _currentPosition = 0.0;
 
-  var _currentPosition = 0.0;
+  ResizableLayoutDirection get layoutDirection => _layoutDirection;
+  ResizableDivider get divider => _divider;
+  List<ResizableSize> get sizes => _sizes;
+  ValueChanged<List<double>> get onComplete => _onComplete;
+  List<ResizableChild> get resizableChildren => _resizableChildren;
+
+  set layoutDirection(ResizableLayoutDirection layoutDirection) {
+    if (_layoutDirection == layoutDirection) {
+      return;
+    }
+
+    _layoutDirection = layoutDirection;
+    markNeedsLayout();
+  }
+
+  set divider(ResizableDivider divider) {
+    if (_divider == divider) {
+      return;
+    }
+
+    _divider = divider;
+    markNeedsLayout();
+  }
+
+  set sizes(List<ResizableSize> sizes) {
+    if (listEquals(_sizes, sizes)) {
+      return;
+    }
+
+    _sizes = sizes;
+    markNeedsLayout();
+  }
+
+  set onComplete(ValueChanged<List<double>> onComplete) {
+    if (_onComplete == onComplete) {
+      return;
+    }
+
+    _onComplete = onComplete;
+    markNeedsLayout();
+  }
+
+  set resizableChildren(List<ResizableChild> resizableChildren) {
+    if (listEquals(_resizableChildren, resizableChildren)) {
+      return;
+    }
+
+    _resizableChildren = resizableChildren;
+    markNeedsLayout();
+  }
 
   @override
   void setupParentData(covariant RenderObject child) {
