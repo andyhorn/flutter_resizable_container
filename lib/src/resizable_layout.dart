@@ -1,75 +1,13 @@
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:flutter_resizable_container/src/resizable_layout_direction.dart';
 import 'package:flutter_resizable_container/src/resizable_size.dart';
 
-sealed class ResizableLayoutDirectionHelper {
-  const ResizableLayoutDirectionHelper._();
-
-  double getMaxConstraintDimension(BoxConstraints constraints);
-  double getSizeDimension(Size size);
-  Offset getOffset(double currentPosition);
-  Size getSize(double value, BoxConstraints constraints);
-  double getMinIntrinsicDimension(RenderBox child);
-}
-
-class ResizableHorizontalLayoutHelper extends ResizableLayoutDirectionHelper {
-  const ResizableHorizontalLayoutHelper() : super._();
-
-  @override
-  double getMaxConstraintDimension(BoxConstraints constraints) {
-    return constraints.maxWidth;
-  }
-
-  @override
-  Offset getOffset(double currentPosition) {
-    return Offset(currentPosition, 0.0);
-  }
-
-  @override
-  double getSizeDimension(Size size) {
-    return size.width;
-  }
-
-  @override
-  Size getSize(double value, BoxConstraints constraints) {
-    return Size(value, constraints.maxHeight);
-  }
-
-  @override
-  double getMinIntrinsicDimension(RenderBox child) {
-    return child.getMinIntrinsicWidth(double.infinity);
-  }
-}
-
-class ResizableVerticalLayoutHelper extends ResizableLayoutDirectionHelper {
-  const ResizableVerticalLayoutHelper() : super._();
-
-  @override
-  double getMaxConstraintDimension(BoxConstraints constraints) {
-    return constraints.maxHeight;
-  }
-
-  @override
-  Offset getOffset(double currentPosition) {
-    return Offset(0.0, currentPosition);
-  }
-
-  @override
-  double getSizeDimension(Size size) {
-    return size.height;
-  }
-
-  @override
-  Size getSize(double value, BoxConstraints constraints) {
-    return Size(constraints.maxWidth, value);
-  }
-
-  @override
-  double getMinIntrinsicDimension(RenderBox child) {
-    return child.getMinIntrinsicHeight(double.infinity);
-  }
-}
+typedef _ContainerMixin
+    = ContainerRenderObjectMixin<RenderBox, _ResizableLayoutParentData>;
+typedef _DefaultsMixin
+    = RenderBoxContainerDefaultsMixin<RenderBox, _ResizableLayoutParentData>;
 
 class ResizableLayout extends MultiChildRenderObjectWidget {
   const ResizableLayout({
@@ -91,9 +29,7 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
   @override
   RenderObject createRenderObject(BuildContext context) {
     return _ResizableLayoutRenderObject(
-      direction: direction == Axis.horizontal
-          ? const ResizableHorizontalLayoutHelper()
-          : const ResizableVerticalLayoutHelper(),
+      layoutDirection: ResizableLayoutDirection.forAxis(direction),
       divider: divider,
       sizes: sizes,
       onComplete: onComplete,
@@ -102,22 +38,17 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
   }
 }
 
-typedef _ContainerMixin
-    = ContainerRenderObjectMixin<RenderBox, _ResizableLayoutParentData>;
-typedef _DefaultsMixin
-    = RenderBoxContainerDefaultsMixin<RenderBox, _ResizableLayoutParentData>;
-
 class _ResizableLayoutRenderObject extends RenderBox
     with _ContainerMixin, _DefaultsMixin {
   _ResizableLayoutRenderObject({
-    required this.direction,
+    required this.layoutDirection,
     required this.divider,
     required this.sizes,
     required this.onComplete,
     required this.resizableChildren,
   });
 
-  final ResizableLayoutDirectionHelper direction;
+  final ResizableLayoutDirection layoutDirection;
   final ResizableDivider divider;
   final List<ResizableSize> sizes;
   final ValueChanged<List<double>> onComplete;
@@ -173,7 +104,7 @@ class _ResizableLayoutRenderObject extends RenderBox
 
       if (size.type == SizeType.expand) {
         flexCount -= size.value.toInt();
-        remainingExpandSpace -= direction.getSizeDimension(child.size);
+        remainingExpandSpace -= layoutDirection.getSizeDimension(child.size);
       }
 
       if (i < childCount - 1) {
@@ -214,7 +145,7 @@ class _ResizableLayoutRenderObject extends RenderBox
       for (var i = 0; i < sizes.length; i++) ...[
         if (sizes[i].isShrink) ...[
           _clamp(
-            direction.getMinIntrinsicDimension(children[i * 2]),
+            layoutDirection.getMinIntrinsicDimension(children[i * 2]),
             resizableChildren[i],
           ),
         ]
@@ -230,7 +161,7 @@ class _ResizableLayoutRenderObject extends RenderBox
 
   BoxConstraints _getDividerConstraints() {
     return BoxConstraints.tight(
-      direction.getSize(divider.thickness + divider.padding, constraints),
+      layoutDirection.getSize(divider.thickness + divider.padding, constraints),
     );
   }
 
@@ -239,7 +170,7 @@ class _ResizableLayoutRenderObject extends RenderBox
     required double shrinkSpace,
     required double dividerSpace,
   }) {
-    return direction.getMaxConstraintDimension(constraints) -
+    return layoutDirection.getMaxConstraintDimension(constraints) -
         pixelSpace -
         shrinkSpace -
         dividerSpace;
@@ -274,7 +205,7 @@ class _ResizableLayoutRenderObject extends RenderBox
     required double requiredRatioSpace,
     required double dividerSpace,
   }) {
-    return direction.getMaxConstraintDimension(constraints) -
+    return layoutDirection.getMaxConstraintDimension(constraints) -
         pixelSpace -
         shrinkSpace -
         requiredRatioSpace -
@@ -292,12 +223,12 @@ class _ResizableLayoutRenderObject extends RenderBox
     final value = switch (size.type) {
       SizeType.pixels => size.value,
       SizeType.ratio => size.value * availableRatioSpace,
-      SizeType.shrink => direction.getMinIntrinsicDimension(child),
+      SizeType.shrink => layoutDirection.getMinIntrinsicDimension(child),
       SizeType.expand => size.value * (expandSpace / flexCount),
     };
 
     final clampedValue = _clamp(value, resizableChild);
-    final childSize = direction.getSize(clampedValue, constraints);
+    final childSize = layoutDirection.getSize(clampedValue, constraints);
     final childConstraints = BoxConstraints.tight(childSize);
 
     return childConstraints;
@@ -313,14 +244,14 @@ class _ResizableLayoutRenderObject extends RenderBox
   double _layoutChild(RenderBox child, BoxConstraints constraints) {
     child.layout(constraints, parentUsesSize: true);
     _setChildOffset(child);
-    final size = direction.getSizeDimension(child.size);
+    final size = layoutDirection.getSizeDimension(child.size);
     _currentPosition += size;
     return size;
   }
 
   void _setChildOffset(RenderBox child) {
     final parentData = child.parentData as _ResizableLayoutParentData;
-    parentData.offset = direction.getOffset(_currentPosition);
+    parentData.offset = layoutDirection.getOffset(_currentPosition);
   }
 }
 
