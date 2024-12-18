@@ -5,8 +5,8 @@ sealed class ResizableLayoutDirection {
 
   factory ResizableLayoutDirection.forAxis(Axis direction) {
     return switch (direction) {
-      Axis.horizontal => _ResizableHorizontalLayoutHelper(),
-      Axis.vertical => _ResizableVerticalLayoutHelper(),
+      Axis.horizontal => ResizableHorizontalLayout(),
+      Axis.vertical => ResizableVerticalLayout(),
     };
   }
 
@@ -17,8 +17,9 @@ sealed class ResizableLayoutDirection {
   double getMinIntrinsicDimension(RenderBox child);
 }
 
-class _ResizableHorizontalLayoutHelper extends ResizableLayoutDirection {
-  const _ResizableHorizontalLayoutHelper() : super._();
+@visibleForTesting
+class ResizableHorizontalLayout extends ResizableLayoutDirection {
+  const ResizableHorizontalLayout() : super._();
 
   @override
   double getMaxConstraintDimension(BoxConstraints constraints) {
@@ -46,8 +47,9 @@ class _ResizableHorizontalLayoutHelper extends ResizableLayoutDirection {
   }
 }
 
-class _ResizableVerticalLayoutHelper extends ResizableLayoutDirection {
-  const _ResizableVerticalLayoutHelper() : super._();
+@visibleForTesting
+class ResizableVerticalLayout extends ResizableLayoutDirection {
+  const ResizableVerticalLayout() : super._();
 
   @override
   double getMaxConstraintDimension(BoxConstraints constraints) {
