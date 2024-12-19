@@ -1,9 +1,16 @@
+## 4.0.0-beta.2
+
+- Add a `ResizableLayout` widget that uses a custom `RenderObject` to handle the initial layout and the layout after any properties on the `ResizableContainer` are updated.
+
 ## 4.0.0-beta.1
 
 - Rewrite the Controller/Container logic to allow Flutter to handle the initial layout of all widgets, updating the rendered sizes in the controller after the first frame. This _shouldn't_ have any major impact to the API, but it does introduce the use of Timers, which could affect tests.
 - Rename `ResizableController.sizes` to `ResizableController.pixels` to more clearly indicate its value.
 - Store, expose, and utilize the current list of `ResizableSize` values in the controller. This enables the values to be used even after manually updating them.
 
+## 3.0.4
+
+- Fix a bug/add support for RTL Directionality.
 
 ## 3.0.3
 
