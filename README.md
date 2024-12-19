@@ -16,10 +16,10 @@ Each example also comes with an embedded source-code view, so you don't have to 
 
 ## Features
 
-- `ResizableContainer`s are fully nestable
+- `ResizableContainer`s are fully nestable and support LTR _and_ RTL layouts
 - Customize the length, thickness, alignment, and color of the divider(s) between children
-- Respond to user interactions with `onHoverEnter` and `onHoverExit` for web and `onTapDown` and `onTapUp` for mobile callbacks
-- Programmatically set the ratios of the resizable children through a `ResizableController`
+- Respond to user interactions with `onHoverEnter` and `onHoverExit` for web/desktop and `onTapDown` and `onTapUp` for mobile
+- Programmatically set the sizes of the children through a `ResizableController`
 - Respond to changes in the sizes of the resizable children by listening to the `ResizableController`
 
 ## Getting started
@@ -43,7 +43,7 @@ ResizableContainer(
 )
 ```
 
-In the example above, any children (more on this in the [ResizableChild](#resizable-child) section) will take up the maximum available height while being allowed to flex their width by dragging a divider or updating their ratios via the controller (see below).
+In the example above, any children (more on this in the [ResizableChild](#resizable-child) section) will take up the maximum available height while being allowed to adjust their widths.
 
 ### ResizableController
 
@@ -76,8 +76,8 @@ void initState() {
 
     controller.addListener(() {
         // ... react to size change events
-        final List<double> sizes = controller.sizes;
-        print(sizes.join(', '));
+        final List<double> pixels = controller.pixels;
+        print(pixels.join(', '));
     });
 }
 
@@ -93,15 +93,15 @@ void dispose() {
 //
 // This method takes a list of ResizableSize objects - more on this below.
 onTap: () => controller.setSizes(const [
+    ResizableSize.pixels(250),
     ResizableSize.ratio(0.25),
-    ResizableSize.ratio(0.25),
-    ResizableSize.ratio(0.5),
+    ResizableSize.expand(),
 ]);
 ```
 
 ### ResizableChild
 
-To add widgets to your container, you must provide a `List<ResizableChild>`, each of which contain the child `Widget` as well as some configuration parameters.
+To add widgets to your container, you must provide a `List<ResizableChild>`, each of which contain the child `Widget` as well as some configuration.
 
 ```dart
 children: [
@@ -139,7 +139,9 @@ The `size` parameter gives a directive of how to size the child during its initi
 
 ### ResizableSize
 
-The `ResizableSize` class defines a "size" as either a ratio of the available space, using the `.ratio` constructor, an absolute size in logical pixels, using the `.pixels` constructor, or as an auto-expanding size using the `expand` constructor.
+The `ResizableSize` class defines a "size" as either a ratio of the available space, using the `.ratio` constructor, an absolute size in logical pixels, using the `.pixels` constructor, or as an auto-expanding size using the `expand` constructor. A fourth size, `shrink`, will conform to the natural size of its child. 
+
+**Note:** When using `shrink`, the rendering engine will throw an error if its child does not have a natural size, such as a `LayoutBuilder`.
 
 For example, to create a size equal to half of the available space:
 
@@ -164,8 +166,9 @@ const expandable = ResizableSize.expand();
 When the controller is laying out the sizes of children, it uses the following rules:
 
 1. If a child has a size using pixels, it will be given that amount of space
-2. If a child has a size using a ratio, it will be given the proportionate amount of the _remaining_ space _after_ all pixel-sizes have been allocated
-3. If a child has a size using `expand`, it will be given whatever space is left after the allocations in rule 1 and rule 2 - If there are multiple children using `expand`, the space remaining after the allocations in rule 1 and rule 2 will be evenly distributed between them
+2. If a child has a `shrink` size, it will be laid out and given its natural size
+3. If a child has a size using a ratio, it will be given the proportionate amount of the _remaining_ space _after_ all pixel- and shrink-sizes have been allocated
+4. If a child has a size using `expand`, it will be given whatever space is left after the allocations in the previous steps - If there are multiple children using `expand`, the remaining space will be distributed between them based on their `flex` value (similar to `Expanded` widgets)
 
 ##### Example 1
 
