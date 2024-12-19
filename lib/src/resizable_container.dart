@@ -92,12 +92,12 @@ class _ResizableContainerState extends State<ResizableContainer> {
             if (controller.needsLayout) {
               return ResizableLayout(
                 direction: widget.direction,
-                onComplete: (sizes) =>
-                    WidgetsBinding.instance.addPostFrameCallback(
-                  (_) => manager.setRenderedSizes(
-                    sizes.evenIndices().toList(),
-                  ),
-                ),
+                onComplete: (sizes) {
+                  final childSizes = sizes.evenIndices().toList();
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    manager.setRenderedSizes(childSizes);
+                  });
+                },
                 sizes: controller.sizes,
                 divider: widget.divider,
                 resizableChildren: widget.children,

@@ -80,7 +80,7 @@ class ResizableController with ChangeNotifier {
   void _setRenderedSizes(List<double> pixels) {
     _pixels = pixels;
     _needsLayout = false;
-    notifyListeners;
+    notifyListeners();
   }
 
   void _setAvailableSpace(double availableSpace) {
