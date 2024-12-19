@@ -1,6 +1,6 @@
 name: flutter_resizable_container
 description: Add nestable, resizable containers to your Flutter app with ease.
-version: 4.0.0-beta.1
+version: 3.0.3
 homepage: https://github.com/andyhorn/flutter_resizable_container
 
 environment:
@@ -16,4 +16,3 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ">=3.0.1 <6.0.0"
   mocktail: ^1.0.3
-  fake_async: ^1.3.1

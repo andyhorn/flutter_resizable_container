@@ -55,8 +55,8 @@ void main() {
       final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
       final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
 
-      expect(boxASize.width, equals(controller.pixels.first));
-      expect(boxBSize.width, equals(controller.pixels.last));
+      expect(boxASize.width, equals(controller.sizes.first));
+      expect(boxBSize.width, equals(controller.sizes.last));
     });
 
     testWidgets('can resize using the controller', (tester) async {
@@ -102,13 +102,12 @@ void main() {
         ResizableSize.ratio(0.6),
         ResizableSize.ratio(0.4),
       ]);
-
       await tester.pump();
-      await tester.pumpAndSettle();
 
       final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
       final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
 
+      // The sizes are not exactly their ratio because the divider width is 2.0
       expect(boxASize, const Size(availableSpace * 0.6, 1000));
       expect(boxBSize, const Size(availableSpace * 0.4, 1000));
     });
@@ -253,7 +252,6 @@ void main() {
 
       await tester.tap(find.byKey(const Key('ToggleSwitch')));
       await tester.pump();
-      await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('ChildA')), findsOneWidget);
       expect(find.byKey(const Key('ChildB')), findsNothing);
@@ -310,310 +308,8 @@ void main() {
       expect(boxASize.width, moreOrLessEquals(800, epsilon: 2));
       expect(boxBSize.width, moreOrLessEquals(200, epsilon: 2));
 
-      expect(controller.pixels.first, moreOrLessEquals(800, epsilon: 2));
-      expect(controller.pixels.last, moreOrLessEquals(200, epsilon: 2));
-    });
-
-    group('when changing the screen size', () {
-      group('with a shrink and expand child', () {
-        testWidgets(
-          'delta is distributed to the expand',
-          (tester) async {
-            final controller = ResizableController();
-            await tester.binding.setSurfaceSize(const Size(1000, 1000));
-            await tester.pumpWidget(
-              MaterialApp(
-                home: Scaffold(
-                  body: ResizableContainer(
-                    controller: controller,
-                    direction: Axis.horizontal,
-                    divider: const ResizableDivider(
-                      thickness: 1,
-                      padding: 0,
-                    ),
-                    children: const [
-                      ResizableChild(
-                        size: ResizableSize.shrink(),
-                        child: SizedBox(
-                          width: 200,
-                          key: Key('BoxA'),
-                        ),
-                      ),
-                      ResizableChild(
-                        size: ResizableSize.expand(),
-                        child: SizedBox.expand(
-                          key: Key('BoxB'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-
-            await tester.pumpAndSettle();
-
-            final boxAFinder = find.byKey(const Key('BoxA'));
-            final boxBFinder = find.byKey(const Key('BoxB'));
-
-            expect(boxAFinder, findsOneWidget);
-            expect(boxBFinder, findsOneWidget);
-
-            final boxASize = tester.getSize(boxAFinder);
-            final boxBSize = tester.getSize(boxBFinder);
-
-            expect(boxASize.width, moreOrLessEquals(200, epsilon: 2));
-            expect(boxBSize.width, moreOrLessEquals(800, epsilon: 2));
-
-            await tester.binding.setSurfaceSize(const Size(1100, 1000));
-            await tester.pumpAndSettle();
-
-            final newBoxASize = tester.getSize(boxAFinder);
-            final newBoxBSize = tester.getSize(boxBFinder);
-
-            expect(newBoxASize.width, moreOrLessEquals(200, epsilon: 2));
-            expect(newBoxBSize.width, moreOrLessEquals(900, epsilon: 2));
-          },
-        );
-
-        testWidgets(
-          'if the expand reaches 0, shrink will receive remaining delta',
-          (tester) async {
-            final controller = ResizableController();
-            await tester.binding.setSurfaceSize(const Size(1000, 1000));
-            await tester.pumpWidget(
-              MaterialApp(
-                home: Scaffold(
-                  body: ResizableContainer(
-                    controller: controller,
-                    direction: Axis.horizontal,
-                    divider: const ResizableDivider(
-                      thickness: 1,
-                      padding: 0,
-                    ),
-                    children: const [
-                      ResizableChild(
-                        size: ResizableSize.shrink(),
-                        child: SizedBox(
-                          width: 200,
-                          key: Key('BoxA'),
-                        ),
-                      ),
-                      ResizableChild(
-                        size: ResizableSize.expand(),
-                        child: SizedBox(
-                          key: Key('BoxB'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-
-            await tester.pumpAndSettle();
-
-            final boxAFinder = find.byKey(const Key('BoxA'));
-            final boxBFinder = find.byKey(const Key('BoxB'));
-
-            expect(boxAFinder, findsOneWidget);
-            expect(boxBFinder, findsOneWidget);
-
-            final boxASize = tester.getSize(boxAFinder);
-            final boxBSize = tester.getSize(boxBFinder);
-
-            expect(boxASize.width, moreOrLessEquals(200, epsilon: 2));
-            expect(boxBSize.width, moreOrLessEquals(800, epsilon: 2));
-
-            await tester.binding.setSurfaceSize(const Size(150, 1000));
-            await tester.pumpAndSettle();
-
-            final newBoxASize = tester.getSize(boxAFinder);
-            final newBoxBSize = tester.getSize(boxBFinder);
-
-            expect(newBoxASize.width, moreOrLessEquals(150, epsilon: 2));
-            expect(newBoxBSize.width, moreOrLessEquals(0, epsilon: 2));
-          },
-        );
-
-        testWidgets(
-          'if the expand reaches a max constraint, shrink will receive remaining delta',
-          (tester) async {
-            final controller = ResizableController();
-            await tester.binding.setSurfaceSize(const Size(1000, 1000));
-            await tester.pumpWidget(
-              MaterialApp(
-                home: Scaffold(
-                  body: ResizableContainer(
-                    controller: controller,
-                    direction: Axis.horizontal,
-                    divider: const ResizableDivider(
-                      thickness: 1,
-                      padding: 0,
-                    ),
-                    children: const [
-                      ResizableChild(
-                        size: ResizableSize.shrink(),
-                        child: SizedBox(
-                          width: 200,
-                          key: Key('BoxA'),
-                        ),
-                      ),
-                      ResizableChild(
-                        size: ResizableSize.expand(),
-                        maxSize: 850,
-                        child: SizedBox(
-                          key: Key('BoxB'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-
-            await tester.pumpAndSettle();
-
-            final boxAFinder = find.byKey(const Key('BoxA'));
-            final boxBFinder = find.byKey(const Key('BoxB'));
-
-            expect(boxAFinder, findsOneWidget);
-            expect(boxBFinder, findsOneWidget);
-
-            final boxASize = tester.getSize(boxAFinder);
-            final boxBSize = tester.getSize(boxBFinder);
-
-            expect(boxASize.width, moreOrLessEquals(200, epsilon: 2));
-            expect(boxBSize.width, moreOrLessEquals(800, epsilon: 2));
-
-            await tester.binding.setSurfaceSize(const Size(1200, 1000));
-            await tester.pumpAndSettle();
-
-            final newBoxASize = tester.getSize(boxAFinder);
-            final newBoxBSize = tester.getSize(boxBFinder);
-
-            expect(newBoxASize.width, moreOrLessEquals(350, epsilon: 2));
-            expect(newBoxBSize.width, moreOrLessEquals(850, epsilon: 2));
-          },
-        );
-      });
-
-      group('with a shrink and pixel child', () {
-        testWidgets('delta is distributed evenly', (tester) async {
-          final controller = ResizableController();
-          await tester.binding.setSurfaceSize(const Size(502, 500));
-          await tester.pumpWidget(
-            MaterialApp(
-              home: Scaffold(
-                body: ResizableContainer(
-                  controller: controller,
-                  direction: Axis.horizontal,
-                  divider: const ResizableDivider(
-                    thickness: 1,
-                    padding: 0,
-                  ),
-                  children: const [
-                    ResizableChild(
-                      size: ResizableSize.shrink(),
-                      child: SizedBox(
-                        width: 200,
-                        key: Key('BoxA'),
-                      ),
-                    ),
-                    ResizableChild(
-                      size: ResizableSize.pixels(300),
-                      child: SizedBox(
-                        key: Key('BoxB'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-
-          await tester.pumpAndSettle();
-
-          final boxAFinder = find.byKey(const Key('BoxA'));
-          final boxBFinder = find.byKey(const Key('BoxB'));
-
-          expect(boxAFinder, findsOneWidget);
-          expect(boxBFinder, findsOneWidget);
-
-          final boxASize = tester.getSize(boxAFinder);
-          final boxBSize = tester.getSize(boxBFinder);
-
-          expect(boxASize.width, moreOrLessEquals(200, epsilon: 2));
-          expect(boxBSize.width, moreOrLessEquals(300, epsilon: 2));
-
-          await tester.binding.setSurfaceSize(const Size(600, 500));
-          await tester.pumpAndSettle();
-
-          final newBoxASize = tester.getSize(boxAFinder);
-          final newBoxBSize = tester.getSize(boxBFinder);
-
-          expect(newBoxASize.width, moreOrLessEquals(250, epsilon: 2));
-          expect(newBoxBSize.width, moreOrLessEquals(350, epsilon: 2));
-        });
-      });
-
-      group('with two pixel children', () {
-        testWidgets('delta is distributed evenly', (tester) async {
-          final controller = ResizableController();
-          await tester.binding.setSurfaceSize(const Size(502, 500));
-          await tester.pumpWidget(
-            MaterialApp(
-              home: Scaffold(
-                body: ResizableContainer(
-                  controller: controller,
-                  direction: Axis.horizontal,
-                  divider: const ResizableDivider(
-                    thickness: 1,
-                    padding: 0,
-                  ),
-                  children: const [
-                    ResizableChild(
-                      size: ResizableSize.pixels(200),
-                      child: SizedBox(
-                        key: Key('BoxA'),
-                      ),
-                    ),
-                    ResizableChild(
-                      size: ResizableSize.pixels(300),
-                      child: SizedBox(
-                        key: Key('BoxB'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-
-          await tester.pumpAndSettle();
-
-          final boxAFinder = find.byKey(const Key('BoxA'));
-          final boxBFinder = find.byKey(const Key('BoxB'));
-
-          expect(boxAFinder, findsOneWidget);
-          expect(boxBFinder, findsOneWidget);
-
-          final boxASize = tester.getSize(boxAFinder);
-          final boxBSize = tester.getSize(boxBFinder);
-
-          expect(boxASize.width, moreOrLessEquals(200, epsilon: 2));
-          expect(boxBSize.width, moreOrLessEquals(300, epsilon: 2));
-
-          await tester.binding.setSurfaceSize(const Size(600, 500));
-          await tester.pumpAndSettle();
-
-          final newBoxASize = tester.getSize(boxAFinder);
-          final newBoxBSize = tester.getSize(boxBFinder);
-
-          expect(newBoxASize.width, moreOrLessEquals(250, epsilon: 2));
-          expect(newBoxBSize.width, moreOrLessEquals(350, epsilon: 2));
-        });
-      });
+      expect(controller.sizes.first, moreOrLessEquals(800, epsilon: 2));
+      expect(controller.sizes.last, moreOrLessEquals(200, epsilon: 2));
     });
   });
 }

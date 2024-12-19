@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
-import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
 
@@ -46,12 +46,13 @@ class _ResizableContainerState extends State<ResizableContainer> {
   late final controller = widget.controller ?? ResizableController();
   late final isDefaultController = widget.controller == null;
   late final manager = ResizableControllerManager(controller);
-  late var keys = _generateKeys();
+  late List<GlobalKey> keys = List.generate(
+    widget.children.length,
+    (_) => GlobalKey(),
+  );
 
-  List<GlobalKey> _generateKeys() => List.generate(
-        widget.children.length,
-        (_) => GlobalKey(),
-      );
+  var initialized = false;
+  var initScheduled = false;
 
   @override
   void initState() {
@@ -62,16 +63,15 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    final didChildrenChange = !listEquals(oldWidget.children, widget.children);
-    final didDirectionChange = widget.direction != oldWidget.direction;
-    final hasChanges = didChildrenChange || didDirectionChange;
-
-    if (didChildrenChange) {
-      controller.setChildren(widget.children);
-    }
+    final hasChanges = !listEquals(oldWidget.children, widget.children)
+      || oldWidget.direction != widget.direction;
 
     if (hasChanges) {
-      keys = _generateKeys();
+      manager.updateChildren(widget.children);
+      keys = List.generate(
+        widget.children.length,
+        (_) => GlobalKey(),
+      );
     }
 
     super.didUpdateWidget(oldWidget);
@@ -96,62 +96,82 @@ class _ResizableContainerState extends State<ResizableContainer> {
         return AnimatedBuilder(
           animation: controller,
           builder: (context, _) {
-            if (controller.needsLayout) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _readSizesAfterLayout();
-              });
+            final hasFlexOrShrink = widget.children.any(
+              (child) => child.size.isShrink || child.size.isExpand,
+            );
 
-              return PreLayout(
-                availableSpace: availableSpace,
-                children: widget.children,
-                direction: widget.direction,
-                divider: widget.divider,
-                keys: keys,
-                sizes: controller.sizes,
-              );
-            } else {
-              return Flex(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                direction: widget.direction,
-                children: [
-                  for (var i = 0; i < widget.children.length; i++) ...[
-                    Builder(
-                      builder: (context) {
-                        final child = widget.children[i].child;
+            return Flex(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              direction: widget.direction,
+              children: [
+                for (var i = 0; i < widget.children.length; i++) ...[
+                  Builder(
+                    builder: (context) {
+                      final child = widget.children[i].child;
+                      final size = widget.children[i].size;
+                      final key = keys[i];
 
-                        final height = _getChildSize(
-                          index: i,
-                          direction: Axis.vertical,
-                          constraints: constraints,
-                        );
+                      final scheduleInit = hasFlexOrShrink && !initScheduled;
+                      final shrink = !initialized && size.isShrink;
+                      final expand = !initialized && size.isExpand;
 
-                        final width = _getChildSize(
-                          index: i,
-                          direction: Axis.horizontal,
-                          constraints: constraints,
-                        );
+                      if (scheduleInit) {
+                        Timer.run(_sizeInit);
+                        initScheduled = true;
+                      }
 
-                        return SizedBox(
-                          height: height,
-                          width: width,
+                      if (shrink) {
+                        // Use UnconstrainedBox to allow the child to shrink
+                        // to its minimum size.
+                        return UnconstrainedBox(
+                          key: key,
                           child: child,
                         );
-                      },
-                    ),
-                    if (i < widget.children.length - 1) ...[
-                      ResizableContainerDivider(
-                        config: widget.divider,
-                        direction: widget.direction,
-                        onResizeUpdate: (delta) => manager.adjustChildSize(
-                          index: i,
-                          delta: delta,
-                        ),
+                      }
+
+                      if (expand) {
+                        // Use Expanded to allow the child to expand to fill
+                        // the available space, mediated by its "flex" value.
+                        return Expanded(
+                          key: key,
+                          flex: size.value.toInt(),
+                          child: child,
+                        );
+                      }
+
+                      final height = _getChildSize(
+                        index: i,
+                        direction: Axis.vertical,
+                        constraints: constraints,
+                      );
+
+                      final width = _getChildSize(
+                        index: i,
+                        direction: Axis.horizontal,
+                        constraints: constraints,
+                      );
+
+                      return SizedBox(
+                        key: key,
+                        height: height,
+                        width: width,
+                        child: child,
+                      );
+                    },
+                  ),
+                  if (i < widget.children.length - 1) ...[
+                    ResizableContainerDivider(
+                      config: widget.divider,
+                      direction: widget.direction,
+                      onResizeUpdate: (delta) => manager.adjustChildSize(
+                        index: i,
+                        delta: delta,
                       ),
-                    ],
+                    ),
                   ],
                 ],
-              );
-            }
+              ],
+            );
           },
         );
       },
@@ -174,11 +194,15 @@ class _ResizableContainerState extends State<ResizableContainer> {
     if (direction != direction) {
       return constraints.maxForDirection(direction);
     } else {
-      return controller.pixels[index];
+      var size = controller.sizes[index];
+      final child = widget.children[index];
+      size = min(size, child.maxSize ?? double.infinity);
+      size = max(size, child.minSize ?? 0);
+      return size;
     }
   }
 
-  void _readSizesAfterLayout() {
+  void _sizeInit() {
     final sizes = keys.map<double>((key) {
       final size = _getRenderBoxSize(key);
 
@@ -192,115 +216,12 @@ class _ResizableContainerState extends State<ResizableContainer> {
       };
     });
 
-    manager.setRenderedSizes(sizes.toList());
+    manager.setSizes(sizes.toList());
+    initialized = true;
   }
 
   Size? _getRenderBoxSize(GlobalKey key) {
     final renderBox = key.currentContext?.findRenderObject() as RenderBox?;
     return renderBox?.size;
-  }
-}
-
-class PreLayout extends StatelessWidget {
-  const PreLayout({
-    super.key,
-    required this.availableSpace,
-    required this.children,
-    required this.direction,
-    required this.divider,
-    required this.keys,
-    required this.sizes,
-  });
-
-  final double availableSpace;
-  final List<ResizableChild> children;
-  final Axis direction;
-  final ResizableDivider divider;
-  final List<GlobalKey> keys;
-  final List<ResizableSize> sizes;
-
-  @override
-  Widget build(BuildContext context) {
-    final totalPixels =
-        sizes.where((size) => size.isPixels).sum((size) => size.value);
-
-    return Flex(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      direction: direction,
-      children: [
-        for (var i = 0; i < children.length; i++) ...[
-          Builder(builder: (context) {
-            final size = sizes[i];
-            final value = size.value;
-
-            if (size.isPixels) {
-              final constrained = _getConstrainedSize(
-                value: value,
-                minimum: children[i].minSize,
-                maximum: children[i].maxSize,
-              );
-
-              return SizedBox(
-                key: keys[i],
-                height: direction == Axis.horizontal ? null : constrained,
-                width: direction == Axis.horizontal ? constrained : null,
-                child: children[i].child,
-              );
-            }
-
-            if (size.isRatio) {
-              final size = (availableSpace - totalPixels) * value;
-              final constrained = _getConstrainedSize(
-                value: size,
-                minimum: children[i].minSize,
-                maximum: children[i].maxSize,
-              );
-
-              return SizedBox(
-                key: keys[i],
-                height: direction == Axis.horizontal ? null : constrained,
-                width: direction == Axis.horizontal ? constrained : null,
-                child: children[i].child,
-              );
-            }
-
-            if (size.isShrink) {
-              return UnconstrainedBox(
-                key: keys[i],
-                child: children[i].child,
-              );
-            }
-
-            return Expanded(
-              key: keys[i],
-              flex: value.toInt(),
-              child: children[i].child,
-            );
-          }),
-          if (i < children.length - 1) ...[
-            ResizableContainerDivider(
-              config: divider,
-              direction: direction,
-              onResizeUpdate: (_) {},
-            ),
-          ],
-        ],
-      ],
-    );
-  }
-
-  double _getConstrainedSize({
-    required double value,
-    required double? minimum,
-    required double? maximum,
-  }) {
-    if (minimum == null && maximum == null) {
-      return value;
-    }
-
-    var adjustedSize = min(value, maximum ?? double.infinity);
-    adjustedSize = max(adjustedSize, 0);
-
-    return adjustedSize;
   }
 }
