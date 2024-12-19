@@ -1,4 +1,3 @@
-import "dart:async";
 import "dart:collection";
 import "dart:math";
 
@@ -81,7 +80,7 @@ class ResizableController with ChangeNotifier {
   void _setRenderedSizes(List<double> pixels) {
     _pixels = pixels;
     _needsLayout = false;
-    Timer.run(notifyListeners);
+    notifyListeners();
   }
 
   void _setAvailableSpace(double availableSpace) {
@@ -323,6 +322,10 @@ final class ResizableControllerManager {
 
   void setAvailableSpace(double availableSpace) {
     _controller._setAvailableSpace(availableSpace);
+  }
+
+  void setNeedsLayout() {
+    _controller._needsLayout = true;
   }
 }
 
