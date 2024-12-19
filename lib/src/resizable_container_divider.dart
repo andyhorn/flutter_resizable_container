@@ -55,7 +55,9 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
             onVerticalDragUpdate: _onVerticalDragUpdate,
             onVerticalDragEnd: _onVerticalDragEnd,
             onHorizontalDragStart: _onHorizontalDragStart,
-            onHorizontalDragUpdate: _onHorizontalDragUpdate,
+            onHorizontalDragUpdate: _getOnHorizontalDragUpdate(
+              Directionality.of(context),
+            ),
             onHorizontalDragEnd: _onHorizontalDragEnd,
             onTapDown: _onTapDown,
             onTapUp: _onTapUp,
@@ -149,10 +151,19 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
     }
   }
 
-  void _onHorizontalDragUpdate(DragUpdateDetails details) {
-    if (widget.direction == Axis.horizontal) {
-      widget.onResizeUpdate(details.delta.dx);
-    }
+  void Function(DragUpdateDetails) _getOnHorizontalDragUpdate(
+    TextDirection textDirection,
+  ) {
+    return (details) {
+      if (widget.direction == Axis.horizontal) {
+        final delta = details.delta.dx;
+
+        widget.onResizeUpdate(switch (textDirection) {
+          TextDirection.ltr => delta,
+          TextDirection.rtl => -delta,
+        });
+      }
+    };
   }
 
   void _onHorizontalDragEnd(DragEndDetails _) {

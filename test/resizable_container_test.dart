@@ -311,6 +311,68 @@ void main() {
       expect(controller.sizes.first, moreOrLessEquals(800, epsilon: 2));
       expect(controller.sizes.last, moreOrLessEquals(200, epsilon: 2));
     });
+
+    testWidgets('adjusts child sizes correctly when RTL', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 1000));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Scaffold(
+              body: ResizableContainer(
+                direction: Axis.horizontal,
+                divider: const ResizableDivider(
+                  thickness: 1,
+                ),
+                children: const [
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(
+                      key: Key('BoxA'),
+                    ),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(
+                      key: Key('BoxB'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final boxAFinder = find.byKey(const Key('BoxA'));
+      final boxBFinder = find.byKey(const Key('BoxB'));
+
+      final boxASize = tester.getSize(boxAFinder);
+      final boxBSize = tester.getSize(boxBFinder);
+
+      expect(boxASize.width, moreOrLessEquals(500, epsilon: 2));
+      expect(boxBSize.width, moreOrLessEquals(500, epsilon: 2));
+
+      final centerA = tester.getCenter(find.byKey(const Key('BoxA')));
+      final centerB = tester.getCenter(find.byKey(const Key('BoxB')));
+
+      expect(centerA.dx, greaterThan(centerB.dx));
+
+      await tester.drag(
+        find.byType(ResizableContainerDivider),
+        const Offset(100, 0),
+      );
+
+      await tester.pump();
+
+      final boxASizeAfter = tester.getSize(boxAFinder);
+      final boxBSizeAfter = tester.getSize(boxBFinder);
+
+      expect(boxASizeAfter.width, lessThan(boxASize.width));
+      expect(boxBSizeAfter.width, greaterThan(boxBSize.width));
+    });
   });
 }
 
