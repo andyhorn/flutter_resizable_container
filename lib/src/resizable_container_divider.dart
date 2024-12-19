@@ -11,12 +11,18 @@ class ResizableContainerDivider extends StatefulWidget {
   const ResizableContainerDivider({
     super.key,
     required this.direction,
-    required this.onResizeUpdate,
     required this.config,
+    required void Function(double) this.onResizeUpdate,
   });
 
+  const ResizableContainerDivider.placeholder({
+    super.key,
+    required this.config,
+    required this.direction,
+  }) : onResizeUpdate = null;
+
   final Axis direction;
-  final void Function(double) onResizeUpdate;
+  final void Function(double)? onResizeUpdate;
   final ResizableDivider config;
 
   @override
@@ -131,7 +137,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
 
   void _onVerticalDragUpdate(DragUpdateDetails details) {
     if (widget.direction == Axis.vertical) {
-      widget.onResizeUpdate(details.delta.dy);
+      widget.onResizeUpdate?.call(details.delta.dy);
     }
   }
 
@@ -158,7 +164,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
       if (widget.direction == Axis.horizontal) {
         final delta = details.delta.dx;
 
-        widget.onResizeUpdate(switch (textDirection) {
+        widget.onResizeUpdate?.call(switch (textDirection) {
           TextDirection.ltr => delta,
           TextDirection.rtl => -delta,
         });
