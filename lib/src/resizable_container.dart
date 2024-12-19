@@ -105,13 +105,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
                   for (var i = 0; i < widget.children.length; i++) ...[
                     widget.children[i].child,
                     if (i < widget.children.length - 1) ...[
-                      ResizableContainerDivider(
+                      ResizableContainerDivider.placeholder(
                         config: widget.divider,
                         direction: widget.direction,
-                        onResizeUpdate: (delta) => manager.adjustChildSize(
-                          index: i,
-                          delta: delta,
-                        ),
                       ),
                     ],
                   ],
