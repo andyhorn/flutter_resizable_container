@@ -1,17 +1,47 @@
 sealed class ResizableSize {
-  const ResizableSize._({this.min, this.max});
+  const ResizableSize._({this.min, this.max})
+      : assert(
+          min == null || min >= 0,
+          'min must be greater than or equal to 0',
+        ),
+        assert(
+          min == null || min < double.infinity,
+          'min cannot be equal to infinity',
+        ),
+        assert(
+          max == null || max >= 0,
+          'max must be greater than or equal to 0',
+        ),
+        assert(
+          max == null || max < double.infinity,
+          'max cannot be equal to infinity',
+        );
 
   final double? min;
   final double? max;
 
-  const factory ResizableSize.pixels(double pixels,
-      {double? min, double? max}) = ResizableSizePixels;
-  const factory ResizableSize.ratio(double ratio, {double? min, double? max}) =
-      ResizableSizeRatio;
-  const factory ResizableSize.expand({int flex, double? min, double? max}) =
-      ResizableSizeExpand;
-  const factory ResizableSize.shrink({double? min, double? max}) =
-      ResizableSizeShrink;
+  const factory ResizableSize.pixels(
+    double pixels, {
+    double? min,
+    double? max,
+  }) = ResizableSizePixels;
+
+  const factory ResizableSize.ratio(
+    double ratio, {
+    double? min,
+    double? max,
+  }) = ResizableSizeRatio;
+
+  const factory ResizableSize.expand({
+    int flex,
+    double? min,
+    double? max,
+  }) = ResizableSizeExpand;
+
+  const factory ResizableSize.shrink({
+    double? min,
+    double? max,
+  }) = ResizableSizeShrink;
 }
 
 final class ResizableSizePixels extends ResizableSize {
