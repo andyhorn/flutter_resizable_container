@@ -15,6 +15,10 @@ sealed class ResizableSize {
         assert(
           max == null || max < double.infinity,
           'max cannot be equal to infinity',
+        ),
+        assert(
+          min == null || max == null || min <= max,
+          'min must be less than or equal to max',
         );
 
   final double? min;
