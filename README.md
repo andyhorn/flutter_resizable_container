@@ -137,7 +137,7 @@ The `ResizableSize` class defines a "size" as a ratio of the available space, us
 
 The `max` parameter constrains the child and will prevent it from being expanded beyond that size in the `direction` of the container.
 
-The `min` parameter constrains the child and will prevent it from being _shrunk_ beyond that size in the `direction` of the container.
+The `min` parameter constrains the child and will prevent it from being _shrunk_ below that size in the `direction` of the container.
 
 **Note:** When using `shrink`, the rendering engine will throw an error if its child does not have a natural size, such as a `LayoutBuilder`.
 
