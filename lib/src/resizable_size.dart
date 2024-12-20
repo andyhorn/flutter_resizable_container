@@ -1,51 +1,70 @@
-enum SizeType {
-  ratio,
-  pixels,
-  expand,
-  shrink,
+sealed class ResizableSize {
+  const ResizableSize._();
+
+  const factory ResizableSize.pixels(double pixels) = ResizableSizePixels;
+  const factory ResizableSize.ratio(double ratio) = ResizableSizeRatio;
+  const factory ResizableSize.expand({int flex}) = ResizableSizeExpand;
+  const factory ResizableSize.shrink() = ResizableSizeShrink;
 }
 
-final class ResizableSize {
-  const ResizableSize.pixels(double pixels)
-      // ignore: prefer_initializing_formals
-      : _value = pixels,
-        type = SizeType.pixels,
-        assert(pixels >= 0, 'Value cannot be less than 0.');
+final class ResizableSizePixels extends ResizableSize {
+  const ResizableSizePixels(this.pixels)
+      : assert(pixels >= 0, 'pixels must be greater than or equal to 0'),
+        super._();
 
-  const ResizableSize.ratio(double ratio)
-      // ignore: prefer_initializing_formals
-      : _value = ratio,
-        type = SizeType.ratio,
-        assert(
-          ratio >= 0 && ratio <= 1,
-          'Value must be between 0 and 1, inclusive.',
-        );
-
-  const ResizableSize.expand({int flex = 1})
-      : _value = flex,
-        type = SizeType.expand,
-        assert(flex > 0, 'Flex value must be greater than 0.');
-
-  const ResizableSize.shrink()
-      : _value = 0,
-        type = SizeType.shrink;
-
-  final num _value;
-  final SizeType type;
-
-  double get value => _value.toDouble();
-  bool get isRatio => type == SizeType.ratio;
-  bool get isPixels => type == SizeType.pixels;
-  bool get isExpand => type == SizeType.expand;
-  bool get isShrink => type == SizeType.shrink;
+  final double pixels;
 
   @override
-  String toString() => 'ResizableSize(type: $type, value: $_value)';
+  String toString() => 'ResizableSizePixels($pixels)';
 
   @override
   operator ==(Object other) =>
-      other is ResizableSize && other.type == type && other._value == _value;
+      other is ResizableSizePixels && other.pixels == pixels;
 
   @override
-  int get hashCode => Object.hash(type, _value);
+  int get hashCode => pixels.hashCode;
+}
+
+final class ResizableSizeRatio extends ResizableSize {
+  const ResizableSizeRatio(this.ratio)
+      : assert(ratio >= 0, 'ratio must be greater than or equal to 0'),
+        assert(ratio <= 1, 'ratio must be less than or equal to 1'),
+        super._();
+
+  final double ratio;
+
+  @override
+  String toString() => 'ResizableSizeRatio($ratio)';
+
+  @override
+  operator ==(Object other) =>
+      other is ResizableSizeRatio && other.ratio == ratio;
+
+  @override
+  int get hashCode => ratio.hashCode;
+}
+
+final class ResizableSizeExpand extends ResizableSize {
+  const ResizableSizeExpand({this.flex = 1})
+      : assert(flex > 0, 'flex must be greater than 0'),
+        super._();
+
+  final int flex;
+
+  @override
+  String toString() => 'ResizableSizeExpand(flex: $flex)';
+
+  @override
+  operator ==(Object other) =>
+      other is ResizableSizeExpand && other.flex == flex;
+
+  @override
+  int get hashCode => flex.hashCode;
+}
+
+final class ResizableSizeShrink extends ResizableSize {
+  const ResizableSizeShrink() : super._();
+
+  @override
+  String toString() => 'ResizableSizeShrink()';
 }

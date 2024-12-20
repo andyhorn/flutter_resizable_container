@@ -94,11 +94,11 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
 
   double _getHeight(double maxHeight) {
     return switch (widget.direction) {
-      Axis.horizontal => switch (widget.config.length.type) {
-          SizeType.pixels => min(widget.config.length.value, maxHeight),
-          SizeType.expand => maxHeight,
-          SizeType.ratio => maxHeight * widget.config.length.value,
-          SizeType.shrink => 0.0,
+      Axis.horizontal => switch (widget.config.length) {
+          ResizableSizePixels(:final pixels) => min(pixels, maxHeight),
+          ResizableSizeExpand() => maxHeight,
+          ResizableSizeRatio(:final ratio) => maxHeight * ratio,
+          ResizableSizeShrink() => 0.0,
         },
       Axis.vertical => widget.config.thickness + widget.config.padding,
     };
@@ -107,11 +107,11 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   double _getWidth(double maxWidth) {
     return switch (widget.direction) {
       Axis.horizontal => widget.config.thickness + widget.config.padding,
-      Axis.vertical => switch (widget.config.length.type) {
-          SizeType.pixels => min(widget.config.length.value, maxWidth),
-          SizeType.expand => maxWidth,
-          SizeType.ratio => maxWidth * widget.config.length.value,
-          SizeType.shrink => 0.0,
+      Axis.vertical => switch (widget.config.length) {
+          ResizableSizePixels(:final pixels) => min(pixels, maxWidth),
+          ResizableSizeExpand() => maxWidth,
+          ResizableSizeRatio(:final ratio) => maxWidth * ratio,
+          ResizableSizeShrink() => 0.0,
         },
     };
   }
