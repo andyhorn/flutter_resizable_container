@@ -207,15 +207,11 @@ class ResizableLayoutRenderObject extends RenderBox
   }
 
   double _getDividerSpace() {
-    double getSize(ResizableDivider divider) {
-      return divider.thickness + divider.padding;
-    }
-
-    return [
-      for (var i = 0; i < resizableChildren.length - 1; i++) ...[
-        getSize(resizableChildren[i].divider),
-      ],
-    ].sum((x) => x).toDouble();
+    return resizableChildren
+        .take(resizableChildren.length - 1)
+        .map((child) => child.divider.thickness + child.divider.padding)
+        .sum((x) => x)
+        .toDouble();
   }
 
   BoxConstraints _getDividerConstraints(ResizableDivider divider) {
