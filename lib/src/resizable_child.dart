@@ -7,15 +7,7 @@ class ResizableChild {
   const ResizableChild({
     required this.child,
     this.size = const ResizableSize.expand(),
-    this.maxSize,
-    this.minSize,
   });
-
-  /// The (optional) maximum size (in px) of this child Widget.
-  final double? maxSize;
-
-  /// The (optional) minimum size (in px) of this child Widget.
-  final double? minSize;
 
   /// The size of the corresponding widget. May use a ratio of the
   /// available space, an absolute size in logical pixels, or it can
@@ -37,25 +29,14 @@ class ResizableChild {
   final Widget child;
 
   @override
-  String toString() => 'ResizableChildData('
-      'size: $size, '
-      'maxSize: $maxSize, '
-      'minSize: $minSize, '
-      'child: $child)';
+  String toString() => 'ResizableChildData(size: $size, child: $child)';
 
   @override
   operator ==(Object other) =>
       other is ResizableChild &&
       other.size == size &&
-      other.maxSize == maxSize &&
-      other.minSize == minSize &&
       other.child.runtimeType == child.runtimeType;
 
   @override
-  int get hashCode => Object.hash(
-        size,
-        maxSize,
-        minSize,
-        child,
-      );
+  int get hashCode => Object.hash(size, child);
 }

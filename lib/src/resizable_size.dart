@@ -1,14 +1,55 @@
 sealed class ResizableSize {
-  const ResizableSize._();
+  const ResizableSize._({this.min, this.max})
+      : assert(
+          min == null || min >= 0,
+          'min must be greater than or equal to 0',
+        ),
+        assert(
+          min == null || min < double.infinity,
+          'min cannot be equal to infinity',
+        ),
+        assert(
+          max == null || max >= 0,
+          'max must be greater than or equal to 0',
+        ),
+        assert(
+          max == null || max < double.infinity,
+          'max cannot be equal to infinity',
+        ),
+        assert(
+          min == null || max == null || min <= max,
+          'min must be less than or equal to max',
+        );
 
-  const factory ResizableSize.pixels(double pixels) = ResizableSizePixels;
-  const factory ResizableSize.ratio(double ratio) = ResizableSizeRatio;
-  const factory ResizableSize.expand({int flex}) = ResizableSizeExpand;
-  const factory ResizableSize.shrink() = ResizableSizeShrink;
+  final double? min;
+  final double? max;
+
+  const factory ResizableSize.pixels(
+    double pixels, {
+    double? min,
+    double? max,
+  }) = ResizableSizePixels;
+
+  const factory ResizableSize.ratio(
+    double ratio, {
+    double? min,
+    double? max,
+  }) = ResizableSizeRatio;
+
+  const factory ResizableSize.expand({
+    int flex,
+    double? min,
+    double? max,
+  }) = ResizableSizeExpand;
+
+  const factory ResizableSize.shrink({
+    double? min,
+    double? max,
+  }) = ResizableSizeShrink;
 }
 
 final class ResizableSizePixels extends ResizableSize {
-  const ResizableSizePixels(this.pixels)
+  const ResizableSizePixels(this.pixels, {super.min, super.max})
       : assert(pixels >= 0, 'pixels must be greater than or equal to 0'),
         super._();
 
@@ -26,7 +67,7 @@ final class ResizableSizePixels extends ResizableSize {
 }
 
 final class ResizableSizeRatio extends ResizableSize {
-  const ResizableSizeRatio(this.ratio)
+  const ResizableSizeRatio(this.ratio, {super.min, super.max})
       : assert(ratio >= 0, 'ratio must be greater than or equal to 0'),
         assert(ratio <= 1, 'ratio must be less than or equal to 1'),
         super._();
@@ -45,7 +86,7 @@ final class ResizableSizeRatio extends ResizableSize {
 }
 
 final class ResizableSizeExpand extends ResizableSize {
-  const ResizableSizeExpand({this.flex = 1})
+  const ResizableSizeExpand({this.flex = 1, super.min, super.max})
       : assert(flex > 0, 'flex must be greater than 0'),
         super._();
 
@@ -63,7 +104,7 @@ final class ResizableSizeExpand extends ResizableSize {
 }
 
 final class ResizableSizeShrink extends ResizableSize {
-  const ResizableSizeShrink() : super._();
+  const ResizableSizeShrink({super.min, super.max}) : super._();
 
   @override
   String toString() => 'ResizableSizeShrink()';

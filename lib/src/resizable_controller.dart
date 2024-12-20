@@ -142,7 +142,7 @@ class ResizableController with ChangeNotifier {
   }
 
   double _getMinimumNecessarySize() {
-    final minimums = _children.map((child) => child.minSize ?? 0.0).toList();
+    final minimums = _sizes.map((size) => size.min ?? 0.0).toList();
     return minimums.fold(0.0, (sum, curr) => sum + curr);
   }
 
@@ -210,7 +210,7 @@ class ResizableController with ChangeNotifier {
     final targetSize = sizes[index] + delta;
 
     if (delta < 0) {
-      final minimumSize = _children[index].minSize ?? 0;
+      final minimumSize = _sizes[index].min ?? 0;
 
       if (targetSize <= minimumSize) {
         return minimumSize - sizes[index];
@@ -219,7 +219,7 @@ class ResizableController with ChangeNotifier {
       return delta;
     }
 
-    final maximumSize = _children[index].maxSize ?? double.infinity;
+    final maximumSize = _sizes[index].max ?? double.infinity;
 
     if (targetSize >= maximumSize) {
       return maximumSize - sizes[index];
@@ -233,8 +233,8 @@ class ResizableController with ChangeNotifier {
     final List<int> changeableIndices = [];
 
     bool shouldAdd(index) {
-      final minSize = _children[index].minSize ?? 0.0;
-      final maxSize = _children[index].maxSize ?? double.infinity;
+      final minSize = _sizes[index].min ?? 0.0;
+      final maxSize = _sizes[index].max ?? double.infinity;
 
       if (direction < 0 && sizes[index] > minSize) {
         return true;
@@ -273,9 +273,9 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     final currentSize = pixels[index];
-    final minCurrentSize = _children[index].minSize ?? 0;
+    final minCurrentSize = _sizes[index].min ?? 0;
     final adjacentSize = pixels[index + 1];
-    final maxAdjacentSize = _children[index + 1].maxSize ?? double.infinity;
+    final maxAdjacentSize = _sizes[index + 1].max ?? double.infinity;
     final maxCurrentDelta = currentSize - minCurrentSize;
     final maxAdjacentDelta = maxAdjacentSize - adjacentSize;
     final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
@@ -292,9 +292,9 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     final currentSize = pixels[index];
-    final maxCurrentSize = _children[index].maxSize ?? double.infinity;
+    final maxCurrentSize = _sizes[index].max ?? double.infinity;
     final adjacentSize = pixels[index + 1];
-    final minAdjacentSize = _children[index + 1].minSize ?? 0;
+    final minAdjacentSize = _sizes[index + 1].min ?? 0;
     final maxAvailableSpace = min(maxCurrentSize, _availableSpace);
     final maxCurrentDelta = maxAvailableSpace - currentSize;
     final maxAdjacentDelta = adjacentSize - minAdjacentSize;
