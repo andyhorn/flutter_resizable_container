@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_resizable_container/src/resizable_size.dart';
+import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 
 /// Controls the sizing parameters for the [child] Widget.
 class ResizableChild {
@@ -7,6 +7,7 @@ class ResizableChild {
   const ResizableChild({
     required this.child,
     this.size = const ResizableSize.expand(),
+    this.divider = const ResizableDivider(),
   });
 
   /// The size of the corresponding widget. May use a ratio of the
@@ -22,11 +23,21 @@ class ResizableChild {
   ///
   /// // Auto-fill available space
   /// size: const ResizableSize.expand(),
+  ///
+  /// // Conform to the child's intrinsic size
+  /// size: const ResizableSize.shrink(),
   /// ```
   final ResizableSize size;
 
-  /// The child [Widget]
+  /// The child [Widget] to be displayed.
   final Widget child;
+
+  /// The divider configuration to be used after this child.
+  ///
+  /// If not provided, the default divider will be used.
+  ///
+  /// If this is the last child, the divider will not be used.
+  final ResizableDivider divider;
 
   @override
   String toString() => 'ResizableChildData(size: $size, child: $child)';
@@ -35,8 +46,9 @@ class ResizableChild {
   operator ==(Object other) =>
       other is ResizableChild &&
       other.size == size &&
+      other.divider == divider &&
       other.child.runtimeType == child.runtimeType;
 
   @override
-  int get hashCode => Object.hash(size, child);
+  int get hashCode => Object.hash(size, child, divider);
 }

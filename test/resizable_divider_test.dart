@@ -30,14 +30,14 @@ void main() {
               body: ResizableContainer(
                 controller: ResizableController(),
                 direction: Axis.horizontal,
-                divider: ResizableDivider(
-                  onHoverEnter: () => hovered = true,
-                ),
-                children: const [
+                children: [
                   ResizableChild(
+                    divider: ResizableDivider(
+                      onHoverEnter: () => hovered = true,
+                    ),
                     child: SizedBox.expand(),
                   ),
-                  ResizableChild(
+                  const ResizableChild(
                     child: SizedBox.expand(),
                   ),
                 ],
@@ -77,16 +77,16 @@ void main() {
               body: ResizableContainer(
                 controller: ResizableController(),
                 direction: Axis.horizontal,
-                divider: ResizableDivider(
-                  onHoverEnter: () => hovered = true,
-                  length: const ResizableSize.ratio(0.1),
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                ),
-                children: const [
+                children: [
                   ResizableChild(
+                    divider: ResizableDivider(
+                      onHoverEnter: () => hovered = true,
+                      length: const ResizableSize.ratio(0.1),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                    ),
                     child: SizedBox.expand(),
                   ),
-                  ResizableChild(
+                  const ResizableChild(
                     child: SizedBox.expand(),
                   ),
                 ],
@@ -123,14 +123,14 @@ void main() {
               body: ResizableContainer(
                 controller: ResizableController(),
                 direction: Axis.horizontal,
-                divider: ResizableDivider(
-                  onHoverExit: () => hovered = false,
-                ),
-                children: const [
+                children: [
                   ResizableChild(
+                    divider: ResizableDivider(
+                      onHoverExit: () => hovered = false,
+                    ),
                     child: SizedBox.expand(),
                   ),
-                  ResizableChild(
+                  const ResizableChild(
                     child: SizedBox.expand(),
                   ),
                 ],
@@ -171,14 +171,14 @@ void main() {
               body: ResizableContainer(
                 controller: ResizableController(),
                 direction: Axis.horizontal,
-                divider: ResizableDivider(
-                  onTapDown: () => dividerTappedDown = true,
-                ),
-                children: const [
+                children: [
                   ResizableChild(
+                    divider: ResizableDivider(
+                      onTapDown: () => dividerTappedDown = true,
+                    ),
                     child: SizedBox.expand(),
                   ),
-                  ResizableChild(
+                  const ResizableChild(
                     child: SizedBox.expand(),
                   ),
                 ],
@@ -222,14 +222,14 @@ void main() {
                   ResizableContainer(
                     controller: ResizableController(),
                     direction: Axis.horizontal,
-                    divider: ResizableDivider(
-                      onTapDown: () => dividerTappedDown = true,
-                    ),
-                    children: const [
+                    children: [
                       ResizableChild(
+                        divider: ResizableDivider(
+                          onTapDown: () => dividerTappedDown = true,
+                        ),
                         child: SizedBox.expand(),
                       ),
-                      ResizableChild(
+                      const ResizableChild(
                         child: SizedBox.expand(),
                       ),
                     ],
@@ -264,14 +264,14 @@ void main() {
               body: ResizableContainer(
                 controller: ResizableController(),
                 direction: Axis.horizontal,
-                divider: ResizableDivider(
-                  onTapUp: () => tappedUp = true,
-                ),
-                children: const [
+                children: [
                   ResizableChild(
+                    divider: ResizableDivider(
+                      onTapUp: () => tappedUp = true,
+                    ),
                     child: SizedBox.expand(),
                   ),
-                  ResizableChild(
+                  const ResizableChild(
                     child: SizedBox.expand(),
                   ),
                 ],
@@ -305,14 +305,14 @@ void main() {
               body: ResizableContainer(
                 controller: ResizableController(),
                 direction: Axis.horizontal,
-                divider: ResizableDivider(
-                  onTapUp: () => tappedUp = true,
-                ),
-                children: const [
+                children: [
                   ResizableChild(
+                    divider: ResizableDivider(
+                      onTapUp: () => tappedUp = true,
+                    ),
                     child: SizedBox.expand(),
                   ),
-                  ResizableChild(
+                  const ResizableChild(
                     child: SizedBox.expand(),
                   ),
                 ],

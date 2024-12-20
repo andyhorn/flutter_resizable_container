@@ -137,22 +137,22 @@ class _CustomDividerExampleScreenState
           Expanded(
             child: ResizableContainer(
               direction: Axis.horizontal,
-              divider: ResizableDivider(
-                color: hovered
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.inversePrimary,
-                thickness: thickness,
-                padding: padding,
-                crossAxisAlignment: crossAxisAlignment,
-                mainAxisAlignment: mainAxisAlignment,
-                length: ResizableSize.ratio(length),
-                onHoverEnter: () => setState(() => hovered = true),
-                onHoverExit: () => setState(() => hovered = false),
-                onTapDown: () => setState(() => hovered = true),
-                onTapUp: () => setState(() => hovered = false),
-              ),
               children: [
                 ResizableChild(
+                  divider: ResizableDivider(
+                    color: hovered
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.inversePrimary,
+                    thickness: thickness,
+                    padding: padding,
+                    crossAxisAlignment: crossAxisAlignment,
+                    mainAxisAlignment: mainAxisAlignment,
+                    length: ResizableSize.ratio(length),
+                    onHoverEnter: () => setState(() => hovered = true),
+                    onHoverExit: () => setState(() => hovered = false),
+                    onTapDown: () => setState(() => hovered = true),
+                    onTapUp: () => setState(() => hovered = false),
+                  ),
                   child: ColoredBox(
                     color: Theme.of(context).colorScheme.primaryContainer,
                     child: const Center(child: Text('Left')),

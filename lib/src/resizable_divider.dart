@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:flutter_resizable_container/src/resizable_size.dart';
 
 class ResizableDivider {
   const ResizableDivider({
@@ -14,7 +14,11 @@ class ResizableDivider {
     this.cursor,
     this.mainAxisAlignment = MainAxisAlignment.center,
     this.crossAxisAlignment = CrossAxisAlignment.center,
-  }) : assert(thickness > 0, '[thickness] must be > 0.');
+  })  : assert(thickness > 0, '[thickness] must be > 0.'),
+        assert(
+          length is! ResizableSizeShrink,
+          'length does not support the "shrink" size',
+        );
 
   /// The thickness of the line drawn within the divider.
   ///
