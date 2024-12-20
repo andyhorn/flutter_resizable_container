@@ -17,7 +17,7 @@ Each example also comes with an embedded source-code view, so you don't have to 
 ## Features
 
 - `ResizableContainer`s are fully nestable and support LTR _and_ RTL layouts
-- Customize the length, thickness, alignment, and color of the divider(s) between children
+- Customize the length, thickness, alignment, and color of the divider(s) between children and the cursor displayed when hovering
 - Respond to user interactions with `onHoverEnter` and `onHoverExit` for web/desktop and `onTapDown` and `onTapUp` for mobile
 - Programmatically set the sizes of the children through a `ResizableController`
 - Respond to changes in the sizes of the resizable children by listening to the `ResizableController`
@@ -259,7 +259,7 @@ In this scenario, the first child would be given 2/3 of the total available spac
 
 Use the `ResizableDivider` class to customize the look and feel of the dividers between each of a container's children.
 
-You can customize the `thickness`, `length`, `crossAxisAlignment`, `mainAxisAlignment`, and `color` of the divider. You can also provide callbacks for the `onHoverEnter` and `onHoverExit` (web) and `onTapDown` and `onTapUp` (mobile) events to respond to user interactions.
+You can customize the `thickness`, `length`, `crossAxisAlignment`, `mainAxisAlignment`, and `color` of the divider, as well as display a custom mouse cursor on hover. You can also provide callbacks for the `onHoverEnter` and `onHoverExit` (web) and `onTapDown` and `onTapUp` (mobile) events to respond to user interactions.
 
 ```dart
 divider: ResizableDivider(
@@ -269,6 +269,7 @@ divider: ResizableDivider(
     onHoverEnter: () => setState(() => hovered = true),
     onHoverExit: () => setState(() => hovered = false),
     color: hovered ? Colors.blue : Colors.black,
+    cursor: SystemMouseCursors.grab,
 ),
 ```
 
