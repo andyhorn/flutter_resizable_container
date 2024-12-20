@@ -101,24 +101,22 @@ onTap: () => controller.setSizes(const [
 
 ### ResizableChild
 
-To add widgets to your container, you must provide a `List<ResizableChild>`, each of which contain the child `Widget` as well as some configuration.
+To add widgets to your container, you must provide a `List<ResizableChild>`, each of which contain the child `Widget` and an optional `ResizableSize`.
 
 ```dart
 children: [
     if (showNavBar) ...[
         const ResizableChild(
-            maxSize: 350.0,
+            size: ResizableSize.expand(max: 350),
             child: NavBarWidget(),
         ),
     ],
     const ResizableChild(
-        startingSize: ResizableSize.expand(),
         child: BodyWidget(),
     ),
     if (showSidePanel) ...[
         const ResizableChild(
-            size: ResizableSize.ratio(0.25),
-            minSize: 100,
+            size: ResizableSize.ratio(0.25, min: 100),
             child: SidePanelWidget(),
         ),
     ],
@@ -127,19 +125,19 @@ children: [
 
 In the example above, there are three `Widget`s added to the screen, two of which can be hidden based on state.
 
-The first child, containing the `NavBarWidget`, has a maximum size of 350.0 px.
-The second child, containing the `BodyWidget`, is set to automatically expand via the `ResizableSize.expand()` value.
-The third child, containing the `SidePanelWidget`, is set to a ratio of 0.75 with a minimum size of 100.0 logical pixels.
+The first child, containing the `NavBarWidget`, has a maximum size of 350px.
+The second child, containing the `BodyWidget`, is set to automatically expand to fill the available space via the default `ResizableSize.expand()` value.
+The third child, containing the `SidePanelWidget`, is set to a ratio of 0.75 with a minimum size of 100px.
 
-The `maxSize` parameter constrains the child and will prevent it from being expanded beyond that size in the `direction` of the container.
-
-The `minSize` parameter constrains the child and will prevent it from being _shrunk_ beyond that size in the `direction` of the container.
-
-The `size` parameter gives a directive of how to size the child during its initial layout and during screen size changes. See the [Resizable Size](#resizable-size) section below for more information.
+The `size` parameter gives a directive of how to size the child during the initial layout, resizing, and screen size changes. See the [Resizable Size](#resizable-size) section below for more information. 
 
 ### ResizableSize
 
-The `ResizableSize` class defines a "size" as either a ratio of the available space, using the `.ratio` constructor, an absolute size in logical pixels, using the `.pixels` constructor, or as an auto-expanding size using the `expand` constructor. A fourth size, `shrink`, will conform to the natural size of its child. 
+The `ResizableSize` class defines a "size" as a ratio of the available space, using the `.ratio` constructor, an absolute size in logical pixels, using the `.pixels` constructor, an auto-expanding size using the `expand` constructor, or `shrink`, which will conform to the natural size of its child. 
+
+The `max` parameter constrains the child and will prevent it from being expanded beyond that size in the `direction` of the container.
+
+The `min` parameter constrains the child and will prevent it from being _shrunk_ below that size in the `direction` of the container.
 
 **Note:** When using `shrink`, the rendering engine will throw an error if its child does not have a natural size, such as a `LayoutBuilder`.
 
@@ -165,10 +163,10 @@ const expandable = ResizableSize.expand();
 
 When the controller is laying out the sizes of children, it uses the following rules:
 
-1. If a child has a size using pixels, it will be given that amount of space
-2. If a child has a `shrink` size, it will be laid out and given its natural size
-3. If a child has a size using a ratio, it will be given the proportionate amount of the _remaining_ space _after_ all pixel- and shrink-sizes have been allocated
-4. If a child has a size using `expand`, it will be given whatever space is left after the allocations in the previous steps - If there are multiple children using `expand`, the remaining space will be distributed between them based on their `flex` value (similar to `Expanded` widgets)
+1. If a child has a size using pixels, it will be given that amount of space, clamped within its min/max bounds (if present)
+2. If a child has a `shrink` size, it will be laid out and given its natural size, clamped within its min/max bounds (if present)
+3. If a child has a size using a ratio, it will be given the proportionate amount of the _remaining_ space _after_ all pixel- and shrink-sizes have been allocated, clamped within its min/max bounds (if present)
+4. If a child has a size using `expand`, it will be given whatever space is left after the allocations in the previous steps - If there are multiple children using `expand`, the remaining space will be distributed between them based on their `flex` value (similar to `Expanded` widgets) and clamped within their min/max bounds (if present)
 
 ##### Example 1
 
@@ -224,6 +222,21 @@ controller.setSizes(const [
 In this scenario, the first child will be given 300px, leaving 200px of available space.
 
 The remaining 200px will be evenly distributed between the `expand` children, resulting in each child being given a size of 100px.
+
+###### Example 4
+
+```dart
+// available space = 500px
+controller.setSizes(const [
+    ResizableSize.pixels(100),
+    ResizableSize.expand(max: 100),
+    ResizableSize.expand(),
+]);
+```
+
+In this scenario, the first child will be given 100px, leaving 400px of available space.
+
+The remaining space will attempt to be divided evenly between the two `expand` sizes, since they have equal `flex` values (defaults to 1). However, the first `expand` has a maximum size of 100px, so this child will only be given 100px and the last child will be given 300px.
 
 ###### Flex
 
