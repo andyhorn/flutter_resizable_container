@@ -198,8 +198,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
-                    size: ResizableSize.ratio(0.25),
-                    minSize: 400,
+                    size: ResizableSize.ratio(0.25, min: 400),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
@@ -235,8 +234,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
-                    size: ResizableSize.ratio(0.75),
-                    maxSize: 400,
+                    size: ResizableSize.ratio(0.75, max: 400),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
@@ -272,8 +270,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
-                    size: ResizableSize.pixels(400),
-                    minSize: 500,
+                    size: ResizableSize.pixels(400, min: 500),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
@@ -309,8 +306,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
-                    size: ResizableSize.pixels(400),
-                    maxSize: 300,
+                    size: ResizableSize.pixels(400, max: 300),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
@@ -346,8 +342,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
-                    size: ResizableSize.shrink(),
-                    minSize: 500,
+                    size: ResizableSize.shrink(min: 500),
                     child: SizedBox(
                       width: 200,
                       key: Key('BoxA'),
@@ -384,8 +379,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
-                    size: ResizableSize.shrink(),
-                    maxSize: 300,
+                    size: ResizableSize.shrink(max: 300),
                     child: SizedBox(
                       width: 400,
                       key: Key('BoxA'),
@@ -422,8 +416,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
-                    size: ResizableSize.expand(),
-                    minSize: 700,
+                    size: ResizableSize.expand(min: 700),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
@@ -459,8 +452,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
-                    size: ResizableSize.expand(),
-                    maxSize: 300,
+                    size: ResizableSize.expand(max: 300),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
@@ -603,7 +595,7 @@ void main() {
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
-                  minSize: 200,
+                  size: ResizableSize.expand(min: 200),
                   child: SizedBox.expand(
                     key: Key('BoxA'),
                   ),
@@ -640,7 +632,7 @@ void main() {
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
-                  maxSize: 700,
+                  size: ResizableSize.expand(max: 700),
                   child: SizedBox.expand(
                     key: Key('BoxA'),
                   ),
@@ -684,7 +676,7 @@ void main() {
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
-                  minSize: 200,
+                  size: ResizableSize.expand(min: 200),
                   child: SizedBox.expand(
                     key: Key('BoxA'),
                   ),
@@ -941,8 +933,7 @@ void main() {
                         ),
                       ),
                       ResizableChild(
-                        size: ResizableSize.expand(),
-                        maxSize: 850,
+                        size: ResizableSize.expand(max: 850),
                         child: SizedBox(
                           key: Key('BoxB'),
                         ),

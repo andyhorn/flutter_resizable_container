@@ -144,8 +144,7 @@ void main() {
                 child: SizedBox.shrink(),
               ),
               ResizableChild(
-                maxSize: 225.0,
-                size: ResizableSize.expand(),
+                size: ResizableSize.expand(max: 225),
                 child: SizedBox.shrink(),
               ),
             ]);

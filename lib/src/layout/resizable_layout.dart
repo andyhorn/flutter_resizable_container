@@ -161,7 +161,6 @@ class ResizableLayoutRenderObject extends RenderBox
       final constraints = _getChildConstraints(
         size: size,
         child: child,
-        resizableChild: resizableChildren[i ~/ 2],
         availableRatioSpace: availableRatioSpace,
         expandSpace: remainingExpandSpace,
         flexCount: flexCount,
@@ -200,7 +199,7 @@ class ResizableLayoutRenderObject extends RenderBox
     final pixels = [
       for (var i = 0; i < sizes.length; i++) ...[
         if (sizes[i] case ResizableSizePixels(:final pixels)) ...[
-          _clamp(pixels, resizableChildren[i]),
+          _clamp(pixels, sizes[i]),
         ],
       ],
     ];
@@ -214,7 +213,7 @@ class ResizableLayoutRenderObject extends RenderBox
         if (sizes[i] is ResizableSizeShrink) ...[
           _clamp(
             layoutDirection.getMinIntrinsicDimension(children[i * 2]),
-            resizableChildren[i],
+            sizes[i],
           ),
         ]
       ],
@@ -248,7 +247,7 @@ class ResizableLayoutRenderObject extends RenderBox
     final sizes = [
       for (var i = 0; i < this.sizes.length; i++) ...[
         if (this.sizes[i] case ResizableSizeRatio(:final ratio)) ...[
-          _clamp(ratio * availableSpace, resizableChildren[i]),
+          _clamp(ratio * availableSpace, this.sizes[i]),
         ],
       ],
     ];
@@ -278,7 +277,6 @@ class ResizableLayoutRenderObject extends RenderBox
 
   BoxConstraints _getChildConstraints({
     required ResizableSize size,
-    required ResizableChild resizableChild,
     required RenderBox child,
     required double availableRatioSpace,
     required double expandSpace,
@@ -291,17 +289,17 @@ class ResizableLayoutRenderObject extends RenderBox
       ResizableSizeExpand(:final flex) => flex * (expandSpace / flexCount),
     };
 
-    final clampedValue = _clamp(value, resizableChild);
+    final clampedValue = _clamp(value, size);
     final childSize = layoutDirection.getSize(clampedValue, constraints);
     final childConstraints = BoxConstraints.tight(childSize);
 
     return childConstraints;
   }
 
-  double _clamp(double value, ResizableChild resizableChild) {
+  double _clamp(double value, ResizableSize size) {
     return value.clamp(
-      resizableChild.minSize ?? 0,
-      resizableChild.maxSize ?? double.infinity,
+      size.min ?? 0,
+      size.max ?? double.infinity,
     );
   }
 
