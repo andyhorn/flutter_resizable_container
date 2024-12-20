@@ -129,7 +129,7 @@ The first child, containing the `NavBarWidget`, has a maximum size of 350px.
 The second child, containing the `BodyWidget`, is set to automatically expand to fill the available space via the default `ResizableSize.expand()` value.
 The third child, containing the `SidePanelWidget`, is set to a ratio of 0.75 with a minimum size of 100px.
 
-The `size` parameter gives a directive of how to size the child during its initial layout, resizing, and during screen size changes. See the [Resizable Size](#resizable-size) section below for more information. 
+The `size` parameter gives a directive of how to size the child during the initial layout, resizing, and screen size changes. See the [Resizable Size](#resizable-size) section below for more information. 
 
 ### ResizableSize
 
