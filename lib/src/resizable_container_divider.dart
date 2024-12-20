@@ -87,8 +87,9 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
 
   MouseCursor _getCursor() {
     return switch (widget.direction) {
-      Axis.horizontal => SystemMouseCursors.resizeLeftRight,
-      Axis.vertical => SystemMouseCursors.resizeUpDown,
+      Axis.horizontal =>
+        widget.config.cursor ?? SystemMouseCursors.resizeLeftRight,
+      Axis.vertical => widget.config.cursor ?? SystemMouseCursors.resizeUpDown,
     };
   }
 
