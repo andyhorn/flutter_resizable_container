@@ -3,6 +3,7 @@ import "dart:math";
 
 import 'package:flutter/material.dart';
 import "package:flutter_resizable_container/flutter_resizable_container.dart";
+import "package:flutter_resizable_container/src/resizable_size.dart";
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
@@ -34,8 +35,8 @@ class ResizableController with ChangeNotifier {
     }
 
     final totalPixels = sizes
-        .where((size) => size.isPixels)
-        .fold(0.0, (sum, curr) => sum + curr.value);
+        .whereType<ResizableSizePixels>()
+        .fold(0.0, (sum, curr) => sum + curr.pixels);
 
     if (totalPixels > _availableSpace) {
       throw ArgumentError(
@@ -44,8 +45,8 @@ class ResizableController with ChangeNotifier {
     }
 
     final totalRatio = sizes
-        .where((size) => size.isRatio)
-        .fold(0.0, (sum, curr) => sum + curr.value);
+        .whereType<ResizableSizeRatio>()
+        .fold(0.0, (sum, curr) => sum + curr.ratio);
 
     if (totalRatio > 1.0) {
       throw ArgumentError('Total ratio must be less than or equal to 1.0');
@@ -245,7 +246,7 @@ class ResizableController with ChangeNotifier {
     }
 
     for (final index in indices) {
-      if (!_children[index].size.isExpand) {
+      if (_children[index].size is! ResizableSizeExpand) {
         continue;
       }
 

@@ -1,5 +1,3 @@
-import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-
 extension IterableNumExtensions on Iterable<num> {
   num sum() => fold(0, (sum, current) => sum + current);
 }
@@ -21,13 +19,4 @@ extension IterableExtensions<T> on Iterable<T> {
           ],
         ],
       ];
-}
-
-extension ResizableSizeIterableExtensions on Iterable<ResizableSize> {
-  double get totalPixels =>
-      where((size) => size.isPixels).sum((size) => size.value).toDouble();
-  double get totalRatio =>
-      where((size) => size.isRatio).sum((size) => size.value).toDouble();
-  int get flexCount =>
-      where((size) => size.isExpand).sum((size) => size.value).toInt();
 }

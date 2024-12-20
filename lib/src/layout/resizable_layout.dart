@@ -170,8 +170,8 @@ class ResizableLayoutRenderObject extends RenderBox
       final childSize = _layoutChild(child, constraints);
       finalSizes.add(childSize);
 
-      if (size.type == SizeType.expand) {
-        flexCount -= size.value.toInt();
+      if (size case ResizableSizeExpand(:final flex)) {
+        flexCount -= flex;
         remainingExpandSpace -= layoutDirection.getSizeDimension(child.size);
       }
 
@@ -199,8 +199,8 @@ class ResizableLayoutRenderObject extends RenderBox
   double _getPixelsSpace() {
     final pixels = [
       for (var i = 0; i < sizes.length; i++) ...[
-        if (sizes[i].isPixels) ...[
-          _clamp(sizes[i].value, resizableChildren[i]),
+        if (sizes[i] case ResizableSizePixels(:final pixels)) ...[
+          _clamp(pixels, resizableChildren[i]),
         ],
       ],
     ];
@@ -211,7 +211,7 @@ class ResizableLayoutRenderObject extends RenderBox
   double _getShrinkSpace(List<RenderBox> children) {
     return [
       for (var i = 0; i < sizes.length; i++) ...[
-        if (sizes[i].isShrink) ...[
+        if (sizes[i] is ResizableSizeShrink) ...[
           _clamp(
             layoutDirection.getMinIntrinsicDimension(children[i * 2]),
             resizableChildren[i],
@@ -247,11 +247,8 @@ class ResizableLayoutRenderObject extends RenderBox
   double _getRequiredRatioSpace(double availableSpace) {
     final sizes = [
       for (var i = 0; i < this.sizes.length; i++) ...[
-        if (this.sizes[i].isRatio) ...[
-          _clamp(
-            this.sizes[i].value * availableSpace,
-            resizableChildren[i],
-          ),
+        if (this.sizes[i] case ResizableSizeRatio(:final ratio)) ...[
+          _clamp(ratio * availableSpace, resizableChildren[i]),
         ],
       ],
     ];
@@ -261,10 +258,9 @@ class ResizableLayoutRenderObject extends RenderBox
 
   int _getFlexCount() {
     return sizes
-        .where((s) => s.isExpand)
-        .map((s) => s.value)
-        .fold(0.0, (sum, curr) => sum + curr)
-        .toInt();
+        .whereType<ResizableSizeExpand>()
+        .map((s) => s.flex)
+        .fold(0, (sum, curr) => sum + curr);
   }
 
   double _getExpandSpace({
@@ -288,11 +284,11 @@ class ResizableLayoutRenderObject extends RenderBox
     required double expandSpace,
     required int flexCount,
   }) {
-    final value = switch (size.type) {
-      SizeType.pixels => size.value,
-      SizeType.ratio => size.value * availableRatioSpace,
-      SizeType.shrink => layoutDirection.getMinIntrinsicDimension(child),
-      SizeType.expand => size.value * (expandSpace / flexCount),
+    final value = switch (size) {
+      ResizableSizePixels(:final pixels) => pixels,
+      ResizableSizeRatio(:final ratio) => ratio * availableRatioSpace,
+      ResizableSizeShrink() => layoutDirection.getMinIntrinsicDimension(child),
+      ResizableSizeExpand(:final flex) => flex * (expandSpace / flexCount),
     };
 
     final clampedValue = _clamp(value, resizableChild);
