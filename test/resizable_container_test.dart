@@ -491,11 +491,11 @@ void main() {
             body: ResizableContainer(
               controller: controller,
               direction: Axis.horizontal,
-              divider: const ResizableDivider(
-                thickness: dividerWidth,
-              ),
               children: const [
                 ResizableChild(
+                  divider: ResizableDivider(
+                    thickness: dividerWidth,
+                  ),
                   size: ResizableSize.ratio(0.5),
                   child: SizedBox.expand(
                     key: Key('BoxA'),
@@ -545,11 +545,11 @@ void main() {
             body: ResizableContainer(
               controller: controller,
               direction: Axis.horizontal,
-              divider: const ResizableDivider(
-                thickness: dividerWidth,
-              ),
               children: const [
                 ResizableChild(
+                  divider: ResizableDivider(
+                    thickness: dividerWidth,
+                  ),
                   child: SizedBox.expand(
                     key: Key('BoxA'),
                   ),
@@ -626,12 +626,12 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
-              divider: ResizableDivider(
-                thickness: dividerWidth,
-              ),
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
+                  divider: ResizableDivider(
+                    thickness: dividerWidth,
+                  ),
                   size: ResizableSize.expand(max: 700),
                   child: SizedBox.expand(
                     key: Key('BoxA'),
@@ -670,12 +670,12 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
-              divider: ResizableDivider(
-                thickness: dividerWidth,
-              ),
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
+                  divider: ResizableDivider(
+                    thickness: dividerWidth,
+                  ),
                   size: ResizableSize.expand(min: 200),
                   child: SizedBox.expand(
                     key: Key('BoxA'),
@@ -745,12 +745,11 @@ void main() {
             body: ResizableContainer(
               controller: controller,
               direction: Axis.horizontal,
-              divider: const ResizableDivider(
-                thickness: 1,
-                padding: 0,
-              ),
               children: const [
                 ResizableChild(
+                  divider: ResizableDivider(
+                    thickness: 1,
+                  ),
                   size: ResizableSize.expand(),
                   child: SizedBox.expand(
                     key: Key('BoxA'),
@@ -800,12 +799,11 @@ void main() {
                   body: ResizableContainer(
                     controller: controller,
                     direction: Axis.horizontal,
-                    divider: const ResizableDivider(
-                      thickness: 1,
-                      padding: 0,
-                    ),
                     children: const [
                       ResizableChild(
+                        divider: ResizableDivider(
+                          thickness: 1,
+                        ),
                         size: ResizableSize.shrink(),
                         child: SizedBox(
                           width: 200,
@@ -860,12 +858,11 @@ void main() {
                   body: ResizableContainer(
                     controller: controller,
                     direction: Axis.horizontal,
-                    divider: const ResizableDivider(
-                      thickness: 1,
-                      padding: 0,
-                    ),
                     children: const [
                       ResizableChild(
+                        divider: ResizableDivider(
+                          thickness: 1,
+                        ),
                         size: ResizableSize.shrink(),
                         child: SizedBox(
                           width: 200,
@@ -920,12 +917,11 @@ void main() {
                   body: ResizableContainer(
                     controller: controller,
                     direction: Axis.horizontal,
-                    divider: const ResizableDivider(
-                      thickness: 1,
-                      padding: 0,
-                    ),
                     children: const [
                       ResizableChild(
+                        divider: ResizableDivider(
+                          thickness: 1,
+                        ),
                         size: ResizableSize.shrink(),
                         child: SizedBox(
                           width: 200,
@@ -980,12 +976,11 @@ void main() {
                 body: ResizableContainer(
                   controller: controller,
                   direction: Axis.horizontal,
-                  divider: const ResizableDivider(
-                    thickness: 1,
-                    padding: 0,
-                  ),
                   children: const [
                     ResizableChild(
+                      divider: ResizableDivider(
+                        thickness: 1,
+                      ),
                       size: ResizableSize.shrink(),
                       child: SizedBox(
                         width: 200,
@@ -1039,12 +1034,11 @@ void main() {
                 body: ResizableContainer(
                   controller: controller,
                   direction: Axis.horizontal,
-                  divider: const ResizableDivider(
-                    thickness: 1,
-                    padding: 0,
-                  ),
                   children: const [
                     ResizableChild(
+                      divider: ResizableDivider(
+                        thickness: 1,
+                      ),
                       size: ResizableSize.pixels(200),
                       child: SizedBox(
                         key: Key('BoxA'),
@@ -1097,11 +1091,11 @@ void main() {
             child: Scaffold(
               body: ResizableContainer(
                 direction: Axis.horizontal,
-                divider: const ResizableDivider(
-                  thickness: 1,
-                ),
                 children: const [
                   ResizableChild(
+                    divider: ResizableDivider(
+                      thickness: 1,
+                    ),
                     size: ResizableSize.expand(),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
@@ -1173,12 +1167,11 @@ void main() {
                   body: ResizableContainer(
                     controller: controller,
                     direction: direction,
-                    divider: const ResizableDivider(
-                      thickness: 1,
-                      padding: 0,
-                    ),
                     children: const [
                       ResizableChild(
+                        divider: ResizableDivider(
+                          thickness: 1,
+                        ),
                         size: ResizableSize.expand(),
                         child: SizedBox.expand(
                           key: Key('BoxA'),
@@ -1252,12 +1245,11 @@ class __ToggleChildAppState extends State<_ToggleChildApp> {
         ),
         body: ResizableContainer(
           direction: Axis.horizontal,
-          divider: const ResizableDivider(
-            thickness: 2,
-            padding: 0,
-          ),
           children: [
             const ResizableChild(
+              divider: ResizableDivider(
+                thickness: 2,
+              ),
               size: ResizableSize.expand(flex: 2),
               child: SizedBox.expand(
                 key: Key('ChildA'),

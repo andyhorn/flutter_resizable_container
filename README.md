@@ -17,7 +17,7 @@ Each example also comes with an embedded source-code view, so you don't have to 
 ## Features
 
 - `ResizableContainer`s are fully nestable and support LTR _and_ RTL layouts
-- Customize the length, thickness, alignment, and color of the divider(s) between children and the cursor displayed when hovering
+- Customize the look and feel of the divider(s) between children
 - Respond to user interactions with `onHoverEnter` and `onHoverExit` for web/desktop and `onTapDown` and `onTapUp` for mobile
 - Programmatically set the sizes of the children through a `ResizableController`
 - Respond to changes in the sizes of the resizable children by listening to the `ResizableController`
@@ -101,33 +101,38 @@ onTap: () => controller.setSizes(const [
 
 ### ResizableChild
 
-To add widgets to your container, you must provide a `List<ResizableChild>`, each of which contain the child `Widget` and an optional `ResizableSize`.
+To add widgets to your container, you must provide a `List<ResizableChild>`, each of which contain the child `Widget`, an optional `ResizableDivider`, and an optional `ResizableSize`.
 
 ```dart
 children: [
-    if (showNavBar) ...[
-        const ResizableChild(
-            size: ResizableSize.expand(max: 350),
-            child: NavBarWidget(),
-        ),
-    ],
     const ResizableChild(
+        divider: ResizableDivider(
+            thickness: 2,
+            color: Colors.blue,
+        ),
+        size: ResizableSize.expand(max: 350),
+        child: NavBarWidget(),
+    ),
+    const ResizableChild(
+        divider: ResizableDivider(
+            thickness: 2,
+            padding: 3,
+        ),
         child: BodyWidget(),
     ),
-    if (showSidePanel) ...[
-        const ResizableChild(
-            size: ResizableSize.ratio(0.25, min: 100),
-            child: SidePanelWidget(),
-        ),
-    ],
+    const ResizableChild(
+        size: ResizableSize.ratio(0.25, min: 100),
+        child: SidePanelWidget(),
+    ),
 ],
 ```
 
-In the example above, there are three `Widget`s added to the screen, two of which can be hidden based on state.
+In the example above, the first two children have a custom `ResizableDivider` (read more about dividers in the [ResizableDivider](#resizabledivider) section). If no divider is set, a default one will be used. The divider provided to a child will be used between itself and the _next_ child in the list - the divider of the last child will not be used.
 
-The first child, containing the `NavBarWidget`, has a maximum size of 350px.
-The second child, containing the `BodyWidget`, is set to automatically expand to fill the available space via the default `ResizableSize.expand()` value.
-The third child, containing the `SidePanelWidget`, is set to a ratio of 0.75 with a minimum size of 100px.
+Each child also provides a custom size configuration:
+  * The first child, containing the `NavBarWidget`, has a maximum size of 350px.
+  * The second child, containing the `BodyWidget`, is set to automatically expand to fill the available space via the default `ResizableSize.expand()` value.
+  * The third child, containing the `SidePanelWidget`, is set to a ratio of 0.75 with a minimum size of 100px.
 
 The `size` parameter gives a directive of how to size the child during the initial layout, resizing, and screen size changes. See the [Resizable Size](#resizable-size) section below for more information. 
 
@@ -259,7 +264,7 @@ In this scenario, the first child would be given 2/3 of the total available spac
 
 Use the `ResizableDivider` class to customize the look and feel of the dividers between each of a container's children.
 
-You can customize the `thickness`, `length`, `crossAxisAlignment`, `mainAxisAlignment`, and `color` of the divider, as well as display a custom mouse cursor on hover. You can also provide callbacks for the `onHoverEnter` and `onHoverExit` (web) and `onTapDown` and `onTapUp` (mobile) events to respond to user interactions.
+You can customize the `thickness`, `length`, `crossAxisAlignment`, `mainAxisAlignment`, and `color` of the divider, as well as display a custom mouse cursor on hover and respond to `onHoverEnter` and `onHoverExit` (web) and `onTapDown` and `onTapUp` (mobile) events.
 
 ```dart
 divider: ResizableDivider(
@@ -285,7 +290,7 @@ If the divider's length is less than the total available space, you can use the 
 
 ![Cross-Axis Alignment](./doc/screenshot_cross_axis_start.png?raw=true 'Cross-Axis Alignment')
 
-By adding a `padding` value, additional (empty) space will be added around/alongside the divider. The `mainAxisAlignment` property can then be used to control its position within this space on the main axis. For example, a vertical divider set to `MainAxisAlignment.start` will be positioned at the very left edge of its available space.
+By adding a `padding` value, additional (empty) space will be added around/alongside the divider. The `mainAxisAlignment` property can then be used to control its position within this space on the main axis. For example, a vertical divider set to `MainAxisAlignment.start` will be positioned at the very left edge of the available space for a vertical divider.
 
 ![Main-Axis Alignment](./doc/screenshot_main_axis_start.png?raw=true 'Main-Axis Alignment')
 

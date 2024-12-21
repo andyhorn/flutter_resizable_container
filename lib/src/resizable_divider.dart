@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:flutter_resizable_container/src/resizable_size.dart';
 
 class ResizableDivider {
   const ResizableDivider({
@@ -14,7 +14,11 @@ class ResizableDivider {
     this.cursor,
     this.mainAxisAlignment = MainAxisAlignment.center,
     this.crossAxisAlignment = CrossAxisAlignment.center,
-  }) : assert(thickness > 0, '[thickness] must be > 0.');
+  })  : assert(thickness > 0, '[thickness] must be > 0.'),
+        assert(
+          length is! ResizableSizeShrink,
+          'length does not support the "shrink" size',
+        );
 
   /// The thickness of the line drawn within the divider.
   ///
@@ -67,4 +71,54 @@ class ResizableDivider {
 
   /// The cursor to display when hovering over this divider.
   final MouseCursor? cursor;
+
+  @override
+  String toString() {
+    return 'ResizableDividerData('
+        'thickness: $thickness, '
+        'length: $length, '
+        'padding: $padding, '
+        'color: $color, '
+        'onHoverEnter: $onHoverEnter, '
+        'onHoverExit: $onHoverExit, '
+        'onTapDown: $onTapDown, '
+        'onTapUp: $onTapUp, '
+        'cursor: $cursor, '
+        'mainAxisAlignment: $mainAxisAlignment, '
+        'crossAxisAlignment: $crossAxisAlignment'
+        ')';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is ResizableDivider &&
+        other.thickness == thickness &&
+        other.length == length &&
+        other.padding == padding &&
+        other.color == color &&
+        other.onHoverEnter == onHoverEnter &&
+        other.onHoverExit == onHoverExit &&
+        other.onTapDown == onTapDown &&
+        other.onTapUp == onTapUp &&
+        other.cursor == cursor &&
+        other.mainAxisAlignment == mainAxisAlignment &&
+        other.crossAxisAlignment == crossAxisAlignment;
+  }
+
+  @override
+  int get hashCode {
+    return thickness.hashCode ^
+        length.hashCode ^
+        padding.hashCode ^
+        color.hashCode ^
+        onHoverEnter.hashCode ^
+        onHoverExit.hashCode ^
+        onTapDown.hashCode ^
+        onTapUp.hashCode ^
+        cursor.hashCode ^
+        mainAxisAlignment.hashCode ^
+        crossAxisAlignment.hashCode;
+  }
 }

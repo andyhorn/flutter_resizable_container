@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_layout_direction.dart';
 import 'package:flutter_resizable_container/src/resizable_size.dart';
 
@@ -15,14 +16,12 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
     super.key,
     required super.children,
     required this.direction,
-    required this.divider,
     required this.onComplete,
     required this.sizes,
     required this.resizableChildren,
   });
 
   final Axis direction;
-  final ResizableDivider divider;
   final ValueChanged<List<double>> onComplete;
   final List<ResizableSize> sizes;
   final List<ResizableChild> resizableChildren;
@@ -31,7 +30,6 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
   RenderObject createRenderObject(BuildContext context) {
     return ResizableLayoutRenderObject(
       layoutDirection: ResizableLayoutDirection.forAxis(direction),
-      divider: divider,
       sizes: sizes,
       onComplete: onComplete,
       resizableChildren: resizableChildren,
@@ -45,7 +43,6 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
   ) {
     renderObject
       ..layoutDirection = ResizableLayoutDirection.forAxis(direction)
-      ..divider = divider
       ..sizes = sizes
       ..onComplete = onComplete
       ..resizableChildren = resizableChildren;
@@ -56,25 +53,21 @@ class ResizableLayoutRenderObject extends RenderBox
     with _ContainerMixin, _DefaultsMixin {
   ResizableLayoutRenderObject({
     required ResizableLayoutDirection layoutDirection,
-    required ResizableDivider divider,
     required List<ResizableSize> sizes,
     required ValueChanged<List<double>> onComplete,
     required List<ResizableChild> resizableChildren,
   })  : _layoutDirection = layoutDirection,
-        _divider = divider,
         _sizes = sizes,
         _onComplete = onComplete,
         _resizableChildren = resizableChildren;
 
   ResizableLayoutDirection _layoutDirection;
-  ResizableDivider _divider;
   List<ResizableSize> _sizes;
   ValueChanged<List<double>> _onComplete;
   List<ResizableChild> _resizableChildren;
   double _currentPosition = 0.0;
 
   ResizableLayoutDirection get layoutDirection => _layoutDirection;
-  ResizableDivider get divider => _divider;
   List<ResizableSize> get sizes => _sizes;
   ValueChanged<List<double>> get onComplete => _onComplete;
   List<ResizableChild> get resizableChildren => _resizableChildren;
@@ -85,15 +78,6 @@ class ResizableLayoutRenderObject extends RenderBox
     }
 
     _layoutDirection = layoutDirection;
-    markNeedsLayout();
-  }
-
-  set divider(ResizableDivider divider) {
-    if (_divider == divider) {
-      return;
-    }
-
-    _divider = divider;
     markNeedsLayout();
   }
 
@@ -135,7 +119,6 @@ class ResizableLayoutRenderObject extends RenderBox
 
     final children = getChildrenAsList();
     final dividerSpace = _getDividerSpace();
-    final dividerConstraints = _getDividerConstraints();
     final pixelSpace = _getPixelsSpace();
     final shrinkSpace = _getShrinkSpace(children);
     final availableRatioSpace = _getAvailableRatioSpace(
@@ -176,7 +159,10 @@ class ResizableLayoutRenderObject extends RenderBox
 
       if (i < childCount - 1) {
         final divider = children[i + 1];
-        final dividerSize = _layoutChild(divider, dividerConstraints);
+        final dividerSize = _layoutChild(
+          divider,
+          _getDividerConstraints(resizableChildren[i ~/ 2].divider),
+        );
         finalSizes.add(dividerSize);
       }
     }
@@ -221,12 +207,14 @@ class ResizableLayoutRenderObject extends RenderBox
   }
 
   double _getDividerSpace() {
-    final dividerThickness = divider.thickness + divider.padding;
-    final dividerCount = childCount ~/ 2;
-    return dividerThickness * dividerCount;
+    return resizableChildren
+        .take(resizableChildren.length - 1)
+        .map((child) => child.divider.thickness + child.divider.padding)
+        .sum((x) => x)
+        .toDouble();
   }
 
-  BoxConstraints _getDividerConstraints() {
+  BoxConstraints _getDividerConstraints(ResizableDivider divider) {
     return BoxConstraints.tight(
       layoutDirection.getSize(divider.thickness + divider.padding, constraints),
     );

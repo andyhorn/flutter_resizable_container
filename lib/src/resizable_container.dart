@@ -21,8 +21,7 @@ class ResizableContainer extends StatefulWidget {
     required this.children,
     required this.direction,
     this.controller,
-    ResizableDivider? divider,
-  }) : divider = divider ?? const ResizableDivider();
+  });
 
   /// A list of resizable [ResizableChild] containing the child [Widget]s and
   /// their sizing configuration.
@@ -33,9 +32,6 @@ class ResizableContainer extends StatefulWidget {
 
   /// The direction along which the child widgets will be laid and resized.
   final Axis direction;
-
-  /// Configuration values for the dividing space/line between this container's [children].
-  final ResizableDivider divider;
 
   @override
   State<ResizableContainer> createState() => _ResizableContainerState();
@@ -57,13 +53,12 @@ class _ResizableContainerState extends State<ResizableContainer> {
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
     final didChildrenChange = !listEquals(oldWidget.children, widget.children);
     final didDirectionChange = oldWidget.direction != widget.direction;
-    final didDividerChange = oldWidget.divider != widget.divider;
 
     if (didChildrenChange) {
       controller.setChildren(widget.children);
     }
 
-    if (didChildrenChange || didDirectionChange || didDividerChange) {
+    if (didChildrenChange || didDirectionChange) {
       manager.setNeedsLayout();
     }
 
@@ -99,14 +94,13 @@ class _ResizableContainerState extends State<ResizableContainer> {
                   });
                 },
                 sizes: controller.sizes,
-                divider: widget.divider,
                 resizableChildren: widget.children,
                 children: [
                   for (var i = 0; i < widget.children.length; i++) ...[
                     widget.children[i].child,
                     if (i < widget.children.length - 1) ...[
                       ResizableContainerDivider.placeholder(
-                        config: widget.divider,
+                        config: widget.children[i].divider,
                         direction: widget.direction,
                       ),
                     ],
@@ -144,7 +138,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                     ),
                     if (i < widget.children.length - 1) ...[
                       ResizableContainerDivider(
-                        config: widget.divider,
+                        config: widget.children[i].divider,
                         direction: widget.direction,
                         onResizeUpdate: (delta) => manager.adjustChildSize(
                           index: i,
@@ -164,9 +158,12 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   double _getAvailableSpace(BoxConstraints constraints) {
     final totalSpace = constraints.maxForDirection(widget.direction);
-    final numDividers = widget.children.length - 1;
-    final dividerSpace = numDividers * widget.divider.thickness +
-        numDividers * widget.divider.padding;
+    final dividerSpace = widget.children
+        .take(widget.children.length - 1)
+        .map((child) => child.divider)
+        .map((divider) => divider.thickness + divider.padding)
+        .sum((x) => x);
+
     return totalSpace - dividerSpace;
   }
 
