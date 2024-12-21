@@ -162,8 +162,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
         .take(widget.children.length - 1)
         .map((child) => child.divider)
         .map((divider) => divider.thickness + divider.padding)
-        .sum((x) => x)
-        .toInt();
+        .sum((x) => x);
 
     return totalSpace - dividerSpace;
   }
