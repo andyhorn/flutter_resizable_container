@@ -40,7 +40,8 @@ class ResizableChild {
   final ResizableDivider divider;
 
   @override
-  String toString() => 'ResizableChildData(size: $size, child: $child)';
+  String toString() =>
+      'ResizableChildData(size: $size, child: $child, divider: $divider)';
 
   @override
   operator ==(Object other) =>
