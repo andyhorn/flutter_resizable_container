@@ -1,3 +1,9 @@
+## 4.0.0-beta.3
+
+- Move the min/max bounds out of the `ResizableChild` and into the `ResizableSize`
+- Remove the `divider` property of the `ResizableContainer` and add it into the `ResizableChild`
+- Add a `cursor` property to the `ResizableDivider` to display a custom `MouseCursor` when hovering over the divider
+
 ## 4.0.0-beta.2
 
 - Add a `ResizableLayout` widget that uses a custom `RenderObject` to handle the initial layout and the layout after any properties on the `ResizableContainer` are updated.
