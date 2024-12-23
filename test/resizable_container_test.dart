@@ -140,7 +140,7 @@ void main() {
         final boxCSize = tester.getSize(find.byKey(const Key('BoxC')));
 
         expect(boxASize.width, equals(500));
-        expect(boxBSize.width, equals(200));
+        expect(boxBSize.width, equals(198)); // account for two 1px dividers
         expect(boxCSize.width, equals(300));
       });
 
@@ -185,7 +185,7 @@ void main() {
         final boxCSize = tester.getSize(find.byKey(const Key('BoxC')));
 
         expect(boxASize.width, equals(500));
-        expect(boxBSize.width, equals(400));
+        expect(boxBSize.width, equals(398)); // account for two 1px dividers
         expect(boxCSize.width, equals(100));
       });
 
@@ -1059,7 +1059,7 @@ void main() {
       group('with a shrink and pixel child', () {
         testWidgets('delta is distributed evenly', (tester) async {
           final controller = ResizableController();
-          await tester.binding.setSurfaceSize(const Size(502, 500));
+          await tester.binding.setSurfaceSize(const Size(500, 500));
           await tester.pumpWidget(
             MaterialApp(
               home: Scaffold(
@@ -1073,7 +1073,7 @@ void main() {
                       ),
                       size: ResizableSize.shrink(),
                       child: SizedBox(
-                        width: 200,
+                        width: 150,
                         key: Key('BoxA'),
                       ),
                     ),
@@ -1100,7 +1100,7 @@ void main() {
           final boxASize = tester.getSize(boxAFinder);
           final boxBSize = tester.getSize(boxBFinder);
 
-          expect(boxASize.width, moreOrLessEquals(200, epsilon: 2));
+          expect(boxASize.width, moreOrLessEquals(150, epsilon: 2));
           expect(boxBSize.width, moreOrLessEquals(300, epsilon: 2));
 
           await tester.binding.setSurfaceSize(const Size(600, 500));
@@ -1109,7 +1109,7 @@ void main() {
           final newBoxASize = tester.getSize(boxAFinder);
           final newBoxBSize = tester.getSize(boxBFinder);
 
-          expect(newBoxASize.width, moreOrLessEquals(250, epsilon: 2));
+          expect(newBoxASize.width, moreOrLessEquals(200, epsilon: 2));
           expect(newBoxBSize.width, moreOrLessEquals(350, epsilon: 2));
         });
       });

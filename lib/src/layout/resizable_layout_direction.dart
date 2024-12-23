@@ -10,11 +10,12 @@ sealed class ResizableLayoutDirection {
     };
   }
 
-  double getMaxConstraintDimension(BoxConstraints constraints);
+  double getMaxConstraint(BoxConstraints constraints);
   double getSizeDimension(Size size);
   Offset getOffset(double currentPosition);
   Size getSize(double value, BoxConstraints constraints);
   double getMinIntrinsicDimension(RenderBox child);
+  BoxConstraints updateConstraints(double value, BoxConstraints constraints);
 }
 
 @visibleForTesting
@@ -22,7 +23,7 @@ class ResizableHorizontalLayout extends ResizableLayoutDirection {
   const ResizableHorizontalLayout() : super._();
 
   @override
-  double getMaxConstraintDimension(BoxConstraints constraints) {
+  double getMaxConstraint(BoxConstraints constraints) {
     return constraints.maxWidth;
   }
 
@@ -45,6 +46,11 @@ class ResizableHorizontalLayout extends ResizableLayoutDirection {
   double getMinIntrinsicDimension(RenderBox child) {
     return child.getMinIntrinsicWidth(double.infinity);
   }
+
+  @override
+  BoxConstraints updateConstraints(double value, BoxConstraints constraints) {
+    return constraints.copyWith(minWidth: value, maxWidth: value);
+  }
 }
 
 @visibleForTesting
@@ -52,7 +58,7 @@ class ResizableVerticalLayout extends ResizableLayoutDirection {
   const ResizableVerticalLayout() : super._();
 
   @override
-  double getMaxConstraintDimension(BoxConstraints constraints) {
+  double getMaxConstraint(BoxConstraints constraints) {
     return constraints.maxHeight;
   }
 
@@ -74,5 +80,10 @@ class ResizableVerticalLayout extends ResizableLayoutDirection {
   @override
   double getMinIntrinsicDimension(RenderBox child) {
     return child.getMinIntrinsicHeight(double.infinity);
+  }
+
+  @override
+  BoxConstraints updateConstraints(double value, BoxConstraints constraints) {
+    return constraints.copyWith(minHeight: value, maxHeight: value);
   }
 }

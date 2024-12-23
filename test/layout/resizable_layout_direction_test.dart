@@ -24,7 +24,7 @@ void main() {
       test('getMaxConstraintDimension returns maxWidth from constraints', () {
         final constraints = BoxConstraints(maxWidth: 100, maxHeight: 200);
 
-        final result = layout.getMaxConstraintDimension(constraints);
+        final result = layout.getMaxConstraint(constraints);
 
         expect(result, 100);
       });
@@ -82,7 +82,7 @@ void main() {
       test('getMaxConstraintDimension returns maxHeight from constraints', () {
         final constraints = BoxConstraints(maxWidth: 100, maxHeight: 200);
 
-        final result = layout.getMaxConstraintDimension(constraints);
+        final result = layout.getMaxConstraint(constraints);
 
         expect(result, 200);
       });
