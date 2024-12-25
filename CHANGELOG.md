@@ -1,3 +1,10 @@
+## 4.0.0-beta.4
+
+- Account for expand sizes with min/max bounds
+- Prevent the controller from notifying its listeners during layout/init
+- Make `ResizableSize` subclasses' constructor's private
+- Improve doc comments
+
 ## 4.0.0-beta.3
 
 - Move the min/max bounds out of the `ResizableChild` and into the `ResizableSize`
