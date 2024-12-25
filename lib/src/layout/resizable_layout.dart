@@ -1,7 +1,9 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:flutter_resizable_container/src/extensions/double_ext.dart';
 import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_layout_direction.dart';
 import 'package:flutter_resizable_container/src/resizable_size.dart';
@@ -144,7 +146,7 @@ class ResizableLayoutRenderObject extends RenderBox
       final constraints = switch (size) {
         ResizableSizeExpand() => layoutDirection.copyConstraintsWith(
             this.constraints,
-            expandSizes[i ~/ 2]!,
+            expandSizes[i ~/ 2]!.toDouble(),
           ),
         _ => _getChildConstraints(
             size: size,
@@ -170,7 +172,7 @@ class ResizableLayoutRenderObject extends RenderBox
     onComplete(finalSizes);
   }
 
-  Map<int, double> _getExpandSizes(double availableSpace) {
+  Map<int, Decimal> _getExpandSizes(double availableSpace) {
     var expandIndices = <int>[
       for (var i = 0; i < _sizes.length; i++) ...[
         if (_sizes[i] is ResizableSizeExpand) ...[
@@ -183,30 +185,32 @@ class ResizableLayoutRenderObject extends RenderBox
       return {};
     }
 
-    final allocatedSpace = <int, double>{
+    final allocatedSpace = <int, Decimal>{
       for (final index in expandIndices) ...{
-        index: 0.0,
+        index: Decimal.zero,
       },
     };
 
-    var remainingFlex = _getFlexCount();
-    var remainingSpace = availableSpace;
-    var didChange = false;
+    var remainingFlex = _getFlexCount().toDecimal();
+    var remainingSpace = availableSpace.toDecimal();
+    var shouldContinue = true;
 
     do {
-      final targetDeltaPerFlex = remainingSpace / remainingFlex;
+      var didChange = false;
       final toRemove = <int>[];
-
-      didChange = false;
+      final targetDeltaPerFlex = (remainingSpace / remainingFlex).toDecimal(
+        scaleOnInfinitePrecision: 6,
+      );
 
       for (final index in expandIndices) {
         final size = _sizes[index];
 
         if (size is ResizableSizeExpand) {
-          final currentValue = allocatedSpace[index] ?? 0.0;
-          final targetDelta = targetDeltaPerFlex * size.flex;
-          final targetSize = currentValue + targetDelta;
-          final clampedValue = _clamp(targetSize, size);
+          final flex = size.flex.toDecimal();
+          final currentValue = (allocatedSpace[index] ?? Decimal.zero);
+          final targetDelta = targetDeltaPerFlex * flex;
+          final targetSize = (currentValue + targetDelta).toDouble();
+          final clampedValue = _clamp(targetSize, size).toDecimal();
 
           if (clampedValue != currentValue) {
             final difference = clampedValue - currentValue;
@@ -214,14 +218,16 @@ class ResizableLayoutRenderObject extends RenderBox
             allocatedSpace[index] = clampedValue;
             didChange = true;
           } else {
-            remainingFlex -= size.flex;
+            remainingFlex -= flex;
             toRemove.add(index);
           }
         }
       }
 
       expandIndices.removeWhere(toRemove.contains);
-    } while (remainingSpace != 0 || didChange);
+
+      shouldContinue = didChange && remainingFlex > Decimal.zero;
+    } while (shouldContinue);
 
     return allocatedSpace;
   }

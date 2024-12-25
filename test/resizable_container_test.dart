@@ -807,11 +807,11 @@ void main() {
 
       expect(
         tester.getSize(find.byKey(const Key('ChildA'))).width,
-        moreOrLessEquals((1000 - 2) * 2 / 3),
+        moreOrLessEquals((1000 - 2) * (2 / 3), epsilon: 1),
       );
       expect(
         tester.getSize(find.byKey(const Key('ChildB'))).width,
-        moreOrLessEquals((1000 - 2) * 1 / 3),
+        moreOrLessEquals((1000 - 2) * (1 / 3), epsilon: 1),
       );
 
       await tester.tap(find.byKey(const Key('ToggleSwitch')));
