@@ -182,7 +182,8 @@ class ResizableLayoutRenderObject extends RenderBox
     }
 
     final allocatedSpace = Map<int, Decimal>.fromIterable(
-      expandIndices.map((index) => MapEntry(index, Decimal.zero)),
+      expandIndices,
+      value: (_) => Decimal.zero,
     );
 
     var remainingFlex = _getFlexCount().toDecimal();
