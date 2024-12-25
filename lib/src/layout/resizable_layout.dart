@@ -299,10 +299,7 @@ class ResizableLayoutRenderObject extends RenderBox
   }
 
   int _getFlexCount() {
-    return sizes
-        .whereType<ResizableSizeExpand>()
-        .map((s) => s.flex)
-        .fold(0, (sum, curr) => sum + curr);
+    return sizes.whereType<ResizableSizeExpand>().map((s) => s.flex).sum();
   }
 
   BoxConstraints _getChildConstraints({

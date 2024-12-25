@@ -9,5 +9,5 @@ extension LisDoubleExtensions on Iterable<double> {
 }
 
 extension ListIntExtensions on Iterable<int> {
-  double sum() => fold(0, (sum, curr) => sum + curr);
+  int sum() => fold(0, (sum, curr) => sum + curr);
 }
