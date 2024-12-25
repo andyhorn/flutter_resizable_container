@@ -1,8 +1,10 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
+import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_layout_direction.dart';
 import 'package:flutter_resizable_container/src/resizable_size.dart';
 
@@ -127,35 +129,34 @@ class ResizableLayoutRenderObject extends RenderBox
       dividerSpace: dividerSpace,
     );
     final requiredRatioSpace = _getRequiredRatioSpace(availableRatioSpace);
-
-    var flexCount = _getFlexCount();
-    var remainingExpandSpace = _getExpandSpace(
-      pixelSpace: pixelSpace,
-      shrinkSpace: shrinkSpace,
-      requiredRatioSpace: requiredRatioSpace,
-      dividerSpace: dividerSpace,
-    );
+    final takenSpace = [
+      pixelSpace,
+      shrinkSpace,
+      requiredRatioSpace,
+      dividerSpace,
+    ].sum();
+    final expandDimension = layoutDirection.getMaxConstraint(constraints);
+    final expandSpace = expandDimension - takenSpace;
+    final expandSizes = _getExpandSizes(expandSpace);
 
     final List<double> finalSizes = [];
-
     for (var i = 0; i < childCount; i += 2) {
       final child = children[i];
       final size = sizes[i ~/ 2];
-      final constraints = _getChildConstraints(
-        size: size,
-        child: child,
-        availableRatioSpace: availableRatioSpace,
-        expandSpace: remainingExpandSpace,
-        flexCount: flexCount,
-      );
+      final constraints = switch (size) {
+        ResizableSizeExpand() => layoutDirection.copyConstraintsWith(
+            this.constraints,
+            expandSizes[i ~/ 2]!.toDouble(),
+          ),
+        _ => _getChildConstraints(
+            size: size,
+            child: child,
+            availableRatioSpace: availableRatioSpace,
+          ),
+      };
 
       final childSize = _layoutChild(child, constraints);
       finalSizes.add(childSize);
-
-      if (size case ResizableSizeExpand(:final flex)) {
-        flexCount -= flex;
-        remainingExpandSpace -= layoutDirection.getSizeDimension(child.size);
-      }
 
       if (i < childCount - 1) {
         final divider = children[i + 1];
@@ -169,6 +170,61 @@ class ResizableLayoutRenderObject extends RenderBox
 
     size = constraints.biggest;
     onComplete(finalSizes);
+  }
+
+  Map<int, Decimal> _getExpandSizes(double availableSpace) {
+    bool isExpand(ResizableSize size) => size is ResizableSizeExpand;
+
+    var expandIndices = _sizes.indicesWhere(isExpand).toList();
+
+    if (expandIndices.isEmpty) {
+      return {};
+    }
+
+    final allocatedSpace = Map<int, Decimal>.fromIterable(
+      expandIndices,
+      value: (_) => Decimal.zero,
+    );
+
+    var remainingFlex = _getFlexCount().toDecimal();
+    var remainingSpace = availableSpace.toDecimal();
+    var shouldContinue = true;
+
+    do {
+      var didChange = false;
+      final toRemove = <int>[];
+      final targetDeltaPerFlex = (remainingSpace / remainingFlex).toDecimal(
+        scaleOnInfinitePrecision: 6,
+      );
+
+      for (final index in expandIndices) {
+        final size = _sizes[index];
+
+        if (size is ResizableSizeExpand) {
+          final flex = size.flex.toDecimal();
+          final currentValue = allocatedSpace[index] ?? Decimal.zero;
+          final targetDelta = targetDeltaPerFlex * flex;
+          final targetSize = (currentValue + targetDelta).toDouble();
+          final clampedValue = _clamp(targetSize, size).toDecimal();
+
+          if (clampedValue != currentValue) {
+            final difference = clampedValue - currentValue;
+            remainingSpace -= difference;
+            allocatedSpace[index] = clampedValue;
+            didChange = true;
+          } else {
+            remainingFlex -= flex;
+            toRemove.add(index);
+          }
+        }
+      }
+
+      expandIndices.removeWhere(toRemove.contains);
+
+      shouldContinue = didChange && remainingFlex > Decimal.zero;
+    } while (shouldContinue);
+
+    return allocatedSpace;
   }
 
   @override
@@ -190,7 +246,7 @@ class ResizableLayoutRenderObject extends RenderBox
       ],
     ];
 
-    return pixels.fold(0.0, (sum, curr) => sum + curr);
+    return pixels.sum();
   }
 
   double _getShrinkSpace(List<RenderBox> children) {
@@ -203,14 +259,14 @@ class ResizableLayoutRenderObject extends RenderBox
           ),
         ]
       ],
-    ].fold(0.0, (sum, curr) => sum + curr);
+    ].sum();
   }
 
   double _getDividerSpace() {
     return resizableChildren
         .take(resizableChildren.length - 1)
         .map((child) => child.divider.thickness + child.divider.padding)
-        .sum((x) => x)
+        .sum()
         .toDouble();
   }
 
@@ -225,7 +281,7 @@ class ResizableLayoutRenderObject extends RenderBox
     required double shrinkSpace,
     required double dividerSpace,
   }) {
-    return layoutDirection.getMaxConstraintDimension(constraints) -
+    return layoutDirection.getMaxConstraint(constraints) -
         pixelSpace -
         shrinkSpace -
         dividerSpace;
@@ -240,41 +296,23 @@ class ResizableLayoutRenderObject extends RenderBox
       ],
     ];
 
-    return sizes.fold(0.0, (sum, curr) => sum + curr);
+    return sizes.sum();
   }
 
   int _getFlexCount() {
-    return sizes
-        .whereType<ResizableSizeExpand>()
-        .map((s) => s.flex)
-        .fold(0, (sum, curr) => sum + curr);
-  }
-
-  double _getExpandSpace({
-    required double pixelSpace,
-    required double shrinkSpace,
-    required double requiredRatioSpace,
-    required double dividerSpace,
-  }) {
-    return layoutDirection.getMaxConstraintDimension(constraints) -
-        pixelSpace -
-        shrinkSpace -
-        requiredRatioSpace -
-        dividerSpace;
+    return sizes.whereType<ResizableSizeExpand>().map((s) => s.flex).sum();
   }
 
   BoxConstraints _getChildConstraints({
     required ResizableSize size,
     required RenderBox child,
     required double availableRatioSpace,
-    required double expandSpace,
-    required int flexCount,
   }) {
     final value = switch (size) {
       ResizableSizePixels(:final pixels) => pixels,
       ResizableSizeRatio(:final ratio) => ratio * availableRatioSpace,
       ResizableSizeShrink() => layoutDirection.getMinIntrinsicDimension(child),
-      ResizableSizeExpand(:final flex) => flex * (expandSpace / flexCount),
+      ResizableSizeExpand() => throw Exception('Invalid size (expand)'),
     };
 
     final clampedValue = _clamp(value, size);

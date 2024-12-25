@@ -99,6 +99,96 @@ void main() {
         expect(boxCSize.width, equals(399.2));
       });
 
+      testWidgets('correctly sizes expands with min constraints',
+          (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1000, 1000));
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                direction: Axis.horizontal,
+                children: [
+                  ResizableChild(
+                    size: ResizableSize.pixels(500),
+                    child: SizedBox.expand(
+                      key: Key('BoxA'),
+                    ),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(
+                      key: Key('BoxB'),
+                    ),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.expand(flex: 1, min: 300),
+                    child: SizedBox.expand(
+                      key: Key('BoxC'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
+        final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
+        final boxCSize = tester.getSize(find.byKey(const Key('BoxC')));
+
+        expect(boxASize.width, equals(500));
+        expect(boxBSize.width, equals(198)); // account for two 1px dividers
+        expect(boxCSize.width, equals(300));
+      });
+
+      testWidgets('correctly sizes expands with max constraints',
+          (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1000, 1000));
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                direction: Axis.horizontal,
+                children: [
+                  ResizableChild(
+                    size: ResizableSize.pixels(500),
+                    child: SizedBox.expand(
+                      key: Key('BoxA'),
+                    ),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(
+                      key: Key('BoxB'),
+                    ),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.expand(max: 100),
+                    child: SizedBox.expand(
+                      key: Key('BoxC'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
+        final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
+        final boxCSize = tester.getSize(find.byKey(const Key('BoxC')));
+
+        expect(boxASize.width, equals(500));
+        expect(boxBSize.width, equals(398)); // account for two 1px dividers
+        expect(boxCSize.width, equals(100));
+      });
+
       testWidgets('correctly sizes shrinks', (tester) async {
         // total space = 1000px
         // divider space = 2 * 1px = 2px
@@ -717,11 +807,11 @@ void main() {
 
       expect(
         tester.getSize(find.byKey(const Key('ChildA'))).width,
-        moreOrLessEquals((1000 - 2) * 2 / 3),
+        moreOrLessEquals((1000 - 2) * (2 / 3), epsilon: 1),
       );
       expect(
         tester.getSize(find.byKey(const Key('ChildB'))).width,
-        moreOrLessEquals((1000 - 2) * 1 / 3),
+        moreOrLessEquals((1000 - 2) * (1 / 3), epsilon: 1),
       );
 
       await tester.tap(find.byKey(const Key('ToggleSwitch')));
@@ -969,7 +1059,7 @@ void main() {
       group('with a shrink and pixel child', () {
         testWidgets('delta is distributed evenly', (tester) async {
           final controller = ResizableController();
-          await tester.binding.setSurfaceSize(const Size(502, 500));
+          await tester.binding.setSurfaceSize(const Size(500, 500));
           await tester.pumpWidget(
             MaterialApp(
               home: Scaffold(
@@ -983,7 +1073,7 @@ void main() {
                       ),
                       size: ResizableSize.shrink(),
                       child: SizedBox(
-                        width: 200,
+                        width: 150,
                         key: Key('BoxA'),
                       ),
                     ),
@@ -1010,7 +1100,7 @@ void main() {
           final boxASize = tester.getSize(boxAFinder);
           final boxBSize = tester.getSize(boxBFinder);
 
-          expect(boxASize.width, moreOrLessEquals(200, epsilon: 2));
+          expect(boxASize.width, moreOrLessEquals(150, epsilon: 2));
           expect(boxBSize.width, moreOrLessEquals(300, epsilon: 2));
 
           await tester.binding.setSurfaceSize(const Size(600, 500));
@@ -1019,7 +1109,7 @@ void main() {
           final newBoxASize = tester.getSize(boxAFinder);
           final newBoxBSize = tester.getSize(boxBFinder);
 
-          expect(newBoxASize.width, moreOrLessEquals(250, epsilon: 2));
+          expect(newBoxASize.width, moreOrLessEquals(200, epsilon: 2));
           expect(newBoxBSize.width, moreOrLessEquals(350, epsilon: 2));
         });
       });

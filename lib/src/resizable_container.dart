@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
 import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
+import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_layout.dart';
@@ -162,7 +163,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
         .take(widget.children.length - 1)
         .map((child) => child.divider)
         .map((divider) => divider.thickness + divider.padding)
-        .sum((x) => x);
+        .sum();
 
     return totalSpace - dividerSpace;
   }

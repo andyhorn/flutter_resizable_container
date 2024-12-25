@@ -40,96 +40,119 @@ class _CustomDividerExampleScreenState
       drawer: const NavDrawer(),
       body: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          Wrap(
+            alignment: WrapAlignment.start,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: 18,
+            spacing: 18,
             children: [
-              Column(
-                children: [
-                  const Text('Length'),
-                  Slider(
-                    min: 0.01,
-                    max: 1.0,
-                    value: length,
-                    onChanged: (value) => setState(() => length = value),
-                  ),
-                  Text('Ratio: ${(length * 100).toStringAsFixed((2))}%'),
-                ],
-              ),
-              Column(
-                children: [
-                  const Text('Thickness'),
-                  Slider(
-                    min: 1,
-                    max: 20.0,
-                    divisions: 19,
-                    value: thickness,
-                    onChanged: (value) => setState(() => thickness = value),
-                  ),
-                  Text('${thickness}px'),
-                ],
-              ),
-              Column(
-                children: [
-                  const Text('Padding'),
-                  Slider(
-                    min: 0,
-                    max: 20,
-                    divisions: 20,
-                    value: padding,
-                    onChanged: (value) => setState(() => padding = value),
-                  ),
-                  Text('${padding}px'),
-                ],
-              ),
-              Column(
-                children: [
-                  const Text('Cross-Axis Alignment'),
-                  DropdownButton(
-                    value: crossAxisAlignment,
-                    items: const [
-                      DropdownMenuItem(
-                        value: CrossAxisAlignment.start,
-                        child: Text('Start'),
-                      ),
-                      DropdownMenuItem(
-                        value: CrossAxisAlignment.center,
-                        child: Text('Center'),
-                      ),
-                      DropdownMenuItem(
-                        value: CrossAxisAlignment.end,
-                        child: Text('End'),
-                      ),
-                    ],
-                    onChanged: (value) => setState(
-                      () => crossAxisAlignment = value!,
+              SizedBox(
+                width: 200,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text('Length'),
+                    Slider(
+                      min: 0.01,
+                      max: 1.0,
+                      value: length,
+                      onChanged: (value) => setState(() => length = value),
                     ),
-                  ),
-                ],
+                    Text('Ratio: ${(length * 100).toStringAsFixed((2))}%'),
+                  ],
+                ),
               ),
-              Column(
-                children: [
-                  const Text('Main-Axis Alignment'),
-                  DropdownButton(
-                    value: mainAxisAlignment,
-                    items: const [
-                      DropdownMenuItem(
-                        value: MainAxisAlignment.start,
-                        child: Text('Start'),
-                      ),
-                      DropdownMenuItem(
-                        value: MainAxisAlignment.center,
-                        child: Text('Center'),
-                      ),
-                      DropdownMenuItem(
-                        value: MainAxisAlignment.end,
-                        child: Text('End'),
-                      ),
-                    ],
-                    onChanged: (value) => setState(
-                      () => mainAxisAlignment = value!,
+              SizedBox(
+                width: 200,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text('Thickness'),
+                    Slider(
+                      min: 1,
+                      max: 20.0,
+                      divisions: 19,
+                      value: thickness,
+                      onChanged: (value) => setState(() => thickness = value),
                     ),
-                  ),
-                ],
+                    Text('${thickness}px'),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 200,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text('Padding'),
+                    Slider(
+                      min: 0,
+                      max: 20,
+                      divisions: 20,
+                      value: padding,
+                      onChanged: (value) => setState(() => padding = value),
+                    ),
+                    Text('${padding}px'),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 200,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text('Cross-Axis Alignment'),
+                    DropdownButton(
+                      value: crossAxisAlignment,
+                      items: const [
+                        DropdownMenuItem(
+                          value: CrossAxisAlignment.start,
+                          child: Text('Start'),
+                        ),
+                        DropdownMenuItem(
+                          value: CrossAxisAlignment.center,
+                          child: Text('Center'),
+                        ),
+                        DropdownMenuItem(
+                          value: CrossAxisAlignment.end,
+                          child: Text('End'),
+                        ),
+                      ],
+                      onChanged: (value) => setState(
+                        () => crossAxisAlignment = value!,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 200,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text('Main-Axis Alignment'),
+                    DropdownButton(
+                      value: mainAxisAlignment,
+                      items: const [
+                        DropdownMenuItem(
+                          value: MainAxisAlignment.start,
+                          child: Text('Start'),
+                        ),
+                        DropdownMenuItem(
+                          value: MainAxisAlignment.center,
+                          child: Text('Center'),
+                        ),
+                        DropdownMenuItem(
+                          value: MainAxisAlignment.end,
+                          child: Text('End'),
+                        ),
+                      ],
+                      onChanged: (value) => setState(
+                        () => mainAxisAlignment = value!,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
