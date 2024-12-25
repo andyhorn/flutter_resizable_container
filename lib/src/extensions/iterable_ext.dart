@@ -10,4 +10,12 @@ extension IterableExtensions<T> on Iterable<T> {
           ],
         ],
       ];
+
+  Iterable<int> indicesWhere(bool Function(T) test) => [
+        for (var i = 0; i < length; i++) ...[
+          if (test(elementAt(i))) ...[
+            i,
+          ],
+        ],
+      ];
 }
