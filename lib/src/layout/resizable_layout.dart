@@ -202,7 +202,7 @@ class ResizableLayoutRenderObject extends RenderBox
 
         if (size is ResizableSizeExpand) {
           final flex = size.flex.toDecimal();
-          final currentValue = (allocatedSpace[index] ?? Decimal.zero);
+          final currentValue = allocatedSpace[index] ?? Decimal.zero;
           final targetDelta = targetDeltaPerFlex * flex;
           final targetSize = (currentValue + targetDelta).toDouble();
           final clampedValue = _clamp(targetSize, size).toDecimal();
