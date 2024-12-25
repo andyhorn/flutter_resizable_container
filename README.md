@@ -4,6 +4,18 @@ Add flexibility and interaction to your UI with ease.
 
 ![Basic Resizing](./doc/basic.gif?raw=true 'Basic Resizing')
 
+Any support is greatly appreciated!
+
+<a href="https://www.buymeacoffee.com/bitwizrd" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
+## Features
+
+- `ResizableContainer`s are fully nestable and support LTR _and_ RTL layouts
+- Customize the look and feel of the divider(s) between children
+- Respond to user interactions with `onHoverEnter` and `onHoverExit` for web/desktop and `onTapDown` and `onTapUp` for mobile
+- Programmatically set the sizes of the children through a `ResizableController`
+- Respond to changes in the sizes of the resizable children by listening to the `ResizableController`
+
 ## Example App
 
 View the interactive example app at [andyhorn.github.io/flutter_resizable_container](https://andyhorn.github.io/flutter_resizable_container)
@@ -15,14 +27,6 @@ The example app contains multiple examples demonstrating the features of this pa
 Each example also comes with an embedded source-code view, so you don't have to bounce between the app and the repo.
 
 ![Source Code Preview](./doc/screenshot_source_code.png?raw=true 'Source Code Preview')
-
-## Features
-
-- `ResizableContainer`s are fully nestable and support LTR _and_ RTL layouts
-- Customize the look and feel of the divider(s) between children
-- Respond to user interactions with `onHoverEnter` and `onHoverExit` for web/desktop and `onTapDown` and `onTapUp` for mobile
-- Programmatically set the sizes of the children through a `ResizableController`
-- Respond to changes in the sizes of the resizable children by listening to the `ResizableController`
 
 ## Getting started
 
