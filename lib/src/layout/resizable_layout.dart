@@ -174,17 +174,16 @@ class ResizableLayoutRenderObject extends RenderBox
 
   Map<int, Decimal> _getExpandSizes(double availableSpace) {
     bool isExpand(ResizableSize size) => size is ResizableSizeExpand;
+
     var expandIndices = _sizes.indicesWhere(isExpand).toList();
 
     if (expandIndices.isEmpty) {
       return {};
     }
 
-    final allocatedSpace = <int, Decimal>{
-      for (final index in expandIndices) ...{
-        index: Decimal.zero,
-      },
-    };
+    final allocatedSpace = Map<int, Decimal>.fromIterable(
+      expandIndices.map((index) => MapEntry(index, Decimal.zero)),
+    );
 
     var remainingFlex = _getFlexCount().toDecimal();
     var remainingSpace = availableSpace.toDecimal();
