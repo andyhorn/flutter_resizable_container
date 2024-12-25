@@ -171,7 +171,7 @@ class ResizableLayoutRenderObject extends RenderBox
   }
 
   Map<int, double> _getExpandSizes(double availableSpace) {
-    final expandIndices = <int>[
+    var expandIndices = <int>[
       for (var i = 0; i < _sizes.length; i++) ...[
         if (_sizes[i] is ResizableSizeExpand) ...[
           i,
@@ -195,11 +195,11 @@ class ResizableLayoutRenderObject extends RenderBox
 
     do {
       final targetDeltaPerFlex = remainingSpace / remainingFlex;
+      final toRemove = <int>[];
 
       didChange = false;
 
-      for (var i = 0; i < expandIndices.length; i++) {
-        final index = expandIndices[i];
+      for (final index in expandIndices) {
         final size = _sizes[index];
 
         if (size is ResizableSizeExpand) {
@@ -215,10 +215,12 @@ class ResizableLayoutRenderObject extends RenderBox
             didChange = true;
           } else {
             remainingFlex -= size.flex;
-            expandIndices.removeAt(i);
+            toRemove.add(index);
           }
         }
       }
+
+      expandIndices.removeWhere(toRemove.contains);
     } while (remainingSpace != 0 || didChange);
 
     return allocatedSpace;
