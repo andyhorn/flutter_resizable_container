@@ -4,7 +4,7 @@ extension DoubleExtensions on double {
   Decimal toDecimal() => Decimal.parse(toString());
 }
 
-extension LisDoubleExtensions on Iterable<double> {
+extension ListDoubleExtensions on Iterable<double> {
   double sum() => fold(0.0, (sum, curr) => sum + curr);
 }
 
