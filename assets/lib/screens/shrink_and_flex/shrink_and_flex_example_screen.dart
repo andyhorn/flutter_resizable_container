@@ -51,9 +51,12 @@ class _ShrinkAndFlexExampleScreenState
                 ),
                 ResizableChild(
                   size: const ResizableSize.shrink(),
-                  child: ColoredBox(
-                    color: Theme.of(context).colorScheme.tertiaryContainer,
-                    child: const SizeLabel(),
+                  child: SizedBox(
+                    width: 100,
+                    child: ColoredBox(
+                      color: Theme.of(context).colorScheme.tertiaryContainer,
+                      child: const SizeLabel(),
+                    ),
                   ),
                 ),
               ],

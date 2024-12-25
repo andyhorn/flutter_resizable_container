@@ -9,18 +9,18 @@ const RESOURCES = {"icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2e
 "icons/Icon-192.png": "ac9a721a12bbc803b44f645561ecb1e1",
 "assets/assets/fonts/RedditMono-VariableFont_wght.ttf": "3678f8f5122391aa145683c9d7b6af9f",
 "assets/AssetManifest.bin": "ae07b1ec69b7ced34a7b891da02c2eae",
-"assets/NOTICES": "c2d08f328340030849d869ae4713ab15",
+"assets/NOTICES": "b49ab42fcc83d5f1a605f1dbd4418343",
 "assets/AssetManifest.json": "3c79ba1ce31bd2dcc741c116bac428aa",
 "assets/fonts/MaterialIcons-Regular.otf": "10cffa28c74e6282bfb7b80d2ea5b664",
 "assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "e986ebe42ef785b27164c36a9abc7818",
 "assets/FontManifest.json": "f8c5386378f30b925622abfa4765e0da",
 "assets/lib/screens/basic/basic_example_screen.dart": "28c5fda7ca0e46dd7273facadebea7bc",
 "assets/lib/screens/controller_set_sizes/controller_set_sizes_example_screen.dart": "ea800e8c301ea82a055670cb54c56a0c",
-"assets/lib/screens/divider/custom_divider_example_screen.dart": "782b07087ff9f5bf3c031e08f198caf0",
+"assets/lib/screens/divider/custom_divider_example_screen.dart": "995f6b66346753ab8f789896354b7d59",
 "assets/lib/screens/pixels/pixels_example_screen.dart": "64b4fe895c29a96da14f249fd6d687d6",
 "assets/lib/screens/ratio/ratio_example_screen.dart": "a52831ac4d47d2389bd0b2f8d152878a",
 "assets/lib/screens/controller_listen/controller_listen_example_screen.dart": "b7e49a8660ce02fad7208cde4fe9e338",
-"assets/lib/screens/shrink_and_flex/shrink_and_flex_example_screen.dart": "2fa80c7cf61e4f9b384ecbb5c835c1ec",
+"assets/lib/screens/shrink_and_flex/shrink_and_flex_example_screen.dart": "164fd83f34c4b0839c9a822fc8764d09",
 "assets/shaders/ink_sparkle.frag": "ecc85a2e95f5e9f53123dcaf8cb9b6ce",
 "assets/AssetManifest.bin.json": "54e7e95e8fd71f1ba2fde14a1d8a06c6",
 "version.json": "d1a3ec4585d541eb5b82d9faaa36760c",
@@ -39,8 +39,8 @@ const RESOURCES = {"icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2e
 "/": "f27c2489e9651b03063b05fb3f90f6fa",
 "flutter.js": "383e55f7f3cce5be08fcf1f3881f585c",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
-"flutter_bootstrap.js": "3c633ea802e62628456dbf57cc0f71e6",
-"main.dart.js": "c79f336f8bdaaeda51839753c0b14462"};
+"flutter_bootstrap.js": "b464a99cde0907c19de84dee32cc2e0d",
+"main.dart.js": "ad12866a0aafb115e6516726a285a2be"};
 // The application shell files that are downloaded before a service worker can
 // start.
 const CORE = ["main.dart.js",
