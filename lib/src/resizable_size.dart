@@ -32,7 +32,7 @@ sealed class ResizableSize {
     double pixels, {
     double? min,
     double? max,
-  }) = ResizableSizePixels;
+  }) = ResizableSizePixels._;
 
   /// Creates a [ResizableSize] with a size equal to a ratio of the available space.
   ///
@@ -42,7 +42,7 @@ sealed class ResizableSize {
     double ratio, {
     double? min,
     double? max,
-  }) = ResizableSizeRatio;
+  }) = ResizableSizeRatio._;
 
   /// Creates a [ResizableSize] that expands to fill the available space not taken
   /// by other resizable children.
@@ -53,7 +53,7 @@ sealed class ResizableSize {
     int flex,
     double? min,
     double? max,
-  }) = ResizableSizeExpand;
+  }) = ResizableSizeExpand._;
 
   /// Creates a [ResizableSize] that shrinks to fit the size of its child [Widget].
   ///
@@ -61,11 +61,11 @@ sealed class ResizableSize {
   const factory ResizableSize.shrink({
     double? min,
     double? max,
-  }) = ResizableSizeShrink;
+  }) = ResizableSizeShrink._;
 }
 
 final class ResizableSizePixels extends ResizableSize {
-  const ResizableSizePixels(this.pixels, {super.min, super.max})
+  const ResizableSizePixels._(this.pixels, {super.min, super.max})
       : assert(pixels >= 0, 'pixels must be greater than or equal to 0'),
         super._();
 
@@ -83,7 +83,7 @@ final class ResizableSizePixels extends ResizableSize {
 }
 
 final class ResizableSizeRatio extends ResizableSize {
-  const ResizableSizeRatio(this.ratio, {super.min, super.max})
+  const ResizableSizeRatio._(this.ratio, {super.min, super.max})
       : assert(ratio >= 0, 'ratio must be greater than or equal to 0'),
         assert(ratio <= 1, 'ratio must be less than or equal to 1'),
         super._();
@@ -102,7 +102,7 @@ final class ResizableSizeRatio extends ResizableSize {
 }
 
 final class ResizableSizeExpand extends ResizableSize {
-  const ResizableSizeExpand({this.flex = 1, super.min, super.max})
+  const ResizableSizeExpand._({this.flex = 1, super.min, super.max})
       : assert(flex > 0, 'flex must be greater than 0'),
         super._();
 
@@ -120,7 +120,7 @@ final class ResizableSizeExpand extends ResizableSize {
 }
 
 final class ResizableSizeShrink extends ResizableSize {
-  const ResizableSizeShrink({super.min, super.max}) : super._();
+  const ResizableSizeShrink._({super.min, super.max}) : super._();
 
   @override
   String toString() => 'ResizableSizeShrink()';
