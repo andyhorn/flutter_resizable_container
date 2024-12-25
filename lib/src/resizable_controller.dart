@@ -71,11 +71,22 @@ class ResizableController with ChangeNotifier {
   }
 
   void setChildren(List<ResizableChild> children) {
+    _setChildren(children, true);
+  }
+
+  void _initChildren(List<ResizableChild> children) {
+    _setChildren(children, false);
+  }
+
+  void _setChildren(List<ResizableChild> children, bool notify) {
     _children = children;
     _sizes = children.map((child) => child.size).toList();
     _pixels = List.filled(children.length, 0);
     _needsLayout = true;
-    notifyListeners();
+
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   void _setRenderedSizes(List<double> pixels) {
@@ -327,6 +338,10 @@ final class ResizableControllerManager {
 
   void setNeedsLayout() {
     _controller._needsLayout = true;
+  }
+
+  void initChildren(List<ResizableChild> children) {
+    _controller._initChildren(children);
   }
 }
 
