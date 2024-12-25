@@ -21,7 +21,7 @@ void main() {
     group(ResizableHorizontalLayout, () {
       final layout = ResizableHorizontalLayout();
 
-      test('getMaxConstraintDimension returns maxWidth from constraints', () {
+      test('getMaxConstraint returns maxWidth from constraints', () {
         final constraints = BoxConstraints(maxWidth: 100, maxHeight: 200);
 
         final result = layout.getMaxConstraint(constraints);
@@ -79,7 +79,7 @@ void main() {
     group(ResizableVerticalLayout, () {
       final layout = ResizableVerticalLayout();
 
-      test('getMaxConstraintDimension returns maxHeight from constraints', () {
+      test('getMaxConstraint returns maxHeight from constraints', () {
         final constraints = BoxConstraints(maxWidth: 100, maxHeight: 200);
 
         final result = layout.getMaxConstraint(constraints);
