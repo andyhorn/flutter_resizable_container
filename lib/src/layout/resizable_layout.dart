@@ -134,7 +134,7 @@ class ResizableLayoutRenderObject extends RenderBox
       shrinkSpace,
       requiredRatioSpace,
       dividerSpace,
-    ].fold(0.0, (sum, curr) => sum + curr);
+    ].sum();
     final expandDimension = layoutDirection.getMaxConstraint(constraints);
     final expandSpace = expandDimension - takenSpace;
     final expandSizes = _getExpandSizes(expandSpace);
@@ -246,7 +246,7 @@ class ResizableLayoutRenderObject extends RenderBox
       ],
     ];
 
-    return pixels.fold(0.0, (sum, curr) => sum + curr);
+    return pixels.sum();
   }
 
   double _getShrinkSpace(List<RenderBox> children) {
@@ -259,7 +259,7 @@ class ResizableLayoutRenderObject extends RenderBox
           ),
         ]
       ],
-    ].fold(0.0, (sum, curr) => sum + curr);
+    ].sum();
   }
 
   double _getDividerSpace() {
@@ -296,7 +296,7 @@ class ResizableLayoutRenderObject extends RenderBox
       ],
     ];
 
-    return sizes.fold(0.0, (sum, curr) => sum + curr);
+    return sizes.sum();
   }
 
   int _getFlexCount() {
