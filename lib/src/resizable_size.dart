@@ -24,24 +24,40 @@ sealed class ResizableSize {
   final double? min;
   final double? max;
 
+  /// Creates a [ResizableSize] with a fixed size in pixels.
+  ///
+  /// 0 <= [pixels] < infinity
+  /// 0 <= [min] < [max] < infinity
   const factory ResizableSize.pixels(
     double pixels, {
     double? min,
     double? max,
   }) = ResizableSizePixels;
 
+  /// Creates a [ResizableSize] with a size equal to a ratio of the available space.
+  ///
+  /// 0 <= [ratio] <= 1
+  /// 0 <= [min] < [max] < infinity
   const factory ResizableSize.ratio(
     double ratio, {
     double? min,
     double? max,
   }) = ResizableSizeRatio;
 
+  /// Creates a [ResizableSize] that expands to fill the available space not taken
+  /// by other resizable children.
+  ///
+  /// 1 <= [flex] < infinity
+  /// 0 <= [min] < [max] < infinity
   const factory ResizableSize.expand({
     int flex,
     double? min,
     double? max,
   }) = ResizableSizeExpand;
 
+  /// Creates a [ResizableSize] that shrinks to fit the size of its child [Widget].
+  ///
+  /// 0 <= [min] < [max] < infinity
   const factory ResizableSize.shrink({
     double? min,
     double? max,

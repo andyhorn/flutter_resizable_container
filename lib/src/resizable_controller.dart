@@ -14,11 +14,13 @@ class ResizableController with ChangeNotifier {
   List<ResizableChild> _children = const [];
   bool _needsLayout = false;
 
+  /// Whether or not the container needs to (re)layout its children.
   bool get needsLayout => _needsLayout;
 
-  /// The size, in pixels, of each child.
+  /// The physical size, in pixels, of each child.
   UnmodifiableListView<double> get pixels => UnmodifiableListView(_pixels);
 
+  /// The [ResizableSize] of each child.
   UnmodifiableListView<ResizableSize> get sizes => UnmodifiableListView(_sizes);
 
   /// A list of ratios (proportion of total available space taken) for each child.
@@ -30,6 +32,13 @@ class ResizableController with ChangeNotifier {
     ]);
   }
 
+  /// Update the [ResizableSize] used to control each child.
+  ///
+  /// The list must contain a value for every child.
+  ///
+  /// The total pixels must be less than or equal to the available space.
+  ///
+  /// The total ratio must be less than or equal to 1.0.
   void setSizes(List<ResizableSize> sizes) {
     if (sizes.length != _children.length) {
       throw ArgumentError('Must contain a value for every child');
