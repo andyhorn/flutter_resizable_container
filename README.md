@@ -2,6 +2,8 @@
 
 Add flexibility and interaction to your UI with ease.
 
+![Basic Resizing](./doc/basic.gif?raw=true 'Basic Resizing')
+
 ## Example App
 
 View the interactive example app at [andyhorn.github.io/flutter_resizable_container](https://andyhorn.github.io/flutter_resizable_container)
@@ -98,6 +100,8 @@ onTap: () => controller.setSizes(const [
     ResizableSize.expand(),
 ]);
 ```
+
+![Set Sizes via Controller](./doc/set_sizes.gif?raw=true 'Set Sizes via Controller')
 
 ### ResizableChild
 
