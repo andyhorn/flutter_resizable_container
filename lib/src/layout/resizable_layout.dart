@@ -203,12 +203,14 @@ class ResizableLayoutRenderObject extends RenderBox
         final size = _sizes[index];
 
         if (size is ResizableSizeExpand) {
+          final currentValue = allocatedSpace[index] ?? 0.0;
           final targetDelta = targetDeltaPerFlex * size.flex;
-          final targetSize = allocatedSpace[index]! + targetDelta;
+          final targetSize = currentValue + targetDelta;
           final clampedValue = _clamp(targetSize, size);
 
-          if (clampedValue != allocatedSpace[index]) {
-            remainingSpace -= clampedValue - allocatedSpace[index]!;
+          if (clampedValue != currentValue) {
+            final difference = clampedValue - currentValue;
+            remainingSpace -= difference;
             allocatedSpace[index] = clampedValue;
             didChange = true;
           } else {
