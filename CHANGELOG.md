@@ -1,3 +1,7 @@
+## 4.0.0
+
+Stable release of v4 with all changes of prior beta releases.
+
 ## 4.0.0-beta.4
 
 - Account for expand sizes with min/max bounds
