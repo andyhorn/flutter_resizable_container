@@ -142,9 +142,9 @@ class ResizableLayoutRenderObject extends RenderBox
       final child = children[i];
       final size = sizes[i ~/ 2];
       final constraints = switch (size) {
-        ResizableSizeExpand() => layoutDirection.updateConstraints(
-            expandSizes[i ~/ 2]!,
+        ResizableSizeExpand() => layoutDirection.copyConstraintsWith(
             this.constraints,
+            expandSizes[i ~/ 2]!,
           ),
         _ => _getChildConstraints(
             size: size,
