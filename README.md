@@ -286,13 +286,13 @@ divider: ResizableDivider(
 ),
 ```
 
-# Sizing
+#### Sizing
 
 The `thickness` and `length` properties control the size of the line drawn on the screen. The `length` determines the cross-axis size - how "long" the line is - while `thickness` determines the main-axis size. The `length` property is of type `ResizableSize`, giving you the flexibility to set a responsive size, using `.ratio`, or a fixed size, using `.pixels`.
 
 Note: If you set an absolute length that is smaller than the available space, the divider will fit to the available space and not overflow.
 
-# Alignment and padding
+#### Alignment and padding
 
 If the divider's length is less than the total available space, you can use the `crossAxisAlignment` to control its cross-axis position. For example, a vertical divider set to `CrossAxisAlignment.start` will be positioned at the top of its space. The default value is `.center`.
 
