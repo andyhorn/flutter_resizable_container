@@ -1,8 +1,9 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 
 /// Controls the sizing parameters for the [child] Widget.
-class ResizableChild {
+class ResizableChild extends Equatable {
   /// Create a new instance of the [ResizableChild] class.
   const ResizableChild({
     required this.child,
@@ -40,16 +41,8 @@ class ResizableChild {
   final ResizableDivider divider;
 
   @override
-  String toString() =>
-      'ResizableChildData(size: $size, child: $child, divider: $divider)';
+  bool get stringify => true;
 
   @override
-  operator ==(Object other) =>
-      other is ResizableChild &&
-      other.size == size &&
-      other.divider == divider &&
-      other.child.runtimeType == child.runtimeType;
-
-  @override
-  int get hashCode => Object.hash(size, child, divider);
+  List<Object?> get props => [size, child.runtimeType, divider];
 }
