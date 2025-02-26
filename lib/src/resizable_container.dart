@@ -1,12 +1,11 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
 import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
 import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
+import 'package:flutter_resizable_container/src/layout/resizable_layout.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
-import 'package:flutter_resizable_container/src/layout/resizable_layout.dart';
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///
@@ -52,7 +51,8 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    final didChildrenChange = !listEquals(oldWidget.children, widget.children);
+    final didChildrenChange =
+        oldWidget.children.length != widget.children.length;
     final didDirectionChange = oldWidget.direction != widget.direction;
 
     if (didChildrenChange) {
