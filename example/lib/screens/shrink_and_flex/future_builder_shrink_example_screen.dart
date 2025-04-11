@@ -20,10 +20,7 @@ class FutureBuilderShrinkExampleScreen extends StatelessWidget {
               ResizableChild(
                 size: const ResizableSize.shrink(),
                 child: switch (snapshot.connectionState) {
-                  ConnectionState.done => Text(
-                      snapshot.data!,
-                      key: UniqueKey(),
-                    ),
+                  ConnectionState.done => Text(snapshot.data!),
                   _ => const SizedBox.shrink(),
                 },
               ),
