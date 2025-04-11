@@ -1,3 +1,11 @@
+## 4.1.0
+
+- Improved change detection in the container to enable more accurate rebuilds when children change.
+
+## 4.0.1
+
+- Fixed a bug causing a custom divider with interactions to break resizing.
+
 ## 4.0.0
 
 Stable release of v4 with all changes of prior beta releases.
