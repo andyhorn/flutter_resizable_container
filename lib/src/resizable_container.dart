@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
@@ -51,15 +52,15 @@ class _ResizableContainerState extends State<ResizableContainer> {
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
-    final didChildrenChange =
-        oldWidget.children.length != widget.children.length;
-    final didDirectionChange = oldWidget.direction != widget.direction;
+    final childrenChanged = !listEquals(oldWidget.children, widget.children);
+    final directionChanged = oldWidget.direction != widget.direction;
+    final hasChanges = childrenChanged || directionChanged;
 
-    if (didChildrenChange) {
-      controller.setChildren(widget.children);
-    }
+    if (hasChanges) {
+      if (childrenChanged) {
+        controller.setChildren(widget.children);
+      }
 
-    if (didChildrenChange || didDirectionChange) {
       manager.setNeedsLayout();
     }
 
