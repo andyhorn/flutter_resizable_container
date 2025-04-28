@@ -88,6 +88,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                 for (var i = 0; i < widget.children.length; i++) ...[
                   // build the child
                   Builder(
+                    key: widget.children[i].key,
                     builder: (context) {
                       final height = _getChildSize(
                         index: i,
