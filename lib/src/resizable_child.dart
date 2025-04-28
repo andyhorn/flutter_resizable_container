@@ -5,11 +5,15 @@ import 'package:flutter_resizable_container/src/resizable_size.dart';
 class ResizableChild {
   /// Create a new instance of the [ResizableChild] class.
   const ResizableChild({
+    this.key,
     required this.child,
     this.size = const ResizableSize.expand(),
     this.maxSize,
     this.minSize,
   });
+
+  /// The (optional) key for this child Widget's container in the list.
+  final Key? key;
 
   /// The (optional) maximum size (in px) of this child Widget.
   final double? maxSize;
