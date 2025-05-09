@@ -84,6 +84,10 @@ class ResizableController with ChangeNotifier {
 
         // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
+          if (index - i - 1 < 0) {
+            continue;
+          }
+
           _pixels[index - i - 1] += changes[i];
         }
 
@@ -98,6 +102,10 @@ class ResizableController with ChangeNotifier {
 
         // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
+          if (index + i + 1 >= _pixels.length) {
+            continue;
+          }
+
           _pixels[index + i + 1] += changes[i];
         }
 
