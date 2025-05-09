@@ -13,6 +13,7 @@ class ResizableController with ChangeNotifier {
   List<ResizableSize> _sizes = const [];
   List<ResizableChild> _children = const [];
   bool _needsLayout = false;
+  bool _cascadeNegativeDelta = false;
 
   /// Whether or not the container needs to (re)layout its children.
   bool get needsLayout => _needsLayout;
@@ -73,8 +74,44 @@ class ResizableController with ChangeNotifier {
         ? _getAdjustedReducingDelta(index: index, delta: delta)
         : _getAdjustedIncreasingDelta(index: index, delta: delta);
 
-    _pixels[index] += adjustedDelta;
-    _pixels[index + 1] -= adjustedDelta;
+    if (adjustedDelta == 0.0 && _cascadeNegativeDelta) {
+      // if the current delta cannot be applied AND cascading is enabled
+      if (delta < 0) {
+        // and the divider is being dragged to the left
+
+        // distribute the delta amongst the leftward siblings
+        final changes = _distributeDeltaLeft(index: index, delta: delta);
+
+        // apply the distribution outward from the selected index
+        for (var i = 0; i < changes.length; i++) {
+          _pixels[index - i - 1] += changes[i];
+        }
+
+        // adjust the width of the first sibling to the right by the
+        // total amount removed from the leftward siblings
+        _pixels[index + 1] += changes.sum().abs();
+      } else {
+        // and the divider is being dragged to the right
+
+        // distribute the delta amongst the rightward siblings
+        final changes = _distributeDeltaRight(index: index, delta: delta);
+
+        // apply the distribution outward from the selected index
+        for (var i = 0; i < changes.length; i++) {
+          _pixels[index + i + 1] += changes[i];
+        }
+
+        // adjust the width of the selected index by the total amount
+        // removed from the rightward siblings
+        _pixels[index] += changes.sum().abs();
+      }
+    } else {
+      // otherwise, apply the adjusted delta to the selected index and its
+      // immediate rightward sibling
+      _pixels[index] += adjustedDelta;
+      _pixels[index + 1] -= adjustedDelta;
+    }
+
     notifyListeners();
   }
 
@@ -128,7 +165,7 @@ class ResizableController with ChangeNotifier {
       return;
     }
 
-    final distributed = _distributeDelta(
+    final distributed = _distributeAvailableSpaceDelta(
       delta: delta,
       sizes: _pixels,
     );
@@ -165,7 +202,71 @@ class ResizableController with ChangeNotifier {
     return minimums.sum();
   }
 
-  List<double> _distributeDelta({
+  List<double> _distributeDeltaRight({
+    required int index,
+    required double delta,
+  }) {
+    // get the indices of all rightward siblings
+    final indices = [
+      for (var i = index + 1; i < _children.length; i++) i,
+    ];
+
+    // calculate the allowable change for each sibling
+    final allowableChanges = [
+      for (final index in indices) ...[
+        _getAllowableChange(delta: -delta, index: index, sizes: _pixels),
+      ],
+    ];
+
+    var remainingDelta = -delta;
+
+    // for each rightward sibling, starting with the closest and moving out,
+    // calculate the "effective" change and subtract it from the remaining delta
+    final changes = <double>[];
+    for (var i = 0; i < indices.length && remainingDelta != 0.0; i++) {
+      final allowableChange = allowableChanges[i];
+      final effectiveChange = max(allowableChange, remainingDelta);
+      changes.add(effectiveChange);
+
+      remainingDelta -= effectiveChange;
+    }
+
+    return changes;
+  }
+
+  List<double> _distributeDeltaLeft({
+    required int index,
+    required double delta,
+  }) {
+    // get the indices of all leftward siblings
+    final indices = [
+      for (var i = 0; i < index; i++) i,
+    ];
+
+    // calculate the allowable change for each sibling
+    final allowableChanges = [
+      for (final index in indices) ...[
+        _getAllowableChange(delta: delta, index: index, sizes: _pixels),
+      ],
+    ];
+
+    var remainingDelta = delta;
+
+    // for each leftward sibling, starting with the closest and moving out,
+    // calculate the "effective" change and subtract it from the remaining delta
+    final changes = <double>[];
+    for (var i = indices.length - 1; i >= 0 && remainingDelta != 0.0; i--) {
+      final allowableChange = allowableChanges[i];
+      final effectiveChange = max(allowableChange, remainingDelta);
+      changes.add(effectiveChange);
+
+      remainingDelta -= effectiveChange;
+    }
+
+    return changes;
+  }
+
+  List<double> _distributeAvailableSpaceDelta({
     required double delta,
     required List<double> sizes,
   }) {
@@ -208,7 +309,7 @@ class ResizableController with ChangeNotifier {
         (index) => sizes[index] + changes[index],
       );
 
-      final redistributed = _distributeDelta(
+      final redistributed = _distributeAvailableSpaceDelta(
         delta: remainingChange,
         sizes: adjustedSizes.toList(),
       );
@@ -350,6 +451,10 @@ final class ResizableControllerManager {
 
   void initChildren(List<ResizableChild> children) {
     _controller._initChildren(children);
+  }
+
+  void setCascadeNegativeDelta(bool cascadeNegativeDelta) {
+    _controller._cascadeNegativeDelta = cascadeNegativeDelta;
   }
 }
 
