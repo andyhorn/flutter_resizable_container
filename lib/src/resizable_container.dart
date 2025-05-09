@@ -15,8 +15,6 @@ import 'package:flutter_resizable_container/src/resizable_controller.dart';
 class ResizableContainer extends StatefulWidget {
   /// Creates a new [ResizableContainer] with the given [direction] and list
   /// of [children] Widgets.
-  ///
-  /// The sum of the [children]'s starting ratios must be equal to 1.0.
   const ResizableContainer({
     super.key,
     required this.children,
@@ -25,7 +23,7 @@ class ResizableContainer extends StatefulWidget {
     this.cascadeNegativeDelta = false,
   });
 
-  /// A list of resizable [ResizableChild] containing the child [Widget]s and
+  /// A list of [ResizableChild] containing the child [Widget]s and
   /// their sizing configuration.
   final List<ResizableChild> children;
 
@@ -62,17 +60,16 @@ class _ResizableContainerState extends State<ResizableContainer> {
     final directionChanged = oldWidget.direction != widget.direction;
     final cascadeChanged =
         oldWidget.cascadeNegativeDelta != widget.cascadeNegativeDelta;
-    final hasChanges = childrenChanged || directionChanged || cascadeChanged;
 
-    if (hasChanges) {
-      if (childrenChanged) {
-        controller.setChildren(widget.children);
-      }
+    if (childrenChanged) {
+      controller.setChildren(widget.children);
+    }
 
-      if (cascadeChanged) {
-        manager.setCascadeNegativeDelta(widget.cascadeNegativeDelta);
-      }
+    if (cascadeChanged) {
+      manager.setCascadeNegativeDelta(widget.cascadeNegativeDelta);
+    }
 
+    if (childrenChanged || directionChanged) {
       manager.setNeedsLayout();
     }
 
