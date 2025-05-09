@@ -20,7 +20,7 @@ class _CascadingDeltaScreenState extends State<CascadingDeltaScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Basic two-pane example'),
+        title: const Text('Cascading delta example'),
         actions: [
           Row(
             children: [
