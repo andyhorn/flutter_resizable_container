@@ -1,4 +1,5 @@
 import 'package:example/file_asset_paths.dart';
+import 'package:example/screens/cascading_delta/cascading_delta_help_dialog.dart';
 import 'package:example/widgets/code_view_dialog.dart';
 import 'package:example/widgets/nav_drawer.dart';
 import 'package:example/widgets/size_label.dart';
@@ -17,8 +18,6 @@ class _CascadingDeltaScreenState extends State<CascadingDeltaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const size = ResizableSize.expand(min: 50);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Basic two-pane example'),
@@ -33,10 +32,10 @@ class _CascadingDeltaScreenState extends State<CascadingDeltaScreen> {
               ),
             ],
           ),
-          // IconButton(
-          //   icon: const Icon(Icons.help_center),
-          //   onPressed: () => BasicExampleHelpDialog.show(context: context),
-          // ),
+          IconButton(
+            icon: const Icon(Icons.help_center),
+            onPressed: () => CascadingDeltaHelpDialog.show(context: context),
+          ),
           IconButton(
             icon: const Icon(Icons.code),
             onPressed: () => CodeViewDialog.show(
@@ -52,28 +51,28 @@ class _CascadingDeltaScreenState extends State<CascadingDeltaScreen> {
         cascadeNegativeDelta: cascade,
         children: [
           ResizableChild(
-            size: size,
+            size: const ResizableSize.expand(min: 50),
             child: ColoredBox(
               color: Theme.of(context).colorScheme.primaryContainer,
               child: const SizeLabel(),
             ),
           ),
           ResizableChild(
-            size: size,
+            size: const ResizableSize.expand(min: 50),
             child: ColoredBox(
               color: Theme.of(context).colorScheme.secondaryContainer,
               child: const SizeLabel(),
             ),
           ),
           ResizableChild(
-            size: size,
+            size: const ResizableSize.expand(min: 50),
             child: ColoredBox(
               color: Theme.of(context).colorScheme.primaryContainer,
               child: const SizeLabel(),
             ),
           ),
           ResizableChild(
-            size: size,
+            size: const ResizableSize.expand(min: 50),
             child: ColoredBox(
               color: Theme.of(context).colorScheme.secondaryContainer,
               child: const SizeLabel(),
