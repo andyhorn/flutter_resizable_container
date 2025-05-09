@@ -74,7 +74,7 @@ class ResizableController with ChangeNotifier {
         ? _getAdjustedReducingDelta(index: index, delta: delta)
         : _getAdjustedIncreasingDelta(index: index, delta: delta);
 
-    if (adjustedDelta == 0.0 && _cascadeNegativeDelta) {
+    if (adjustedDelta != delta && _cascadeNegativeDelta) {
       // if the current delta cannot be applied AND cascading is enabled
       if (delta < 0) {
         // and the divider is being dragged to the left
