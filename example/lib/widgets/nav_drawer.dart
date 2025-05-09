@@ -46,6 +46,11 @@ class NavDrawer extends StatelessWidget {
             onTap: () => Navigator.of(context)
                 .pushReplacementNamed('future-builder-shrink'),
           ),
+          ListTile(
+            title: const Text('Cascading Delta Example'),
+            onTap: () =>
+                Navigator.of(context).pushReplacementNamed('cascading-delta'),
+          ),
           const SizedBox(height: 15),
           const NavSectionHeader(title: 'Controller Examples'),
           ListTile(

@@ -70,6 +70,7 @@ flutter:
     - lib/screens/pixels/pixels_example_screen.dart
     - lib/screens/ratio/ratio_example_screen.dart
     - lib/screens/shrink_and_flex/shrink_and_flex_example_screen.dart
+    - lib/screens/cascading_delta/cascading_delta_screen.dart
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
