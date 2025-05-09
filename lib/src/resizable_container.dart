@@ -15,16 +15,15 @@ import 'package:flutter_resizable_container/src/resizable_controller.dart';
 class ResizableContainer extends StatefulWidget {
   /// Creates a new [ResizableContainer] with the given [direction] and list
   /// of [children] Widgets.
-  ///
-  /// The sum of the [children]'s starting ratios must be equal to 1.0.
   const ResizableContainer({
     super.key,
     required this.children,
     required this.direction,
     this.controller,
+    this.cascadeNegativeDelta = false,
   });
 
-  /// A list of resizable [ResizableChild] containing the child [Widget]s and
+  /// A list of [ResizableChild] containing the child [Widget]s and
   /// their sizing configuration.
   final List<ResizableChild> children;
 
@@ -33,6 +32,10 @@ class ResizableContainer extends StatefulWidget {
 
   /// The direction along which the child widgets will be laid and resized.
   final Axis direction;
+
+  /// When enabled, reducing the size of a child beyond its lower bound will reduce the
+  /// size of its sibling(s). Defaults to `false`.
+  final bool cascadeNegativeDelta;
 
   @override
   State<ResizableContainer> createState() => _ResizableContainerState();
@@ -48,19 +51,25 @@ class _ResizableContainerState extends State<ResizableContainer> {
     super.initState();
 
     manager.initChildren(widget.children);
+    manager.setCascadeNegativeDelta(widget.cascadeNegativeDelta);
   }
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
     final childrenChanged = !listEquals(oldWidget.children, widget.children);
     final directionChanged = oldWidget.direction != widget.direction;
-    final hasChanges = childrenChanged || directionChanged;
+    final cascadeChanged =
+        oldWidget.cascadeNegativeDelta != widget.cascadeNegativeDelta;
 
-    if (hasChanges) {
-      if (childrenChanged) {
-        controller.setChildren(widget.children);
-      }
+    if (childrenChanged) {
+      controller.setChildren(widget.children);
+    }
 
+    if (cascadeChanged) {
+      manager.setCascadeNegativeDelta(widget.cascadeNegativeDelta);
+    }
+
+    if (childrenChanged || directionChanged) {
       manager.setNeedsLayout();
     }
 

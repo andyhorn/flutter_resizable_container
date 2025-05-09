@@ -19,7 +19,11 @@ enum FileAssetPaths {
   ),
   shrinkAndFlexScreen(
     'lib/screens/shrink_and_flex/shrink_and_flex_example_screen.dart',
-  );
+  ),
+  cascadingDeltaScreen(
+    'lib/screens/cascading_delta/cascading_delta_screen.dart',
+  ),
+  ;
 
   const FileAssetPaths(this.path);
   final String path;

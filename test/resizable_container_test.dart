@@ -1307,6 +1307,69 @@ void main() {
         expect(newBoxBSize.height, moreOrLessEquals(0, epsilon: 2));
       });
     });
+
+    group('when cascading is enabled', () {
+      testWidgets('negative deltas are applied to siblings', (tester) async {
+        await tester.binding.setSurfaceSize(const Size(303, 500));
+        await tester.pumpWidget(
+          MaterialApp(
+            home: StatefulBuilder(
+              builder: (context, setState) {
+                return Scaffold(
+                  body: ResizableContainer(
+                    cascadeNegativeDelta: true,
+                    direction: Axis.horizontal,
+                    children: const [
+                      ResizableChild(
+                        size: ResizableSize.expand(),
+                        divider: ResizableDivider(
+                          thickness: 2,
+                        ),
+                        child: SizedBox.expand(
+                          key: Key('BoxA'),
+                        ),
+                      ),
+                      ResizableChild(
+                        size: ResizableSize.expand(min: 50),
+                        child: SizedBox.expand(
+                          key: Key('BoxB'),
+                        ),
+                      ),
+                      ResizableChild(
+                        size: ResizableSize.expand(min: 50),
+                        child: SizedBox.expand(
+                          key: Key('BoxC'),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        final handle = find.byType(ResizableContainerDivider).first;
+        expect(handle, isNotNull);
+
+        await tester.drag(handle, const Offset(kDragSlopDefault + 55, 0));
+        await tester.pump();
+
+        final boxAFinder = find.byKey(const Key('BoxA'));
+        final boxBFinder = find.byKey(const Key('BoxB'));
+        final boxCFinder = find.byKey(const Key('BoxC'));
+
+        final boxASize = tester.getSize(boxAFinder);
+        final boxBSize = tester.getSize(boxBFinder);
+        final boxCSize = tester.getSize(boxCFinder);
+
+        expect(boxASize.width, equals(155));
+        expect(boxBSize.width, equals(50));
+        expect(boxCSize.width, equals(95));
+      });
+    });
   });
 }
 
