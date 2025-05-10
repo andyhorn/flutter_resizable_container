@@ -1,3 +1,10 @@
+## 4.2.0
+
+- Added `cascadeNegativeDelta` flag to cascade changes through children that have reached their lower bound.
+- Added `onDragStart` and `onDragEnd` callbacks to the `ResizableDivider`.
+- Added a `key` parameter to the `ResizableChild` to pass to the child Widget's wrapper.
+- Bump FVM Flutter and dependency versions.
+
 ## 4.1.0
 
 - Improved change detection in the container to enable more accurate rebuilds when children change.
