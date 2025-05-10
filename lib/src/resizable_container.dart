@@ -125,6 +125,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                 children: [
                   for (var i = 0; i < widget.children.length; i++) ...[
                     Builder(
+                      key: widget.children[i].key,
                       builder: (context) {
                         final child = widget.children[i].child;
 

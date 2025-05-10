@@ -7,9 +7,12 @@ class ResizableChild extends Equatable {
   /// Create a new instance of the [ResizableChild] class.
   const ResizableChild({
     required this.child,
+    this.key,
     this.size = const ResizableSize.expand(),
     this.divider = const ResizableDivider(),
   });
+
+  final Key? key;
 
   /// The size of the corresponding widget. May use a ratio of the
   /// available space, an absolute size in logical pixels, or it can
