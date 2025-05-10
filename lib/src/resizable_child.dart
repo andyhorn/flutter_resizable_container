@@ -12,6 +12,7 @@ class ResizableChild extends Equatable {
     this.divider = const ResizableDivider(),
   });
 
+  /// The (optional) key for this child Widget's container in the list.
   final Key? key;
 
   /// The size of the corresponding widget. May use a ratio of the
