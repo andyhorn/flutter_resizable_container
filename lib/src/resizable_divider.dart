@@ -12,6 +12,8 @@ class ResizableDivider extends Equatable {
     this.onHoverExit,
     this.onTapDown,
     this.onTapUp,
+    this.onDragEnd,
+    this.onDragStart,
     this.cursor,
     this.mainAxisAlignment = MainAxisAlignment.center,
     this.crossAxisAlignment = CrossAxisAlignment.center,
@@ -72,6 +74,12 @@ class ResizableDivider extends Equatable {
 
   /// Triggers when the user's tap is released on this divider.
   final VoidCallback? onTapUp;
+
+  /// Triggers when the user begins dragging this divider.
+  final VoidCallback? onDragStart;
+
+  /// Triggers when the user stops dragging this divider.
+  final VoidCallback? onDragEnd;
 
   /// The cursor to display when hovering over this divider.
   final MouseCursor? cursor;

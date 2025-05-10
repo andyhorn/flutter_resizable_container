@@ -1234,6 +1234,54 @@ void main() {
       expect(boxBSizeAfter.width, greaterThan(boxBSize.width));
     });
 
+    testWidgets('fires drag events', (tester) async {
+      var dragStart = false;
+      var dragEnd = false;
+
+      await tester.binding.setSurfaceSize(const Size(1000, 1000));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Scaffold(
+              body: ResizableContainer(
+                direction: Axis.horizontal,
+                children: [
+                  ResizableChild(
+                    divider: ResizableDivider(
+                      onDragStart: () => dragStart = true,
+                      onDragEnd: () => dragEnd = true,
+                    ),
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(
+                      key: Key('BoxA'),
+                    ),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(
+                      key: Key('BoxB'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final divider = find.byType(ResizableContainerDivider);
+      expect(divider, findsOneWidget);
+
+      await tester.drag(divider, Offset(1 + kDragSlopDefault, 0));
+      await tester.pump();
+
+      expect(dragStart, isTrue);
+      expect(dragEnd, isTrue);
+    });
+
     group('when changing direction', () {
       testWidgets('children are resized correctly', (tester) async {
         final controller = ResizableController();
