@@ -133,6 +133,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   void _onVerticalDragStart(DragStartDetails _) {
     if (widget.direction == Axis.vertical) {
       setState(() => isDragging = true);
+      widget.config.onDragStart?.call();
     }
   }
 
@@ -145,6 +146,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   void _onVerticalDragEnd(DragEndDetails _) {
     if (widget.direction == Axis.vertical) {
       setState(() => isDragging = false);
+      widget.config.onDragEnd?.call();
 
       if (!isHovered) {
         widget.config.onHoverExit?.call();
@@ -155,6 +157,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   void _onHorizontalDragStart(DragStartDetails _) {
     if (widget.direction == Axis.horizontal) {
       setState(() => isDragging = true);
+      widget.config.onDragStart?.call();
     }
   }
 
@@ -176,6 +179,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   void _onHorizontalDragEnd(DragEndDetails _) {
     if (widget.direction == Axis.horizontal) {
       setState(() => isDragging = false);
+      widget.config.onDragEnd?.call();
 
       if (!isHovered) {
         widget.config.onHoverExit?.call();
