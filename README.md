@@ -51,6 +51,33 @@ ResizableContainer(
 
 In the example above, any children (more on this in the [ResizableChild](#resizable-child) section) will take up the maximum available height while being allowed to adjust their widths.
 
+### Children
+
+Any and all children of the container must added to the `children` parameter as a list of `ResizableChild`.
+
+```dart
+ResizableContainer(
+    children: [
+        ResizableChild(...),
+        ResizableChild(...),
+        ResizableChild(...),
+    ],
+),
+```
+
+### Cascade Negative Delta
+
+By default, if a divider is dragged and a child is reduced to its lower bound, any subsequent dragging of the divider in the same direction will have no effect; When the child reaches its bound, all resizing stops.
+
+By enabling the `cascadeNegativeDelta` flag to `true` in the `ResizableController`, this behavior is modified so that any additional changes in the divider's position will "cascade" through to the child's sibling in the same direction. If this sibling reaches its lower bound, any additional changes will "cascade" to _its_ next sibling, and so on.
+
+```dart
+ResizableContainer(
+    cascadeNegativeDelta: true,
+),
+```
+
+
 ### ResizableController
 
 #### Setup
