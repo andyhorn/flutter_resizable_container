@@ -218,7 +218,7 @@ void main() {
           equals(
             const [
               ResizableChild(
-                id: 'child_205',
+                id: 'child_195',
                 size: ResizableSize.pixels(100),
                 child: SizedBox.shrink(),
               ),
