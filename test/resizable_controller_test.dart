@@ -21,10 +21,12 @@ void main() {
       setUp(() {
         controller.setChildren(const [
           ResizableChild(
+            id: 'child_23',
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
           ),
           ResizableChild(
+            id: 'child_27',
             size: ResizableSize.pixels(200),
             child: SizedBox.shrink(),
           ),
@@ -43,10 +45,12 @@ void main() {
       setUp(() {
         controller.setChildren(const [
           ResizableChild(
+            id: 'child_45',
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
           ),
           ResizableChild(
+            id: 'child_49',
             size: ResizableSize.pixels(200),
             child: SizedBox.shrink(),
           ),
@@ -66,10 +70,12 @@ void main() {
         setUp(() {
           controller.setChildren(const [
             ResizableChild(
+              id: 'child_68',
               size: ResizableSize.pixels(100),
               child: SizedBox.shrink(),
             ),
             ResizableChild(
+              id: 'child_72',
               size: ResizableSize.pixels(200),
               child: SizedBox.shrink(),
             ),
@@ -94,10 +100,12 @@ void main() {
           setUp(() {
             controller.setChildren(const [
               ResizableChild(
+                id: 'child_96',
                 size: ResizableSize.pixels(100),
                 child: SizedBox.shrink(),
               ),
               ResizableChild(
+                id: 'child_100',
                 size: ResizableSize.pixels(200),
                 child: SizedBox.shrink(),
               ),
@@ -117,10 +125,12 @@ void main() {
           setUp(() {
             controller.setChildren(const [
               ResizableChild(
+                id: 'child_119',
                 size: ResizableSize.pixels(100),
                 child: SizedBox.shrink(),
               ),
               ResizableChild(
+                id: 'child_123',
                 size: ResizableSize.expand(),
                 child: SizedBox.shrink(),
               ),
@@ -140,10 +150,12 @@ void main() {
           setUp(() {
             controller.setChildren(const [
               ResizableChild(
+                id: 'child_142',
                 size: ResizableSize.pixels(100),
                 child: SizedBox.shrink(),
               ),
               ResizableChild(
+                id: 'child_146',
                 size: ResizableSize.expand(max: 225),
                 child: SizedBox.shrink(),
               ),
@@ -168,10 +180,12 @@ void main() {
           setUp(() {
             controller.setChildren(const [
               ResizableChild(
+                id: 'child_170',
                 size: ResizableSize.pixels(100),
                 child: SizedBox.shrink(),
               ),
               ResizableChild(
+                id: 'child_174',
                 size: ResizableSize.shrink(),
                 child: SizedBox.shrink(),
               ),
@@ -193,6 +207,7 @@ void main() {
       test('sets the list of ResizableChild', () {
         controller.setChildren(const [
           ResizableChild(
+            id: 'child_195',
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
           ),
@@ -203,6 +218,7 @@ void main() {
           equals(
             const [
               ResizableChild(
+                id: 'child_205',
                 size: ResizableSize.pixels(100),
                 child: SizedBox.shrink(),
               ),
@@ -216,6 +232,7 @@ void main() {
         controller.addListener(() => notified = true);
         controller.setChildren(const [
           ResizableChild(
+            id: 'child_218',
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
           ),
@@ -226,13 +243,16 @@ void main() {
       test('sets the list of children', () {
         controller.setChildren(const [
           ResizableChild(
+            id: 'child_228',
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
           ),
           ResizableChild(
+            id: 'child_232',
             child: SizedBox.shrink(),
           ),
           ResizableChild(
+            id: 'child_235',
             child: SizedBox.shrink(),
           ),
         ]);
@@ -245,7 +265,10 @@ void main() {
 
       test('requests a new layout', () {
         controller.setChildren([
-          ResizableChild(child: SizedBox.shrink()),
+          ResizableChild(
+            id: 'child_248',
+            child: SizedBox.shrink(),
+          ),
         ]);
 
         expect(controller.needsLayout, isTrue);
@@ -256,13 +279,16 @@ void main() {
       setUp(() {
         controller.setChildren(const [
           ResizableChild(
+            id: 'child_258',
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
           ),
           ResizableChild(
+            id: 'child_262',
             child: SizedBox.shrink(),
           ),
           ResizableChild(
+            id: 'child_265',
             child: SizedBox.shrink(),
           ),
         ]);
@@ -295,13 +321,16 @@ void main() {
       setUp(() {
         controller.setChildren(const [
           ResizableChild(
+            id: 'child_297',
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
           ),
           ResizableChild(
+            id: 'child_301',
             child: SizedBox.shrink(),
           ),
           ResizableChild(
+            id: 'child_304',
             child: SizedBox.shrink(),
           ),
         ]);

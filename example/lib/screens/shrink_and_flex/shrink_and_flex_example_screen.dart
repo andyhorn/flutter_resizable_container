@@ -43,6 +43,7 @@ class _ShrinkAndFlexExampleScreenState
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
+                  id: 'child_45',
                   size: const ResizableSize.expand(),
                   child: ColoredBox(
                     color: Theme.of(context).colorScheme.primaryContainer,
@@ -50,6 +51,7 @@ class _ShrinkAndFlexExampleScreenState
                   ),
                 ),
                 ResizableChild(
+                  id: 'child_52',
                   size: const ResizableSize.shrink(),
                   child: SizedBox(
                     width: 100,

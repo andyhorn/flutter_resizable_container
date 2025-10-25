@@ -92,18 +92,21 @@ class _ControllerSetSizesExampleScreenState
         direction: Axis.horizontal,
         children: [
           ResizableChild(
+            id: 'child_94',
             child: ColoredBox(
               color: Theme.of(context).colorScheme.primaryContainer,
               child: const SizeLabel(),
             ),
           ),
           ResizableChild(
+            id: 'child_100',
             child: ColoredBox(
               color: Theme.of(context).colorScheme.tertiaryContainer,
               child: const SizeLabel(),
             ),
           ),
           ResizableChild(
+            id: 'child_106',
             child: ColoredBox(
               color: Theme.of(context).colorScheme.surfaceContainer,
               child: const SizeLabel(),

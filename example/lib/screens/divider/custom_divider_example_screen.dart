@@ -162,6 +162,7 @@ class _CustomDividerExampleScreenState
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
+                  id: 'child_164',
                   divider: ResizableDivider(
                     color: hovered
                         ? Theme.of(context).colorScheme.primary
@@ -182,6 +183,7 @@ class _CustomDividerExampleScreenState
                   ),
                 ),
                 ResizableChild(
+                  id: 'child_184',
                   child: ColoredBox(
                     color: Theme.of(context).colorScheme.tertiaryContainer,
                     child: const Center(child: Text('Right')),

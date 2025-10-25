@@ -33,12 +33,14 @@ class BasicExampleScreen extends StatelessWidget {
         direction: Axis.horizontal,
         children: [
           ResizableChild(
+            id: 'child_35',
             child: ColoredBox(
               color: Theme.of(context).colorScheme.primaryContainer,
               child: const SizeLabel(),
             ),
           ),
           ResizableChild(
+            id: 'child_41',
             child: ColoredBox(
               color: Theme.of(context).colorScheme.secondaryContainer,
               child: const SizeLabel(),
