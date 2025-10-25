@@ -19,17 +19,20 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.ratio(0.15),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     child: SizedBox.expand(
                       key: Key('BoxB'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxC',
                     size: ResizableSize.ratio(0.15),
                     child: SizedBox.expand(
                       key: Key('BoxC'),
@@ -65,18 +68,21 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.expand(flex: 1),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(flex: 2),
                     child: SizedBox.expand(
                       key: Key('BoxB'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxC',
                     size: ResizableSize.expand(flex: 2),
                     child: SizedBox.expand(
                       key: Key('BoxC'),
@@ -110,18 +116,21 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.pixels(500),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox.expand(
                       key: Key('BoxB'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxC',
                     size: ResizableSize.expand(flex: 1, min: 300),
                     child: SizedBox.expand(
                       key: Key('BoxC'),
@@ -155,18 +164,21 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.pixels(500),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox.expand(
                       key: Key('BoxB'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxC',
                     size: ResizableSize.expand(max: 100),
                     child: SizedBox.expand(
                       key: Key('BoxC'),
@@ -200,6 +212,7 @@ void main() {
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
+                  id: 'BoxA',
                   size: ResizableSize.shrink(),
                   child: SizedBox(
                     width: 200,
@@ -207,6 +220,7 @@ void main() {
                   ),
                 ),
                 ResizableChild(
+                  id: 'BoxB',
                   size: ResizableSize.shrink(),
                   child: SizedBox(
                     width: 400,
@@ -214,6 +228,7 @@ void main() {
                   ),
                 ),
                 ResizableChild(
+                  id: 'BoxC',
                   size: ResizableSize.expand(),
                   child: SizedBox(
                     key: Key('BoxC'),
@@ -244,18 +259,21 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.pixels(200),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox.expand(
                       key: Key('BoxB'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxC',
                     size: ResizableSize.pixels(500),
                     child: SizedBox.expand(
                       key: Key('BoxC'),
@@ -288,12 +306,14 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.ratio(0.25, min: 400),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox.expand(
                       key: Key('BoxB'),
@@ -324,12 +344,14 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.ratio(0.75, max: 400),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox.expand(
                       key: Key('BoxB'),
@@ -360,12 +382,14 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.pixels(400, min: 500),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox.expand(
                       key: Key('BoxB'),
@@ -396,12 +420,14 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.pixels(400, max: 300),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox.expand(
                       key: Key('BoxB'),
@@ -432,6 +458,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.shrink(min: 500),
                     child: SizedBox(
                       width: 200,
@@ -439,6 +466,7 @@ void main() {
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox(
                       key: Key('BoxB'),
@@ -469,6 +497,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.shrink(max: 300),
                     child: SizedBox(
                       width: 400,
@@ -476,6 +505,7 @@ void main() {
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox(
                       key: Key('BoxB'),
@@ -506,12 +536,14 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.expand(min: 700),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox.expand(
                       key: Key('BoxB'),
@@ -542,12 +574,14 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     size: ResizableSize.expand(max: 300),
                     child: SizedBox.expand(
                       key: Key('BoxA'),
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox.expand(
                       key: Key('BoxB'),
@@ -583,6 +617,7 @@ void main() {
               direction: Axis.horizontal,
               children: const [
                 ResizableChild(
+                  id: 'BoxA',
                   divider: ResizableDivider(
                     thickness: dividerWidth,
                   ),
@@ -592,6 +627,7 @@ void main() {
                   ),
                 ),
                 ResizableChild(
+                  id: 'BoxB',
                   size: ResizableSize.ratio(0.5),
                   child: SizedBox.expand(
                     key: Key('BoxB'),
@@ -637,6 +673,7 @@ void main() {
               direction: Axis.horizontal,
               children: const [
                 ResizableChild(
+                  id: 'BoxA',
                   divider: ResizableDivider(
                     thickness: dividerWidth,
                   ),
@@ -645,6 +682,7 @@ void main() {
                   ),
                 ),
                 ResizableChild(
+                  id: 'BoxB',
                   child: SizedBox.expand(
                     key: Key('BoxB'),
                   ),
@@ -685,12 +723,16 @@ void main() {
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
+                  id: 'BoxA',
                   size: ResizableSize.expand(min: 200),
                   child: SizedBox.expand(
                     key: Key('BoxA'),
                   ),
                 ),
-                ResizableChild(child: SizedBox.expand()),
+                ResizableChild(
+                  id: 'BoxB',
+                  child: SizedBox.expand(),
+                ),
               ],
             ),
           ),
@@ -719,6 +761,7 @@ void main() {
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
+                  id: 'BoxA',
                   divider: ResizableDivider(
                     thickness: dividerWidth,
                   ),
@@ -728,6 +771,7 @@ void main() {
                   ),
                 ),
                 ResizableChild(
+                  id: 'BoxB',
                   child: SizedBox.expand(
                     key: Key('BoxB'),
                   ),
@@ -763,6 +807,7 @@ void main() {
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
+                  id: 'BoxA',
                   divider: ResizableDivider(
                     thickness: dividerWidth,
                   ),
@@ -772,6 +817,7 @@ void main() {
                   ),
                 ),
                 ResizableChild(
+                  id: 'BoxB',
                   child: SizedBox.expand(
                     key: Key('BoxB'),
                   ),
@@ -837,6 +883,7 @@ void main() {
               direction: Axis.horizontal,
               children: const [
                 ResizableChild(
+                  id: 'BoxA',
                   divider: ResizableDivider(
                     thickness: 1,
                   ),
@@ -846,6 +893,7 @@ void main() {
                   ),
                 ),
                 ResizableChild(
+                  id: 'BoxB',
                   size: ResizableSize.shrink(),
                   child: SizedBox(
                     width: 200,
@@ -891,6 +939,7 @@ void main() {
                     direction: Axis.horizontal,
                     children: const [
                       ResizableChild(
+                        id: 'BoxA',
                         divider: ResizableDivider(
                           thickness: 1,
                         ),
@@ -901,6 +950,7 @@ void main() {
                         ),
                       ),
                       ResizableChild(
+                        id: 'BoxB',
                         size: ResizableSize.expand(),
                         child: SizedBox.expand(
                           key: Key('BoxB'),
@@ -950,6 +1000,7 @@ void main() {
                     direction: Axis.horizontal,
                     children: const [
                       ResizableChild(
+                        id: 'BoxA',
                         divider: ResizableDivider(
                           thickness: 1,
                         ),
@@ -960,6 +1011,7 @@ void main() {
                         ),
                       ),
                       ResizableChild(
+                        id: 'BoxB',
                         size: ResizableSize.expand(),
                         child: SizedBox(
                           key: Key('BoxB'),
@@ -1009,6 +1061,7 @@ void main() {
                     direction: Axis.horizontal,
                     children: const [
                       ResizableChild(
+                        id: 'BoxA',
                         divider: ResizableDivider(
                           thickness: 1,
                         ),
@@ -1019,6 +1072,7 @@ void main() {
                         ),
                       ),
                       ResizableChild(
+                        id: 'BoxB',
                         size: ResizableSize.expand(max: 850),
                         child: SizedBox(
                           key: Key('BoxB'),
@@ -1068,6 +1122,7 @@ void main() {
                   direction: Axis.horizontal,
                   children: const [
                     ResizableChild(
+                      id: 'BoxA',
                       divider: ResizableDivider(
                         thickness: 1,
                       ),
@@ -1078,6 +1133,7 @@ void main() {
                       ),
                     ),
                     ResizableChild(
+                      id: 'BoxB',
                       size: ResizableSize.pixels(300),
                       child: SizedBox(
                         key: Key('BoxB'),
@@ -1126,6 +1182,7 @@ void main() {
                   direction: Axis.horizontal,
                   children: const [
                     ResizableChild(
+                      id: 'BoxA',
                       divider: ResizableDivider(
                         thickness: 1,
                       ),
@@ -1135,6 +1192,7 @@ void main() {
                       ),
                     ),
                     ResizableChild(
+                      id: 'BoxB',
                       size: ResizableSize.pixels(300),
                       child: SizedBox(
                         key: Key('BoxB'),
@@ -1183,6 +1241,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: const [
                   ResizableChild(
+                    id: 'BoxA',
                     divider: ResizableDivider(
                       thickness: 1,
                     ),
@@ -1192,6 +1251,7 @@ void main() {
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox.expand(
                       key: Key('BoxB'),
@@ -1248,6 +1308,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'BoxA',
                     divider: ResizableDivider(
                       onDragStart: () => dragStart = true,
                       onDragEnd: () => dragEnd = true,
@@ -1258,6 +1319,7 @@ void main() {
                     ),
                   ),
                   ResizableChild(
+                    id: 'BoxB',
                     size: ResizableSize.expand(),
                     child: SizedBox.expand(
                       key: Key('BoxB'),
@@ -1307,6 +1369,7 @@ void main() {
                     direction: direction,
                     children: const [
                       ResizableChild(
+                        id: 'BoxA',
                         divider: ResizableDivider(
                           thickness: 1,
                         ),
@@ -1316,6 +1379,7 @@ void main() {
                         ),
                       ),
                       ResizableChild(
+                        id: 'BoxB',
                         size: ResizableSize.shrink(),
                         child: SizedBox(
                           width: 200,
@@ -1369,6 +1433,7 @@ void main() {
                     direction: Axis.horizontal,
                     children: const [
                       ResizableChild(
+                        id: 'BoxA',
                         size: ResizableSize.expand(),
                         divider: ResizableDivider(
                           thickness: 2,
@@ -1378,12 +1443,14 @@ void main() {
                         ),
                       ),
                       ResizableChild(
+                        id: 'BoxB',
                         size: ResizableSize.expand(min: 50),
                         child: SizedBox.expand(
                           key: Key('BoxB'),
                         ),
                       ),
                       ResizableChild(
+                        id: 'BoxC',
                         size: ResizableSize.expand(min: 50),
                         child: SizedBox.expand(
                           key: Key('BoxC'),
@@ -1448,6 +1515,7 @@ class __ToggleChildAppState extends State<_ToggleChildApp> {
           direction: Axis.horizontal,
           children: [
             const ResizableChild(
+              id: 'ChildA',
               divider: ResizableDivider(
                 thickness: 2,
               ),
@@ -1458,6 +1526,7 @@ class __ToggleChildAppState extends State<_ToggleChildApp> {
             ),
             if (!hidden)
               const ResizableChild(
+                id: 'ChildB',
                 size: ResizableSize.expand(),
                 child: SizedBox.expand(
                   key: Key('ChildB'),

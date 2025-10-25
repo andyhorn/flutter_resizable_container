@@ -68,12 +68,14 @@ class _ControllerListenExampleScreenState
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
+                  id: 'child_70',
                   child: ColoredBox(
                     color: Theme.of(context).colorScheme.primaryContainer,
                     child: const Center(child: Text('Left')),
                   ),
                 ),
                 ResizableChild(
+                  id: 'child_76',
                   child: ColoredBox(
                     color: Theme.of(context).colorScheme.tertiaryContainer,
                     child: const Center(child: Text('Right')),

@@ -33,6 +33,7 @@ class PixelsExampleScreen extends StatelessWidget {
         direction: Axis.horizontal,
         children: [
           ResizableChild(
+            id: 'child_35',
             size: const ResizableSize.pixels(333),
             child: ColoredBox(
               color: Theme.of(context).colorScheme.primaryContainer,
@@ -40,6 +41,7 @@ class PixelsExampleScreen extends StatelessWidget {
             ),
           ),
           ResizableChild(
+            id: 'child_42',
             child: ColoredBox(
               color: Theme.of(context).colorScheme.tertiaryContainer,
               child: const SizeLabel(),
