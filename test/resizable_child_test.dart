@@ -22,6 +22,23 @@ void main() {
         expect(child1.hashCode, equals(child2.hashCode));
       });
 
+      test('instances with different ids are not equal', () {
+        const child1 = ResizableChild(
+          id: 'test_id',
+          child: SizedBox.shrink(),
+          visible: true,
+        );
+
+        const child2 = ResizableChild(
+          id: 'test_id_2',
+          child: SizedBox.shrink(),
+          visible: true,
+        );
+
+        expect(child1, isNot(equals(child2)));
+        expect(child1.hashCode, isNot(equals(child2.hashCode)));
+      });
+
       test('instances with different visible flags are not equal', () {
         const child1 = ResizableChild(
           id: 'test_id',
@@ -170,7 +187,8 @@ void main() {
 
         final props = child.props;
 
-        expect(props, hasLength(5));
+        expect(props, hasLength(6));
+        expect(props, contains(child.id));
         expect(props, contains(child.size));
         expect(props, contains(child.key));
         expect(props, contains(child.child.key));

@@ -68,5 +68,6 @@ class ResizableChild extends Equatable {
   bool get stringify => true;
 
   @override
-  List<Object?> get props => [size, key, child.key, child.runtimeType, visible];
+  List<Object?> get props =>
+      [id, size, key, child.key, child.runtimeType, visible];
 }
