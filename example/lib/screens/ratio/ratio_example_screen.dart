@@ -33,6 +33,7 @@ class RatioExampleScreen extends StatelessWidget {
         direction: Axis.horizontal,
         children: [
           ResizableChild(
+            id: 'child_35',
             size: const ResizableSize.ratio(0.15),
             child: ColoredBox(
               color: Theme.of(context).colorScheme.primaryContainer,
@@ -40,12 +41,14 @@ class RatioExampleScreen extends StatelessWidget {
             ),
           ),
           ResizableChild(
+            id: 'child_42',
             child: ColoredBox(
               color: Theme.of(context).colorScheme.tertiaryContainer,
               child: const SizeLabel(),
             ),
           ),
           ResizableChild(
+            id: 'child_48',
             size: const ResizableSize.ratio(0.15),
             child: ColoredBox(
               color: Theme.of(context).colorScheme.primaryContainer,

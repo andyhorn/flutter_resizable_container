@@ -22,6 +22,7 @@ class FutureBuilderShrinkExampleScreen extends StatelessWidget {
           return ResizableContainer(
             children: [
               ResizableChild(
+                id: 'child_24',
                 size: const ResizableSize.shrink(),
                 child: switch (snapshot.connectionState) {
                   ConnectionState.done => ColoredBox(
@@ -51,6 +52,7 @@ class FutureBuilderShrinkExampleScreen extends StatelessWidget {
                 },
               ),
               ResizableChild(
+                id: 'child_53',
                 child: ColoredBox(
                   color: Theme.of(context).colorScheme.primaryContainer,
                   child: const SizeLabel(),

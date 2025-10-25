@@ -32,12 +32,14 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'child_34',
                     divider: ResizableDivider(
                       onHoverEnter: () => hovered = true,
                     ),
                     child: SizedBox.expand(),
                   ),
                   const ResizableChild(
+                    id: 'child_40',
                     child: SizedBox.expand(),
                   ),
                 ],
@@ -79,6 +81,7 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'child_81',
                     divider: ResizableDivider(
                       onHoverEnter: () => hovered = true,
                       length: const ResizableSize.ratio(0.1),
@@ -87,6 +90,7 @@ void main() {
                     child: SizedBox.expand(),
                   ),
                   const ResizableChild(
+                    id: 'child_89',
                     child: SizedBox.expand(),
                   ),
                 ],
@@ -125,12 +129,14 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'child_127',
                     divider: ResizableDivider(
                       onHoverExit: () => hovered = false,
                     ),
                     child: SizedBox.expand(),
                   ),
                   const ResizableChild(
+                    id: 'child_133',
                     child: SizedBox.expand(),
                   ),
                 ],
@@ -173,12 +179,14 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'child_175',
                     divider: ResizableDivider(
                       onTapDown: () => dividerTappedDown = true,
                     ),
                     child: SizedBox.expand(),
                   ),
                   const ResizableChild(
+                    id: 'child_181',
                     child: SizedBox.expand(),
                   ),
                 ],
@@ -224,12 +232,14 @@ void main() {
                     direction: Axis.horizontal,
                     children: [
                       ResizableChild(
+                        id: 'child_226',
                         divider: ResizableDivider(
                           onTapDown: () => dividerTappedDown = true,
                         ),
                         child: SizedBox.expand(),
                       ),
                       const ResizableChild(
+                        id: 'child_232',
                         child: SizedBox.expand(),
                       ),
                     ],
@@ -266,12 +276,14 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'child_268',
                     divider: ResizableDivider(
                       onTapUp: () => tappedUp = true,
                     ),
                     child: SizedBox.expand(),
                   ),
                   const ResizableChild(
+                    id: 'child_274',
                     child: SizedBox.expand(),
                   ),
                 ],
@@ -307,12 +319,14 @@ void main() {
                 direction: Axis.horizontal,
                 children: [
                   ResizableChild(
+                    id: 'child_309',
                     divider: ResizableDivider(
                       onTapUp: () => tappedUp = true,
                     ),
                     child: SizedBox.expand(),
                   ),
                   const ResizableChild(
+                    id: 'child_315',
                     child: SizedBox.expand(),
                   ),
                 ],

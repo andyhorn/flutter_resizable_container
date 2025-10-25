@@ -51,6 +51,7 @@ class _CascadingDeltaScreenState extends State<CascadingDeltaScreen> {
         cascadeNegativeDelta: cascade,
         children: [
           ResizableChild(
+            id: 'child_53',
             size: const ResizableSize.expand(min: 50),
             child: ColoredBox(
               color: Theme.of(context).colorScheme.primaryContainer,
@@ -58,6 +59,7 @@ class _CascadingDeltaScreenState extends State<CascadingDeltaScreen> {
             ),
           ),
           ResizableChild(
+            id: 'child_60',
             size: const ResizableSize.expand(min: 50),
             child: ColoredBox(
               color: Theme.of(context).colorScheme.secondaryContainer,
@@ -65,6 +67,7 @@ class _CascadingDeltaScreenState extends State<CascadingDeltaScreen> {
             ),
           ),
           ResizableChild(
+            id: 'child_67',
             size: const ResizableSize.expand(min: 50),
             child: ColoredBox(
               color: Theme.of(context).colorScheme.primaryContainer,
@@ -72,6 +75,7 @@ class _CascadingDeltaScreenState extends State<CascadingDeltaScreen> {
             ),
           ),
           ResizableChild(
+            id: 'child_74',
             size: const ResizableSize.expand(min: 50),
             child: ColoredBox(
               color: Theme.of(context).colorScheme.secondaryContainer,
