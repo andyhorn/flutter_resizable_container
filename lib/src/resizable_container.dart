@@ -196,7 +196,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required Axis direction,
     required BoxConstraints constraints,
   }) {
-    if (direction != direction) {
+    if (direction != widget.direction) {
       return constraints.maxForDirection(direction);
     } else {
       return controller.pixels[index];
