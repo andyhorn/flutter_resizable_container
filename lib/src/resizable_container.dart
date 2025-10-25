@@ -7,6 +7,7 @@ import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_layout.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
+import 'package:flutter_resizable_container/src/visibility_reflow.dart';
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///
@@ -21,6 +22,7 @@ class ResizableContainer extends StatefulWidget {
     required this.direction,
     this.controller,
     this.cascadeNegativeDelta = false,
+    this.visibilityReflow = VisibilityReflow.nearest,
   });
 
   /// A list of [ResizableChild] containing the child [Widget]s and
@@ -36,6 +38,16 @@ class ResizableContainer extends StatefulWidget {
   /// When enabled, reducing the size of a child beyond its lower bound will reduce the
   /// size of its sibling(s). Defaults to `false`.
   final bool cascadeNegativeDelta;
+
+  /// The visibility reflow strategy to be used when a child is not visible.
+  ///
+  /// If `nearest`, the space will be given to the nearest visible child.
+  /// If `splitNearest`, the space will be split between the two nearest visible children.
+  /// If `proportional`, the space will be split proportionally between all visible children.
+  /// If `none`, the space will not be distributed to any other children.
+  ///
+  /// Defaults to `nearest`.
+  final VisibilityReflow visibilityReflow;
 
   @override
   State<ResizableContainer> createState() => _ResizableContainerState();
