@@ -107,6 +107,8 @@ class _ResizableContainerState extends State<ResizableContainer> {
         return AnimatedBuilder(
           animation: controller,
           builder: (context, _) {
+            final visibleChildren = _getVisibleChildren();
+
             if (controller.needsLayout) {
               return ResizableLayout(
                 direction: widget.direction,
@@ -117,13 +119,13 @@ class _ResizableContainerState extends State<ResizableContainer> {
                   });
                 },
                 sizes: controller.sizes,
-                resizableChildren: widget.children,
+                resizableChildren: visibleChildren,
                 children: [
-                  for (var i = 0; i < widget.children.length; i++) ...[
-                    widget.children[i].child,
-                    if (i < widget.children.length - 1) ...[
+                  for (var i = 0; i < visibleChildren.length; i++) ...[
+                    visibleChildren[i].child,
+                    if (i < visibleChildren.length - 1) ...[
                       ResizableContainerDivider.placeholder(
-                        config: widget.children[i].divider,
+                        config: visibleChildren[i].divider,
                         direction: widget.direction,
                       ),
                     ],
@@ -135,11 +137,11 @@ class _ResizableContainerState extends State<ResizableContainer> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 direction: widget.direction,
                 children: [
-                  for (var i = 0; i < widget.children.length; i++) ...[
+                  for (var i = 0; i < visibleChildren.length; i++) ...[
                     Builder(
-                      key: widget.children[i].key,
+                      key: visibleChildren[i].key,
                       builder: (context) {
-                        final child = widget.children[i].child;
+                        final child = visibleChildren[i].child;
 
                         final height = _getChildSize(
                           index: i,
@@ -160,9 +162,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
                         );
                       },
                     ),
-                    if (i < widget.children.length - 1) ...[
+                    if (i < visibleChildren.length - 1) ...[
                       ResizableContainerDivider(
-                        config: widget.children[i].divider,
+                        config: visibleChildren[i].divider,
                         direction: widget.direction,
                         onResizeUpdate: (delta) => manager.adjustChildSize(
                           index: i,
@@ -180,10 +182,21 @@ class _ResizableContainerState extends State<ResizableContainer> {
     );
   }
 
+  List<ResizableChild> _getVisibleChildren() {
+    return [
+      for (var i = 0; i < widget.children.length; i++) ...[
+        if (controller.isVisible(i)) ...[
+          widget.children[i],
+        ],
+      ],
+    ];
+  }
+
   double _getAvailableSpace(BoxConstraints constraints) {
+    final visibleChildren = _getVisibleChildren();
     final totalSpace = constraints.maxForDirection(widget.direction);
-    final dividerSpace = widget.children
-        .take(widget.children.length - 1)
+    final dividerSpace = visibleChildren
+        .take(visibleChildren.length - 1)
         .map((child) => child.divider)
         .map((divider) => divider.thickness + divider.padding)
         .sum();

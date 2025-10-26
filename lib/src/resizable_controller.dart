@@ -79,6 +79,8 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
+  bool isVisible(int index) => _visibleIndices.contains(index);
+
   void _adjustChildSize({
     required int index,
     required double delta,
