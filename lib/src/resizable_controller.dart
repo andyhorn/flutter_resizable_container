@@ -10,6 +10,7 @@ import "package:flutter_resizable_container/src/resizable_size.dart";
 class ResizableController with ChangeNotifier {
   double _availableSpace = -1;
   List<double> _pixels = [];
+  List<int> _visibleIndices = const [];
   List<ResizableSize> _sizes = const [];
   List<ResizableChild> _children = const [];
   bool _needsLayout = false;
@@ -19,19 +20,31 @@ class ResizableController with ChangeNotifier {
   bool get needsLayout => _needsLayout;
 
   /// The physical size, in pixels, of each child.
-  UnmodifiableListView<double> get pixels => UnmodifiableListView(_pixels);
+  UnmodifiableListView<double> get pixels => UnmodifiableListView([
+        for (var i = 0; i < _children.length; i++) ...[
+          if (_visibleIndices.contains(i)) ...[
+            _pixels[i],
+          ],
+        ],
+      ]);
 
   /// The [ResizableSize] of each child.
-  UnmodifiableListView<ResizableSize> get sizes => UnmodifiableListView(_sizes);
+  UnmodifiableListView<ResizableSize> get sizes => UnmodifiableListView([
+        for (var i = 0; i < _children.length; i++) ...[
+          if (_visibleIndices.contains(i)) ...[
+            _sizes[i],
+          ],
+        ],
+      ]);
 
   /// A list of ratios (proportion of total available space taken) for each child.
-  UnmodifiableListView<double> get ratios {
-    return UnmodifiableListView([
-      for (final size in pixels) ...[
-        size / _availableSpace,
-      ],
-    ]);
-  }
+  UnmodifiableListView<double> get ratios => UnmodifiableListView([
+        for (var i = 0; i < _children.length; i++) ...[
+          if (_visibleIndices.contains(i)) ...[
+            _pixels[i] / _availableSpace,
+          ],
+        ],
+      ]);
 
   /// Update the [ResizableSize] used to control each child.
   ///
