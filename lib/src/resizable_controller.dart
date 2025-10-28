@@ -8,9 +8,10 @@ import "package:flutter_resizable_container/src/resizable_size.dart";
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
+  final _visibleIndices = SplayTreeSet<int>();
+
   double _availableSpace = -1;
   List<double> _pixels = [];
-  List<int> _visibleIndices = const [];
   List<ResizableSize> _sizes = const [];
   List<ResizableChild> _children = const [];
   bool _needsLayout = false;
@@ -69,7 +70,7 @@ class ResizableController with ChangeNotifier {
 
   bool isVisible(int index) => _visibleIndices.contains(index);
 
-  int _getRawIndex(int visibleIndex) => _visibleIndices[visibleIndex];
+  int _getRawIndex(int visibleIndex) => _visibleIndices.elementAt(visibleIndex);
 
   void _adjustChildSize({
     required int index,
@@ -147,13 +148,13 @@ class ResizableController with ChangeNotifier {
     _children = children;
     _sizes = children.map((child) => child.size).toList();
     _pixels = List.filled(children.length, 0);
-    _visibleIndices = [
-      for (var i = 0; i < children.length; i++) ...[
-        if (children[i].visible) ...[
-          i,
-        ],
-      ],
-    ];
+    _visibleIndices.clear();
+
+    for (var i = 0; i < children.length; i++) {
+      if (children[i].visible) {
+        _visibleIndices.add(i);
+      }
+    }
 
     _needsLayout = true;
 
