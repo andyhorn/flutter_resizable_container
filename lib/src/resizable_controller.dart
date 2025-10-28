@@ -81,6 +81,8 @@ class ResizableController with ChangeNotifier {
 
   bool isVisible(int index) => _visibleIndices.contains(index);
 
+  int _getRawIndex(int visibleIndex) => _visibleIndices[visibleIndex];
+
   void _adjustChildSize({
     required int index,
     required double delta,
@@ -99,20 +101,19 @@ class ResizableController with ChangeNotifier {
 
         // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
-          var siblingIndex = _visibleIndices[index - i - 1];
+          var siblingIndex = index - i - 1;
 
           if (siblingIndex < 0) {
             continue;
           }
 
           // apply the change to the next visible leftward sibling
-          _pixels[siblingIndex] += changes[i];
+          _pixels[_getRawIndex(siblingIndex)] += changes[i];
         }
 
         // adjust the width of the first visible sibling to the right by the
         // total amount removed from the leftward siblings
-        var nextSiblingIndex = _visibleIndices[index + 1];
-        _pixels[nextSiblingIndex] += changes.sum().abs();
+        _pixels[_getRawIndex(index + 1)] += changes.sum().abs();
       } else {
         // and the divider is being dragged to the right
 
@@ -121,26 +122,26 @@ class ResizableController with ChangeNotifier {
 
         // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
-          var siblingIndex = _visibleIndices[index + i + 1];
+          final siblingIndex = index + i + 1;
 
           if (siblingIndex >= pixels.length) {
             continue;
           }
 
           // apply the change to the next visible rightward sibling
-          _pixels[siblingIndex] += changes[i];
+          _pixels[_getRawIndex(siblingIndex)] += changes[i];
         }
 
-        // adjust the width of the first visible sibling to the left by the
+        // adjust the width of the selected index by the
         // total amount removed from the rightward siblings
-        var previousSiblingIndex = _visibleIndices[index - 1];
-        _pixels[previousSiblingIndex] += changes.sum().abs();
+
+        _pixels[_getRawIndex(index)] += changes.sum().abs();
       }
     } else {
       // otherwise, apply the adjusted delta to the selected index and its
       // immediate rightward sibling
-      _pixels[_visibleIndices[index]] += adjustedDelta;
-      _pixels[_visibleIndices[index + 1]] -= adjustedDelta;
+      _pixels[_getRawIndex(index)] += adjustedDelta;
+      _pixels[_getRawIndex(index + 1)] -= adjustedDelta;
     }
 
     notifyListeners();
@@ -226,7 +227,7 @@ class ResizableController with ChangeNotifier {
     );
 
     for (var i = 0; i < sizes.length; i++) {
-      _pixels[i] += distributed[i];
+      _pixels[_getRawIndex(i)] += distributed[i];
     }
 
     _availableSpace = availableSpace;
@@ -262,13 +263,10 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     // get the indices of all visible rightward siblings
-    final indices = [
-      for (var i = index + 1; i < _children.length; i++) ...[
-        if (_visibleIndices.contains(i)) ...[
-          i,
-        ],
-      ],
-    ];
+    final indices = List.generate(
+      _visibleIndices.length - index - 1,
+      (i) => index + i + 1,
+    );
 
     // calculate the allowable change for each sibling
     final allowableChanges = [
@@ -297,14 +295,8 @@ class ResizableController with ChangeNotifier {
     required int index,
     required double delta,
   }) {
-    // get the indices of all visible leftward siblings
-    final indices = [
-      for (var i = 0; i < index; i++) ...[
-        if (_visibleIndices.contains(i)) ...[
-          i,
-        ],
-      ],
-    ];
+    // get the indices of all leftward siblings
+    final indices = List.generate(index, (i) => i);
 
     // calculate the allowable change for each sibling
     final allowableChanges = [
@@ -333,14 +325,7 @@ class ResizableController with ChangeNotifier {
     required double delta,
     required List<double> sizes,
   }) {
-    final indices = [
-      for (var i = 0; i < _children.length; i++) ...[
-        if (_visibleIndices.contains(i)) ...[
-          i,
-        ],
-      ],
-    ];
-
+    final indices = List.generate(_visibleIndices.length, (i) => i);
     final changeableIndices = _getChangeableIndices(delta < 0 ? -1 : 1, sizes);
 
     if (changeableIndices.isEmpty) {
@@ -420,13 +405,7 @@ class ResizableController with ChangeNotifier {
 
   List<int> _getChangeableIndices(int direction, List<double> sizes) {
     final List<int> changeableIndices = [];
-    final indices = [
-      for (var i = 0; i < _children.length; i++) ...[
-        if (_visibleIndices.contains(i)) ...[
-          i,
-        ],
-      ],
-    ];
+    final indices = List.generate(_visibleIndices.length, (i) => i);
 
     bool shouldAdd(index) {
       final minSize = this.sizes[index].min ?? 0.0;
