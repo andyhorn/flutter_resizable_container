@@ -20,31 +20,19 @@ class ResizableController with ChangeNotifier {
   bool get needsLayout => _needsLayout;
 
   /// The physical size, in pixels, of each child.
-  UnmodifiableListView<double> get pixels => UnmodifiableListView([
-        for (var i = 0; i < _children.length; i++) ...[
-          if (_visibleIndices.contains(i)) ...[
-            _pixels[i],
-          ],
-        ],
-      ]);
+  UnmodifiableListView<double> get pixels => UnmodifiableListView(
+        _visibleIndices.map((i) => _pixels[i]),
+      );
 
   /// The [ResizableSize] of each child.
-  UnmodifiableListView<ResizableSize> get sizes => UnmodifiableListView([
-        for (var i = 0; i < _children.length; i++) ...[
-          if (_visibleIndices.contains(i)) ...[
-            _sizes[i],
-          ],
-        ],
-      ]);
+  UnmodifiableListView<ResizableSize> get sizes => UnmodifiableListView(
+        _visibleIndices.map((i) => _sizes[i]),
+      );
 
   /// A list of ratios (proportion of total available space taken) for each child.
-  UnmodifiableListView<double> get ratios => UnmodifiableListView([
-        for (var i = 0; i < _children.length; i++) ...[
-          if (_visibleIndices.contains(i)) ...[
-            _pixels[i] / _availableSpace,
-          ],
-        ],
-      ]);
+  UnmodifiableListView<double> get ratios => UnmodifiableListView(
+        _visibleIndices.map((i) => _pixels[i] / _availableSpace),
+      );
 
   /// Update the [ResizableSize] used to control each child.
   ///
