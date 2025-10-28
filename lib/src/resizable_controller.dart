@@ -113,7 +113,7 @@ class ResizableController with ChangeNotifier {
         for (var i = 0; i < changes.length; i++) {
           final siblingIndex = index + i + 1;
 
-          if (siblingIndex >= pixels.length) {
+          if (siblingIndex >= _visibleIndices.length) {
             continue;
           }
 
