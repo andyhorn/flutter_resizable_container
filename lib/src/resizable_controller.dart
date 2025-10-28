@@ -8,6 +8,8 @@ import "package:flutter_resizable_container/src/resizable_size.dart";
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
+  final _visibleIndices = SplayTreeSet<int>();
+
   double _availableSpace = -1;
   List<double> _pixels = [];
   List<ResizableSize> _sizes = const [];
@@ -19,19 +21,19 @@ class ResizableController with ChangeNotifier {
   bool get needsLayout => _needsLayout;
 
   /// The physical size, in pixels, of each child.
-  UnmodifiableListView<double> get pixels => UnmodifiableListView(_pixels);
+  UnmodifiableListView<double> get pixels => UnmodifiableListView(
+        _visibleIndices.map((i) => _pixels[i]),
+      );
 
   /// The [ResizableSize] of each child.
-  UnmodifiableListView<ResizableSize> get sizes => UnmodifiableListView(_sizes);
+  UnmodifiableListView<ResizableSize> get sizes => UnmodifiableListView(
+        _visibleIndices.map((i) => _sizes[i]),
+      );
 
   /// A list of ratios (proportion of total available space taken) for each child.
-  UnmodifiableListView<double> get ratios {
-    return UnmodifiableListView([
-      for (final size in pixels) ...[
-        size / _availableSpace,
-      ],
-    ]);
-  }
+  UnmodifiableListView<double> get ratios => UnmodifiableListView(
+        _visibleIndices.map((i) => _pixels[i] / _availableSpace),
+      );
 
   /// Update the [ResizableSize] used to control each child.
   ///
@@ -66,6 +68,10 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
+  bool isVisible(int index) => _visibleIndices.contains(index);
+
+  int _getRawIndex(int visibleIndex) => _visibleIndices.elementAt(visibleIndex);
+
   void _adjustChildSize({
     required int index,
     required double delta,
@@ -79,21 +85,24 @@ class ResizableController with ChangeNotifier {
       if (delta < 0) {
         // and the divider is being dragged to the left
 
-        // distribute the delta amongst the leftward siblings
+        // distribute the delta amongst the visible leftward siblings
         final changes = _distributeDeltaLeft(index: index, delta: delta);
 
         // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
-          if (index - i - 1 < 0) {
+          var siblingIndex = index - i - 1;
+
+          if (siblingIndex < 0) {
             continue;
           }
 
-          _pixels[index - i - 1] += changes[i];
+          // apply the change to the next visible leftward sibling
+          _pixels[_getRawIndex(siblingIndex)] += changes[i];
         }
 
-        // adjust the width of the first sibling to the right by the
+        // adjust the width of the first visible sibling to the right by the
         // total amount removed from the leftward siblings
-        _pixels[index + 1] += changes.sum().abs();
+        _pixels[_getRawIndex(index + 1)] += changes.sum().abs();
       } else {
         // and the divider is being dragged to the right
 
@@ -102,22 +111,26 @@ class ResizableController with ChangeNotifier {
 
         // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
-          if (index + i + 1 >= _pixels.length) {
+          final siblingIndex = index + i + 1;
+
+          if (siblingIndex >= _visibleIndices.length) {
             continue;
           }
 
-          _pixels[index + i + 1] += changes[i];
+          // apply the change to the next visible rightward sibling
+          _pixels[_getRawIndex(siblingIndex)] += changes[i];
         }
 
-        // adjust the width of the selected index by the total amount
-        // removed from the rightward siblings
-        _pixels[index] += changes.sum().abs();
+        // adjust the width of the selected index by the
+        // total amount removed from the rightward siblings
+
+        _pixels[_getRawIndex(index)] += changes.sum().abs();
       }
     } else {
       // otherwise, apply the adjusted delta to the selected index and its
       // immediate rightward sibling
-      _pixels[index] += adjustedDelta;
-      _pixels[index + 1] -= adjustedDelta;
+      _pixels[_getRawIndex(index)] += adjustedDelta;
+      _pixels[_getRawIndex(index + 1)] -= adjustedDelta;
     }
 
     notifyListeners();
@@ -135,6 +148,14 @@ class ResizableController with ChangeNotifier {
     _children = children;
     _sizes = children.map((child) => child.size).toList();
     _pixels = List.filled(children.length, 0);
+    _visibleIndices.clear();
+
+    for (var i = 0; i < children.length; i++) {
+      if (children[i].visible) {
+        _visibleIndices.add(i);
+      }
+    }
+
     _needsLayout = true;
 
     if (notify) {
@@ -143,7 +164,23 @@ class ResizableController with ChangeNotifier {
   }
 
   void _setRenderedSizes(List<double> pixels) {
-    _pixels = pixels;
+    _pixels = [];
+
+    // set the pixels for the visible children
+    //
+    // if the child is visible, set its size to the corresponding pixel
+    // size and increment the pixel index
+    // if the child is not visible, set its size to 0.0
+    var pixelIndex = 0;
+    for (var i = 0; i < _children.length; i++) {
+      if (_visibleIndices.contains(i)) {
+        _pixels.add(pixels[pixelIndex]);
+        pixelIndex++;
+      } else {
+        _pixels.add(0.0);
+      }
+    }
+
     _needsLayout = false;
     notifyListeners();
   }
@@ -179,7 +216,7 @@ class ResizableController with ChangeNotifier {
     );
 
     for (var i = 0; i < sizes.length; i++) {
-      _pixels[i] += distributed[i];
+      _pixels[_getRawIndex(i)] += distributed[i];
     }
 
     _availableSpace = availableSpace;
@@ -206,7 +243,7 @@ class ResizableController with ChangeNotifier {
   }
 
   double _getMinimumNecessarySize() {
-    final minimums = _sizes.map((size) => size.min ?? 0.0).toList();
+    final minimums = sizes.map((size) => size.min ?? 0.0).toList();
     return minimums.sum();
   }
 
@@ -214,15 +251,16 @@ class ResizableController with ChangeNotifier {
     required int index,
     required double delta,
   }) {
-    // get the indices of all rightward siblings
-    final indices = [
-      for (var i = index + 1; i < _children.length; i++) i,
-    ];
+    // get the indices of all visible rightward siblings
+    final indices = List.generate(
+      _visibleIndices.length - index - 1,
+      (i) => index + i + 1,
+    );
 
     // calculate the allowable change for each sibling
     final allowableChanges = [
       for (final index in indices) ...[
-        _getAllowableChange(delta: -delta, index: index, sizes: _pixels),
+        _getAllowableChange(delta: -delta, index: index, sizes: pixels),
       ],
     ];
 
@@ -247,14 +285,12 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     // get the indices of all leftward siblings
-    final indices = [
-      for (var i = 0; i < index; i++) i,
-    ];
+    final indices = List.generate(index, (i) => i);
 
     // calculate the allowable change for each sibling
     final allowableChanges = [
       for (final index in indices) ...[
-        _getAllowableChange(delta: delta, index: index, sizes: _pixels),
+        _getAllowableChange(delta: delta, index: index, sizes: pixels),
       ],
     ];
 
@@ -278,7 +314,7 @@ class ResizableController with ChangeNotifier {
     required double delta,
     required List<double> sizes,
   }) {
-    final indices = List.generate(_children.length, (i) => i);
+    final indices = List.generate(_visibleIndices.length, (i) => i);
     final changeableIndices = _getChangeableIndices(delta < 0 ? -1 : 1, sizes);
 
     if (changeableIndices.isEmpty) {
@@ -338,7 +374,7 @@ class ResizableController with ChangeNotifier {
     final targetSize = sizes[index] + delta;
 
     if (delta < 0) {
-      final minimumSize = _sizes[index].min ?? 0;
+      final minimumSize = this.sizes[index].min ?? 0;
 
       if (targetSize <= minimumSize) {
         return minimumSize - sizes[index];
@@ -347,7 +383,7 @@ class ResizableController with ChangeNotifier {
       return delta;
     }
 
-    final maximumSize = _sizes[index].max ?? double.infinity;
+    final maximumSize = this.sizes[index].max ?? double.infinity;
 
     if (targetSize >= maximumSize) {
       return maximumSize - sizes[index];
@@ -357,12 +393,12 @@ class ResizableController with ChangeNotifier {
   }
 
   List<int> _getChangeableIndices(int direction, List<double> sizes) {
-    final indices = List.generate(_children.length, (i) => i);
     final List<int> changeableIndices = [];
+    final indices = List.generate(_visibleIndices.length, (i) => i);
 
     bool shouldAdd(index) {
-      final minSize = _sizes[index].min ?? 0.0;
-      final maxSize = _sizes[index].max ?? double.infinity;
+      final minSize = this.sizes[index].min ?? 0.0;
+      final maxSize = this.sizes[index].max ?? double.infinity;
 
       if (direction < 0 && sizes[index] > minSize) {
         return true;
@@ -374,7 +410,7 @@ class ResizableController with ChangeNotifier {
     }
 
     for (final index in indices) {
-      if (_children[index].size is! ResizableSizeExpand) {
+      if (this.sizes[index] is! ResizableSizeExpand) {
         continue;
       }
 
@@ -401,9 +437,9 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     final currentSize = pixels[index];
-    final minCurrentSize = _sizes[index].min ?? 0;
+    final minCurrentSize = sizes[index].min ?? 0;
     final adjacentSize = pixels[index + 1];
-    final maxAdjacentSize = _sizes[index + 1].max ?? double.infinity;
+    final maxAdjacentSize = sizes[index + 1].max ?? double.infinity;
     final maxCurrentDelta = currentSize - minCurrentSize;
     final maxAdjacentDelta = maxAdjacentSize - adjacentSize;
     final maxDelta = min(maxCurrentDelta, maxAdjacentDelta);
@@ -420,9 +456,9 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     final currentSize = pixels[index];
-    final maxCurrentSize = _sizes[index].max ?? double.infinity;
+    final maxCurrentSize = sizes[index].max ?? double.infinity;
     final adjacentSize = pixels[index + 1];
-    final minAdjacentSize = _sizes[index + 1].min ?? 0;
+    final minAdjacentSize = sizes[index + 1].min ?? 0;
     final maxAvailableSpace = min(maxCurrentSize, _availableSpace);
     final maxCurrentDelta = maxAvailableSpace - currentSize;
     final maxAdjacentDelta = adjacentSize - minAdjacentSize;
