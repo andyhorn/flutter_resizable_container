@@ -151,6 +151,29 @@ Calls to `setSizes` while a child is hidden store the new size and apply it
 the next time the child is shown; the child stays hidden until you call
 `show`.
 
+##### Animating hide/show
+
+By default, `hide`/`show` snap the affected child to its new size in a
+single frame. To tween the transition, pass a `ResizableHideAnimation` to
+the container's `hideAnimation` parameter:
+
+```dart
+ResizableContainer(
+  direction: Axis.horizontal,
+  controller: controller,
+  hideAnimation: const ResizableHideAnimation(
+    duration: Duration(milliseconds: 200),
+    curve: Curves.easeInOut,
+  ),
+  children: [ ... ],
+);
+```
+
+When non-null, the affected child and its siblings interpolate between
+their current rendered sizes and the new targets over the configured
+duration and curve. All other size transitions (divider drag, `setSizes`,
+available-space changes) remain instant.
+
 ### ResizableChild
 
 To add widgets to your container, you must provide a `List<ResizableChild>`, each of which contain the child `Widget`, an optional `ResizableDivider`, and an optional `ResizableSize`.

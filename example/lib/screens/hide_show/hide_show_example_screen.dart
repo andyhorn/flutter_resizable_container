@@ -18,6 +18,8 @@ class _HideShowExampleScreenState extends State<HideShowExampleScreen> {
 
   final controller = ResizableController();
 
+  bool _animate = true;
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +46,15 @@ class _HideShowExampleScreenState extends State<HideShowExampleScreen> {
       appBar: AppBar(
         title: const Text('Hide / Show example'),
         actions: [
+          IconButton(
+            tooltip: _animate
+                ? 'Animated hide/show is on'
+                : 'Animated hide/show is off',
+            onPressed: () => setState(() => _animate = !_animate),
+            icon: Icon(
+              _animate ? Icons.animation : Icons.flash_on,
+            ),
+          ),
           IconButton(
             tooltip: leftHidden ? 'Show left panel' : 'Hide left panel',
             onPressed: () => controller.setHidden(_leftIndex, !leftHidden),
@@ -80,6 +91,7 @@ class _HideShowExampleScreenState extends State<HideShowExampleScreen> {
       body: ResizableContainer(
         controller: controller,
         direction: Axis.horizontal,
+        hideAnimation: _animate ? const ResizableHideAnimation() : null,
         children: [
           ResizableChild(
             size: const ResizableSize.pixels(240),

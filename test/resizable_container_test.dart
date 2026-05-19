@@ -1458,6 +1458,499 @@ void main() {
         expect(boxCSize.width, equals(95));
       });
     });
+
+    group('hideAnimation', () {
+      Widget buildHarness({
+        required ResizableController controller,
+        ResizableHideAnimation? hideAnimation,
+      }) {
+        return MaterialApp(
+          home: Scaffold(
+            body: ResizableContainer(
+              controller: controller,
+              direction: Axis.horizontal,
+              hideAnimation: hideAnimation,
+              children: const [
+                ResizableChild(
+                  size: ResizableSize.pixels(200),
+                  divider: ResizableDivider(thickness: 2),
+                  child: SizedBox.expand(key: Key('A')),
+                ),
+                ResizableChild(
+                  size: ResizableSize.pixels(200),
+                  divider: ResizableDivider(thickness: 2),
+                  child: SizedBox.expand(key: Key('B')),
+                ),
+                ResizableChild(
+                  size: ResizableSize.expand(),
+                  child: SizedBox.expand(key: Key('C')),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
+      testWidgets(
+        'collapses immediately when hideAnimation is null',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(buildHarness(controller: controller));
+          await tester.pumpAndSettle();
+
+          controller.hide(1);
+          await tester.pumpAndSettle();
+
+          expect(tester.getSize(find.byKey(const Key('B'))).width, 0);
+          // Both dividers adjacent to the hidden child are also removed.
+          expect(find.byType(ResizableContainerDivider), findsNothing);
+        },
+      );
+
+      testWidgets(
+        'interpolates the hidden child width between start and target',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          final initialWidth = tester.getSize(find.byKey(const Key('B'))).width;
+          expect(initialWidth, 200);
+
+          controller.hide(1);
+          // pump #1: capture-target frame, schedules animation start in
+          // its post-frame callback.
+          await tester.pump();
+          // pump #2: first ticker tick — Ticker captures its start time on
+          // the first tick, so elapsed is 0 here.
+          await tester.pump();
+          // pump #3: advances halfway through the 200ms animation.
+          await tester.pump(const Duration(milliseconds: 100));
+
+          final midWidth = tester.getSize(find.byKey(const Key('B'))).width;
+          expect(midWidth, lessThan(initialWidth));
+          expect(midWidth, greaterThan(0));
+        },
+      );
+
+      testWidgets(
+        'reaches zero width and lets siblings absorb the freed space',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(1);
+          await tester.pumpAndSettle();
+
+          expect(tester.getSize(find.byKey(const Key('B'))).width, 0);
+          // A=200, B=0, dividers collapsed, so C absorbs the rest.
+          expect(
+            tester.getSize(find.byKey(const Key('C'))).width,
+            equals(400),
+          );
+        },
+      );
+
+      testWidgets(
+        'keeps the adjacent divider in the tree during the collapse',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(1);
+          await tester.pump();
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 50));
+
+          // Both dividers adjacent to the collapsing child are still
+          // rendered during the in-flight collapse.
+          expect(find.byType(ResizableContainerDivider), findsNWidgets(2));
+        },
+      );
+
+      testWidgets(
+        'removes the adjacent divider once the animation settles',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(1);
+          await tester.pumpAndSettle();
+
+          // Both dividers adjacent to the hidden child are removed.
+          expect(find.byType(ResizableContainerDivider), findsNothing);
+        },
+      );
+
+      testWidgets(
+        'animates the restored size on show',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(1);
+          await tester.pumpAndSettle();
+          expect(tester.getSize(find.byKey(const Key('B'))).width, 0);
+
+          controller.show(1);
+          await tester.pump();
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 100));
+
+          final midWidth = tester.getSize(find.byKey(const Key('B'))).width;
+          expect(midWidth, greaterThan(0));
+          expect(midWidth, lessThan(200));
+
+          await tester.pumpAndSettle();
+          expect(tester.getSize(find.byKey(const Key('B'))).width, 200);
+        },
+      );
+
+      testWidgets(
+        'preserves continuity when show is called mid-hide',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(1);
+          // Two pumps to seed the Ticker, then advance halfway.
+          await tester.pump();
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 100));
+
+          final widthBeforeShow =
+              tester.getSize(find.byKey(const Key('B'))).width;
+          expect(widthBeforeShow, greaterThan(0));
+          expect(widthBeforeShow, lessThan(200));
+
+          controller.show(1);
+          await tester.pump();
+
+          final widthAfterShow =
+              tester.getSize(find.byKey(const Key('B'))).width;
+          // The first frame after `show` should mirror the from-snapshot,
+          // i.e. the displayed width at the moment `show` was called.
+          expect(
+            widthAfterShow,
+            closeTo(widthBeforeShow, 1.0),
+          );
+        },
+      );
+
+      testWidgets(
+        'cancels the animation when available space changes mid-flight',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(1);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 100));
+
+          await tester.binding.setSurfaceSize(const Size(800, 400));
+          await tester.pumpAndSettle();
+
+          // After the resize, the hidden child still has zero width and the
+          // remaining children absorb the new available space.
+          expect(tester.getSize(find.byKey(const Key('B'))).width, 0);
+          final aWidth = tester.getSize(find.byKey(const Key('A'))).width;
+          final cWidth = tester.getSize(find.byKey(const Key('C'))).width;
+          expect(aWidth, 200);
+          expect(cWidth, equals(800 - aWidth));
+        },
+      );
+
+      testWidgets(
+        'leaves no pending timers when disposed mid-flight',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(1);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 50));
+
+          // Replace the harness with an empty widget — the previous
+          // container's State is disposed.
+          await tester.pumpWidget(const SizedBox());
+          await tester.pump();
+
+          expect(tester.binding.transientCallbackCount, 0);
+        },
+      );
+
+      testWidgets(
+        'controller.isHidden reflects the intent immediately',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(0);
+          // Without any pump, the controller's reported intent is already
+          // hidden, even though the visual transition has not begun.
+          expect(controller.isHidden(0), isTrue);
+
+          await tester.pumpAndSettle();
+        },
+      );
+
+      testWidgets(
+        'batches consecutive hides into a single animation',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(0);
+          controller.hide(1);
+          await tester.pump();
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 100));
+
+          // Both children interpolate inside the same animation — at the
+          // halfway mark each width is strictly between its start and 0.
+          final aWidth = tester.getSize(find.byKey(const Key('A'))).width;
+          final bWidth = tester.getSize(find.byKey(const Key('B'))).width;
+          expect(aWidth, greaterThan(0));
+          expect(aWidth, lessThan(200));
+          expect(bWidth, greaterThan(0));
+          expect(bWidth, lessThan(200));
+
+          await tester.pumpAndSettle();
+          expect(tester.getSize(find.byKey(const Key('A'))).width, 0);
+          expect(tester.getSize(find.byKey(const Key('B'))).width, 0);
+        },
+      );
+
+      testWidgets(
+        'disposes the animation controller when hideAnimation is removed '
+        'mid-flight',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          Widget appWithAnimation(ResizableHideAnimation? animation) {
+            return MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  controller: controller,
+                  direction: Axis.horizontal,
+                  hideAnimation: animation,
+                  children: const [
+                    ResizableChild(
+                      size: ResizableSize.pixels(200),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('A')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.pixels(200),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('B')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.expand(),
+                      child: SizedBox.expand(key: Key('C')),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          await tester.pumpWidget(
+            appWithAnimation(const ResizableHideAnimation()),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(1);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 50));
+
+          // Remove the animation config while the tween is still running.
+          await tester.pumpWidget(appWithAnimation(null));
+          await tester.pump();
+
+          // The hidden child snaps to its target (0) and no pending animation
+          // timers remain.
+          expect(tester.getSize(find.byKey(const Key('B'))).width, 0);
+          expect(tester.binding.transientCallbackCount, 0);
+        },
+      );
+
+      testWidgets(
+        'animates the next hide after hideAnimation switches on',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          Widget appWithAnimation(ResizableHideAnimation? animation) {
+            return MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  controller: controller,
+                  direction: Axis.horizontal,
+                  hideAnimation: animation,
+                  children: const [
+                    ResizableChild(
+                      size: ResizableSize.pixels(200),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('A')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.pixels(200),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('B')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.expand(),
+                      child: SizedBox.expand(key: Key('C')),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          await tester.pumpWidget(appWithAnimation(null));
+          await tester.pumpAndSettle();
+
+          // Switch animation on after first build.
+          await tester.pumpWidget(
+            appWithAnimation(const ResizableHideAnimation()),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(1);
+          await tester.pump();
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 100));
+
+          final midWidth = tester.getSize(find.byKey(const Key('B'))).width;
+          expect(midWidth, greaterThan(0));
+          expect(midWidth, lessThan(200));
+        },
+      );
+
+      testWidgets(
+        'controller.pixels reports the target value after hide',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(0);
+          await tester.pump();
+
+          // The container has captured the target via the offstage layout
+          // and pushed it into the controller — so pixels[0] is 0 well
+          // before the visible transition finishes.
+          expect(controller.pixels[0], 0);
+
+          await tester.pumpAndSettle();
+        },
+      );
+    });
   });
 }
 
