@@ -56,7 +56,7 @@ class ResizableContainer extends StatefulWidget {
 }
 
 class _ResizableContainerState extends State<ResizableContainer>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final controller = widget.controller ?? ResizableController();
   late final isDefaultController = widget.controller == null;
   late final manager = ResizableControllerManager(controller);
