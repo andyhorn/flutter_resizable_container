@@ -7,6 +7,7 @@ import 'package:example/screens/pixels/pixels_example_screen.dart';
 import 'package:example/screens/ratio/ratio_example_screen.dart';
 import 'package:example/screens/shrink_and_flex/future_builder_shrink_example_screen.dart';
 import 'package:example/screens/shrink_and_flex/shrink_and_flex_example_screen.dart';
+import 'package:example/screens/shrink_and_flex/shrink_scrollable_example_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -30,6 +31,7 @@ class ExampleApp extends StatelessWidget {
         'sizes': (context) => const ControllerSetSizesExampleScreen(),
         'divider': (context) => const CustomDividerExampleScreen(),
         'shrink': (context) => const ShrinkAndFlexExampleScreen(),
+        'shrink-scrollable': (context) => const ShrinkScrollableExampleScreen(),
         'future-builder-shrink': (context) =>
             const FutureBuilderShrinkExampleScreen(),
         'cascading-delta': (context) => const CascadingDeltaScreen(),

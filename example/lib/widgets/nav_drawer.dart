@@ -42,6 +42,11 @@ class NavDrawer extends StatelessWidget {
             onTap: () => Navigator.of(context).pushReplacementNamed('shrink'),
           ),
           ListTile(
+            title: const Text('Shrink with Scrollable Content'),
+            onTap: () =>
+                Navigator.of(context).pushReplacementNamed('shrink-scrollable'),
+          ),
+          ListTile(
             title: const Text('FutureBuilder Shrink Example'),
             onTap: () => Navigator.of(context)
                 .pushReplacementNamed('future-builder-shrink'),
