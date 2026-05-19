@@ -134,6 +134,23 @@ onTap: () => controller.setSizes(const [
 
 ![Set Sizes via Controller](./doc/set_sizes.gif?raw=true 'Set Sizes via Controller')
 
+#### Hiding and showing children
+
+Use `hide`, `show`, or `setHidden` on the controller to collapse a child and
+its adjacent divider without removing it from the widget tree. The previous
+`ResizableSize` is remembered and restored when the child is shown again.
+
+```dart
+controller.hide(1);            // collapses child 1 and its divider
+controller.isHidden(1);        // => true
+controller.show(1);            // restores the previous size
+controller.setHidden(1, true); // equivalent to hide(1)
+```
+
+Calls to `setSizes` while a child is hidden store the new size and apply it
+the next time the child is shown; the child stays hidden until you call
+`show`.
+
 ### ResizableChild
 
 To add widgets to your container, you must provide a `List<ResizableChild>`, each of which contain the child `Widget`, an optional `ResizableDivider`, and an optional `ResizableSize`.

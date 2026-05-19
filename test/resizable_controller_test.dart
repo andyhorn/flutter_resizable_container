@@ -358,5 +358,136 @@ void main() {
         expect(controller.needsLayout, isTrue);
       });
     });
+
+    group('#hide / #show', () {
+      setUp(() {
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+        ]);
+
+        manager.setAvailableSpace(300);
+        manager.setRenderedSizes([100, 100, 100]);
+      });
+
+      test('hide marks the child as hidden and replaces its size with zero',
+          () {
+        controller.hide(1);
+
+        expect(controller.isHidden(1), isTrue);
+        expect(controller.hiddenIndices, equals({1}));
+        expect(controller.sizes[1], equals(const ResizableSize.pixels(0)));
+        expect(controller.needsLayout, isTrue);
+      });
+
+      test('hide notifies listeners', () {
+        var notified = false;
+        controller.addListener(() => notified = true);
+
+        controller.hide(0);
+
+        expect(notified, isTrue);
+      });
+
+      test('hide is a no-op when already hidden', () {
+        controller.hide(0);
+
+        var notified = false;
+        controller.addListener(() => notified = true);
+
+        controller.hide(0);
+
+        expect(notified, isFalse);
+      });
+
+      test('show restores the previously-set size', () {
+        controller.hide(0);
+        controller.show(0);
+
+        expect(controller.isHidden(0), isFalse);
+        expect(controller.hiddenIndices, isEmpty);
+        expect(controller.sizes[0], equals(const ResizableSize.pixels(100)));
+      });
+
+      test('show is a no-op when the child is visible', () {
+        var notified = false;
+        controller.addListener(() => notified = true);
+
+        controller.show(0);
+
+        expect(notified, isFalse);
+      });
+
+      test('hide throws when index is out of range', () {
+        expect(() => controller.hide(-1), throwsRangeError);
+        expect(() => controller.hide(3), throwsRangeError);
+      });
+
+      test('setSizes while hidden remembers the new size for show()', () {
+        controller.hide(1);
+
+        controller.setSizes(const [
+          ResizableSize.pixels(50),
+          ResizableSize.pixels(120),
+          ResizableSize.pixels(50),
+        ]);
+
+        // hidden index still zero-sized
+        expect(controller.sizes[1], equals(const ResizableSize.pixels(0)));
+        expect(controller.isHidden(1), isTrue);
+
+        controller.show(1);
+        expect(controller.sizes[1], equals(const ResizableSize.pixels(120)));
+      });
+
+      test('setSizes ignores hidden indices when validating totals', () {
+        controller.hide(2);
+
+        // Without ignoring index 2, this would exceed available space (300).
+        expect(
+          () => controller.setSizes(const [
+            ResizableSize.pixels(150),
+            ResizableSize.pixels(150),
+            ResizableSize.pixels(200),
+          ]),
+          returnsNormally,
+        );
+      });
+
+      test('setChildren clears hidden state', () {
+        controller.hide(0);
+
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(50),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(50),
+            child: SizedBox.shrink(),
+          ),
+        ]);
+
+        expect(controller.hiddenIndices, isEmpty);
+      });
+
+      test('setHidden(true) and setHidden(false) match hide/show', () {
+        controller.setHidden(0, true);
+        expect(controller.isHidden(0), isTrue);
+
+        controller.setHidden(0, false);
+        expect(controller.isHidden(0), isFalse);
+      });
+    });
   });
 }
