@@ -20,6 +20,9 @@ enum FileAssetPaths {
   shrinkAndFlexScreen(
     'lib/screens/shrink_and_flex/shrink_and_flex_example_screen.dart',
   ),
+  shrinkScrollableScreen(
+    'lib/screens/shrink_and_flex/shrink_scrollable_example_screen.dart',
+  ),
   cascadingDeltaScreen(
     'lib/screens/cascading_delta/cascading_delta_screen.dart',
   ),

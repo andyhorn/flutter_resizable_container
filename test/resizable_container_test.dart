@@ -235,6 +235,46 @@ void main() {
         expect(boxCSize.width, equals(398));
       });
 
+      // Regression test for issue #85: shrink should reflect the child's
+      // rendered size even when the child is a SingleChildScrollView,
+      // whose intrinsic main-axis dimension is 0.
+      testWidgets(
+        'shrink measures actual content size for SingleChildScrollView',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(1000, 1000));
+
+          await tester.pumpWidget(MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                direction: Axis.vertical,
+                children: [
+                  ResizableChild(
+                    size: ResizableSize.shrink(),
+                    child: SingleChildScrollView(
+                      child: SizedBox(
+                        height: 150,
+                        key: Key('ScrollContent'),
+                      ),
+                    ),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox(key: Key('Expand')),
+                  ),
+                ],
+              ),
+            ),
+          ));
+
+          await tester.pumpAndSettle();
+
+          final scrollSize = tester.getSize(
+            find.byKey(const Key('ScrollContent')).first,
+          );
+          expect(scrollSize.height, equals(150));
+        },
+      );
+
       testWidgets('correctly sizes pixels', (tester) async {
         await tester.binding.setSurfaceSize(const Size(1000, 1000));
         await tester.pumpWidget(
