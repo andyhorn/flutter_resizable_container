@@ -1,3 +1,7 @@
+## Unreleased
+
+- feat: animate hide/show transitions via `hideAnimation`. Pass a `ResizableHideAnimation` to `ResizableContainer.hideAnimation` to tween the affected child and its siblings between their current and target sizes when `ResizableController.hide` or `ResizableController.show` is called. Defaults to `null` (instant snap, unchanged behavior).
+
 ## 4.2.0
 
 - Added `cascadeNegativeDelta` flag to cascade changes through children that have reached their lower bound.
