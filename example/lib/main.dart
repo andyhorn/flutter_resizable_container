@@ -3,6 +3,7 @@ import 'package:example/screens/cascading_delta/cascading_delta_screen.dart';
 import 'package:example/screens/controller_listen/controller_listen_example_screen.dart';
 import 'package:example/screens/controller_set_sizes/controller_set_sizes_example_screen.dart';
 import 'package:example/screens/divider/custom_divider_example_screen.dart';
+import 'package:example/screens/hide_show/hide_show_example_screen.dart';
 import 'package:example/screens/pixels/pixels_example_screen.dart';
 import 'package:example/screens/ratio/ratio_example_screen.dart';
 import 'package:example/screens/shrink_and_flex/future_builder_shrink_example_screen.dart';
@@ -33,6 +34,7 @@ class ExampleApp extends StatelessWidget {
         'future-builder-shrink': (context) =>
             const FutureBuilderShrinkExampleScreen(),
         'cascading-delta': (context) => const CascadingDeltaScreen(),
+        'hide-show': (context) => const HideShowExampleScreen(),
       },
     );
   }
