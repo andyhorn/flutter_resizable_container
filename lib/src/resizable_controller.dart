@@ -6,12 +6,17 @@ import "package:flutter_resizable_container/flutter_resizable_container.dart";
 import "package:flutter_resizable_container/src/extensions/num_ext.dart";
 import "package:flutter_resizable_container/src/resizable_size.dart";
 
+/// The effective [ResizableSize] applied to a hidden child.
+const ResizableSize _hiddenSize = ResizableSize.pixels(0, min: 0, max: 0);
+
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
   double _availableSpace = -1;
   List<double> _pixels = [];
   List<ResizableSize> _sizes = const [];
   List<ResizableChild> _children = const [];
+  final Set<int> _hiddenIndices = <int>{};
+  final Map<int, ResizableSize> _savedSizes = <int, ResizableSize>{};
   bool _needsLayout = false;
   bool _cascadeNegativeDelta = false;
 
@@ -27,10 +32,50 @@ class ResizableController with ChangeNotifier {
   /// A list of ratios (proportion of total available space taken) for each child.
   UnmodifiableListView<double> get ratios {
     return UnmodifiableListView([
-      for (final size in pixels) ...[
-        size / _availableSpace,
-      ],
+      for (final size in pixels) ...[size / _availableSpace],
     ]);
+  }
+
+  /// The set of indices of children that are currently hidden.
+  Set<int> get hiddenIndices => Set.unmodifiable(_hiddenIndices);
+
+  /// Whether the child at [index] is currently hidden.
+  bool isHidden(int index) => _hiddenIndices.contains(index);
+
+  /// Hide the child at [index] and its associated divider.
+  ///
+  /// The previous size at [index] is remembered and restored by [show].
+  void hide(int index) => setHidden(index, true);
+
+  /// Show the previously-hidden child at [index] and its associated divider.
+  ///
+  /// If the child is not hidden, this is a no-op.
+  void show(int index) => setHidden(index, false);
+
+  /// Sets whether the child at [index] is hidden.
+  ///
+  /// When hiding, the child's current [ResizableSize] is saved and replaced
+  /// with a zero-sized entry so the child collapses and its divider is
+  /// omitted. When showing, the saved size is restored.
+  void setHidden(int index, bool hidden) {
+    _validateIndex(index);
+
+    if (hidden == _hiddenIndices.contains(index)) {
+      return;
+    }
+
+    if (hidden) {
+      _savedSizes[index] = _sizes[index];
+      _sizes = [..._sizes]..[index] = _hiddenSize;
+      _hiddenIndices.add(index);
+    } else {
+      final restored = _savedSizes.remove(index) ?? _children[index].size;
+      _sizes = [..._sizes]..[index] = restored;
+      _hiddenIndices.remove(index);
+    }
+
+    _needsLayout = true;
+    notifyListeners();
   }
 
   /// Update the [ResizableSize] used to control each child.
@@ -40,13 +85,24 @@ class ResizableController with ChangeNotifier {
   /// The total pixels must be less than or equal to the available space.
   ///
   /// The total ratio must be less than or equal to 1.0.
+  ///
+  /// Sizes provided for currently-hidden indices are remembered and applied
+  /// when the child is shown again; the child remains hidden until [show] is
+  /// called.
   void setSizes(List<ResizableSize> sizes) {
     if (sizes.length != _children.length) {
       throw ArgumentError('Must contain a value for every child');
     }
 
-    final totalPixels =
-        sizes.whereType<ResizableSizePixels>().map((size) => size.pixels).sum();
+    final effective = [
+      for (var i = 0; i < sizes.length; i++)
+        _hiddenIndices.contains(i) ? _hiddenSize : sizes[i],
+    ];
+
+    final totalPixels = effective
+        .whereType<ResizableSizePixels>()
+        .map((size) => size.pixels)
+        .sum();
 
     if (totalPixels > _availableSpace) {
       throw ArgumentError(
@@ -54,22 +110,31 @@ class ResizableController with ChangeNotifier {
       );
     }
 
-    final totalRatio =
-        sizes.whereType<ResizableSizeRatio>().map((size) => size.ratio).sum();
+    final totalRatio = effective
+        .whereType<ResizableSizeRatio>()
+        .map((size) => size.ratio)
+        .sum();
 
     if (totalRatio > 1.0) {
       throw ArgumentError('Total ratio must be less than or equal to 1.0');
     }
 
-    _sizes = sizes;
+    for (final index in _hiddenIndices) {
+      _savedSizes[index] = sizes[index];
+    }
+
+    _sizes = effective;
     _needsLayout = true;
     notifyListeners();
   }
 
-  void _adjustChildSize({
-    required int index,
-    required double delta,
-  }) {
+  void _validateIndex(int index) {
+    if (index < 0 || index >= _children.length) {
+      throw RangeError.index(index, _children, 'index');
+    }
+  }
+
+  void _adjustChildSize({required int index, required double delta}) {
     final adjustedDelta = delta < 0
         ? _getAdjustedReducingDelta(index: index, delta: delta)
         : _getAdjustedIncreasingDelta(index: index, delta: delta);
@@ -135,6 +200,8 @@ class ResizableController with ChangeNotifier {
     _children = children;
     _sizes = children.map((child) => child.size).toList();
     _pixels = List.filled(children.length, 0);
+    _hiddenIndices.clear();
+    _savedSizes.clear();
     _needsLayout = true;
 
     if (notify) {
@@ -215,9 +282,7 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     // get the indices of all rightward siblings
-    final indices = [
-      for (var i = index + 1; i < _children.length; i++) i,
-    ];
+    final indices = [for (var i = index + 1; i < _children.length; i++) i];
 
     // calculate the allowable change for each sibling
     final allowableChanges = [
@@ -247,9 +312,7 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     // get the indices of all leftward siblings
-    final indices = [
-      for (var i = 0; i < index; i++) i,
-    ];
+    final indices = [for (var i = 0; i < index; i++) i];
 
     // calculate the allowable change for each sibling
     final allowableChanges = [

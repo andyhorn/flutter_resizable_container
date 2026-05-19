@@ -109,7 +109,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                 children: [
                   for (var i = 0; i < widget.children.length; i++) ...[
                     widget.children[i].child,
-                    if (i < widget.children.length - 1) ...[
+                    if (_shouldRenderDividerAfter(i)) ...[
                       ResizableContainerDivider.placeholder(
                         config: widget.children[i].divider,
                         direction: widget.direction,
@@ -148,7 +148,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                         );
                       },
                     ),
-                    if (i < widget.children.length - 1) ...[
+                    if (_shouldRenderDividerAfter(i)) ...[
                       ResizableContainerDivider(
                         config: widget.children[i].divider,
                         direction: widget.direction,
@@ -177,6 +177,24 @@ class _ResizableContainerState extends State<ResizableContainer> {
         .sum();
 
     return totalSpace - dividerSpace;
+  }
+
+  bool _shouldRenderDividerAfter(int index) {
+    if (index >= widget.children.length - 1) {
+      return false;
+    }
+
+    if (controller.isHidden(index)) {
+      return false;
+    }
+
+    for (var j = index + 1; j < widget.children.length; j++) {
+      if (!controller.isHidden(j)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   double _getChildSize({
