@@ -68,6 +68,7 @@ class ResizableLayoutRenderObject extends RenderBox
   ValueChanged<List<double>> _onComplete;
   List<ResizableChild> _resizableChildren;
   double _currentPosition = 0.0;
+  final Map<int, double> _shrinkSizes = {};
 
   ResizableLayoutDirection get layoutDirection => _layoutDirection;
   List<ResizableSize> get sizes => _sizes;
@@ -118,11 +119,15 @@ class ResizableLayoutRenderObject extends RenderBox
   @override
   void performLayout() {
     _currentPosition = 0.0;
+    _shrinkSizes.clear();
 
     final children = getChildrenAsList();
     final dividerSpace = _getDividerSpace();
     final pixelSpace = _getPixelsSpace();
-    final shrinkSpace = _getShrinkSpace(children);
+    final shrinkCap = layoutDirection.getMaxConstraint(constraints) -
+        pixelSpace -
+        dividerSpace;
+    final shrinkSpace = _getShrinkSpace(children, shrinkCap);
     final availableRatioSpace = _getAvailableRatioSpace(
       pixelSpace: pixelSpace,
       shrinkSpace: shrinkSpace,
@@ -150,7 +155,7 @@ class ResizableLayoutRenderObject extends RenderBox
           ),
         _ => _getChildConstraints(
             size: size,
-            child: child,
+            index: i ~/ 2,
             availableRatioSpace: availableRatioSpace,
           ),
       };
@@ -249,17 +254,24 @@ class ResizableLayoutRenderObject extends RenderBox
     return pixels.sum();
   }
 
-  double _getShrinkSpace(List<RenderBox> children) {
-    return [
-      for (var i = 0; i < sizes.length; i++) ...[
-        if (sizes[i] is ResizableSizeShrink) ...[
-          _clamp(
-            layoutDirection.getMinIntrinsicDimension(children[i * 2]),
-            sizes[i],
-          ),
-        ]
-      ],
-    ].sum();
+  double _getShrinkSpace(List<RenderBox> children, double cap) {
+    var total = 0.0;
+    for (var i = 0; i < sizes.length; i++) {
+      if (sizes[i] is ResizableSizeShrink) {
+        final measured = _measureShrink(children[i * 2], cap);
+        final clamped = _clamp(measured, sizes[i]);
+        _shrinkSizes[i] = clamped;
+        total += clamped;
+      }
+    }
+    return total;
+  }
+
+  double _measureShrink(RenderBox child, double cap) {
+    final size = child.getDryLayout(
+      layoutDirection.getShrinkMeasureConstraints(constraints, cap),
+    );
+    return layoutDirection.getSizeDimension(size);
   }
 
   double _getDividerSpace() {
@@ -305,13 +317,13 @@ class ResizableLayoutRenderObject extends RenderBox
 
   BoxConstraints _getChildConstraints({
     required ResizableSize size,
-    required RenderBox child,
+    required int index,
     required double availableRatioSpace,
   }) {
     final value = switch (size) {
       ResizableSizePixels(:final pixels) => pixels,
       ResizableSizeRatio(:final ratio) => ratio * availableRatioSpace,
-      ResizableSizeShrink() => layoutDirection.getMinIntrinsicDimension(child),
+      ResizableSizeShrink() => _shrinkSizes[index] ?? 0,
       ResizableSizeExpand() => throw Exception('Invalid size (expand)'),
     };
 
