@@ -106,10 +106,11 @@ class _ResizableContainerState extends State<ResizableContainer> {
                 },
                 sizes: controller.sizes,
                 resizableChildren: widget.children,
+                hiddenIndices: controller.hiddenIndices,
                 children: [
                   for (var i = 0; i < widget.children.length; i++) ...[
                     widget.children[i].child,
-                    if (_shouldRenderDividerAfter(i)) ...[
+                    if (i < widget.children.length - 1) ...[
                       ResizableContainerDivider.placeholder(
                         config: widget.children[i].divider,
                         direction: widget.direction,
@@ -148,15 +149,18 @@ class _ResizableContainerState extends State<ResizableContainer> {
                         );
                       },
                     ),
-                    if (_shouldRenderDividerAfter(i)) ...[
-                      ResizableContainerDivider(
-                        config: widget.children[i].divider,
-                        direction: widget.direction,
-                        onResizeUpdate: (delta) => manager.adjustChildSize(
-                          index: i,
-                          delta: delta,
+                    if (i < widget.children.length - 1) ...[
+                      if (_isDividerHidden(i))
+                        const SizedBox.shrink()
+                      else
+                        ResizableContainerDivider(
+                          config: widget.children[i].divider,
+                          direction: widget.direction,
+                          onResizeUpdate: (delta) => manager.adjustChildSize(
+                            index: i,
+                            delta: delta,
+                          ),
                         ),
-                      ),
                     ],
                   ],
                 ],
@@ -179,22 +183,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
     return totalSpace - dividerSpace;
   }
 
-  bool _shouldRenderDividerAfter(int index) {
-    if (index >= widget.children.length - 1) {
-      return false;
-    }
-
-    if (controller.isHidden(index)) {
-      return false;
-    }
-
-    for (var j = index + 1; j < widget.children.length; j++) {
-      if (!controller.isHidden(j)) {
-        return true;
-      }
-    }
-
-    return false;
+  bool _isDividerHidden(int dividerIndex) {
+    return controller.isHidden(dividerIndex) ||
+        controller.isHidden(dividerIndex + 1);
   }
 
   double _getChildSize({
