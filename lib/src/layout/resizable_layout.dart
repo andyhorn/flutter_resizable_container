@@ -21,12 +21,14 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
     required this.onComplete,
     required this.sizes,
     required this.resizableChildren,
+    this.hiddenIndices = const <int>{},
   });
 
   final Axis direction;
   final ValueChanged<List<double>> onComplete;
   final List<ResizableSize> sizes;
   final List<ResizableChild> resizableChildren;
+  final Set<int> hiddenIndices;
 
   @override
   RenderObject createRenderObject(BuildContext context) {
@@ -35,6 +37,7 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
       sizes: sizes,
       onComplete: onComplete,
       resizableChildren: resizableChildren,
+      hiddenIndices: hiddenIndices,
     );
   }
 
@@ -47,7 +50,8 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
       ..layoutDirection = ResizableLayoutDirection.forAxis(direction)
       ..sizes = sizes
       ..onComplete = onComplete
-      ..resizableChildren = resizableChildren;
+      ..resizableChildren = resizableChildren
+      ..hiddenIndices = hiddenIndices;
   }
 }
 
@@ -58,15 +62,18 @@ class ResizableLayoutRenderObject extends RenderBox
     required List<ResizableSize> sizes,
     required ValueChanged<List<double>> onComplete,
     required List<ResizableChild> resizableChildren,
+    Set<int> hiddenIndices = const <int>{},
   })  : _layoutDirection = layoutDirection,
         _sizes = sizes,
         _onComplete = onComplete,
-        _resizableChildren = resizableChildren;
+        _resizableChildren = resizableChildren,
+        _hiddenIndices = hiddenIndices;
 
   ResizableLayoutDirection _layoutDirection;
   List<ResizableSize> _sizes;
   ValueChanged<List<double>> _onComplete;
   List<ResizableChild> _resizableChildren;
+  Set<int> _hiddenIndices;
   double _currentPosition = 0.0;
   final Map<int, double> _shrinkSizes = {};
 
@@ -74,6 +81,21 @@ class ResizableLayoutRenderObject extends RenderBox
   List<ResizableSize> get sizes => _sizes;
   ValueChanged<List<double>> get onComplete => _onComplete;
   List<ResizableChild> get resizableChildren => _resizableChildren;
+  Set<int> get hiddenIndices => _hiddenIndices;
+
+  set hiddenIndices(Set<int> hiddenIndices) {
+    if (setEquals(_hiddenIndices, hiddenIndices)) {
+      return;
+    }
+
+    _hiddenIndices = hiddenIndices;
+    markNeedsLayout();
+  }
+
+  bool _isDividerHidden(int dividerIndex) {
+    return _hiddenIndices.contains(dividerIndex) ||
+        _hiddenIndices.contains(dividerIndex + 1);
+  }
 
   set layoutDirection(ResizableLayoutDirection layoutDirection) {
     if (_layoutDirection == layoutDirection) {
@@ -165,10 +187,11 @@ class ResizableLayoutRenderObject extends RenderBox
 
       if (i < childCount - 1) {
         final divider = children[i + 1];
-        final dividerSize = _layoutChild(
-          divider,
-          _getDividerConstraints(resizableChildren[i ~/ 2].divider),
-        );
+        final dividerIndex = i ~/ 2;
+        final dividerConstraints = _isDividerHidden(dividerIndex)
+            ? BoxConstraints.tight(layoutDirection.getSize(0, constraints))
+            : _getDividerConstraints(resizableChildren[dividerIndex].divider);
+        final dividerSize = _layoutChild(divider, dividerConstraints);
         finalSizes.add(dividerSize);
       }
     }
@@ -275,11 +298,15 @@ class ResizableLayoutRenderObject extends RenderBox
   }
 
   double _getDividerSpace() {
-    return resizableChildren
-        .take(resizableChildren.length - 1)
-        .map((child) => child.divider.thickness + child.divider.padding)
-        .sum()
-        .toDouble();
+    var total = 0.0;
+    for (var i = 0; i < resizableChildren.length - 1; i++) {
+      if (_isDividerHidden(i)) {
+        continue;
+      }
+      final divider = resizableChildren[i].divider;
+      total += divider.thickness + divider.padding;
+    }
+    return total;
   }
 
   BoxConstraints _getDividerConstraints(ResizableDivider divider) {

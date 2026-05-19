@@ -106,6 +106,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                 },
                 sizes: controller.sizes,
                 resizableChildren: widget.children,
+                hiddenIndices: controller.hiddenIndices,
                 children: [
                   for (var i = 0; i < widget.children.length; i++) ...[
                     widget.children[i].child,
@@ -149,14 +150,17 @@ class _ResizableContainerState extends State<ResizableContainer> {
                       },
                     ),
                     if (i < widget.children.length - 1) ...[
-                      ResizableContainerDivider(
-                        config: widget.children[i].divider,
-                        direction: widget.direction,
-                        onResizeUpdate: (delta) => manager.adjustChildSize(
-                          index: i,
-                          delta: delta,
+                      if (_isDividerHidden(i))
+                        const SizedBox.shrink()
+                      else
+                        ResizableContainerDivider(
+                          config: widget.children[i].divider,
+                          direction: widget.direction,
+                          onResizeUpdate: (delta) => manager.adjustChildSize(
+                            index: i,
+                            delta: delta,
+                          ),
                         ),
-                      ),
                     ],
                   ],
                 ],
@@ -177,6 +181,11 @@ class _ResizableContainerState extends State<ResizableContainer> {
         .sum();
 
     return totalSpace - dividerSpace;
+  }
+
+  bool _isDividerHidden(int dividerIndex) {
+    return controller.isHidden(dividerIndex) ||
+        controller.isHidden(dividerIndex + 1);
   }
 
   double _getChildSize({

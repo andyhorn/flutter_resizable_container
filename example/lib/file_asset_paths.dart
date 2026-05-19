@@ -26,6 +26,9 @@ enum FileAssetPaths {
   cascadingDeltaScreen(
     'lib/screens/cascading_delta/cascading_delta_screen.dart',
   ),
+  hideShowScreen(
+    'lib/screens/hide_show/hide_show_example_screen.dart',
+  ),
   ;
 
   const FileAssetPaths(this.path);
