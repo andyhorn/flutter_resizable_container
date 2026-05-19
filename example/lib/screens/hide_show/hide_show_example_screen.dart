@@ -60,10 +60,10 @@ class _HideShowExampleScreenState extends State<HideShowExampleScreen> {
           ),
           IconButton(
             tooltip: 'Resize left to 320px (works while hidden)',
-            onPressed: () => controller.setSizes(const [
-              ResizableSize.pixels(320),
-              ResizableSize.expand(),
-              ResizableSize.pixels(240),
+            onPressed: () => controller.setSizes([
+              const ResizableSize.pixels(320),
+              const ResizableSize.expand(),
+              ResizableSize.pixels(controller.pixels[2]),
             ]),
             icon: const Icon(Icons.straighten),
           ),
