@@ -291,6 +291,125 @@ void main() {
       });
     });
 
+    group('#adjustChildSize with cascadeNegativeDelta', () {
+      group('when dragging right (delta > 0)', () {
+        test(
+          'does not grow the selected child past its max constraint',
+          () {
+            controller.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.pixels(50),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.pixels(60, max: 70),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.pixels(50, min: 20),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.pixels(40, min: 20),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            manager.setAvailableSpace(200);
+            manager.setRenderedSizes([50, 60, 50, 40]);
+            manager.setCascadeNegativeDelta(true);
+
+            // Drag divider after index=1 far to the right. Index 2 can only
+            // give up 30 (50 -> 20) and index 3 can give up 20 (40 -> 20),
+            // which would naively grow index 1 by 50 -> 110, well past its
+            // max of 70. The cascade must clamp at the max.
+            manager.adjustChildSize(index: 1, delta: 100);
+
+            expect(controller.pixels[1], lessThanOrEqualTo(70));
+            expect(controller.pixels[1], equals(70));
+            // total width is preserved
+            expect(controller.pixels.reduce((a, b) => a + b), equals(200));
+          },
+        );
+
+        test(
+          'shrinks rightward siblings only by what the selected child can absorb',
+          () {
+            controller.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.pixels(50),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.pixels(60, max: 70),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.pixels(50, min: 20),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.pixels(40, min: 20),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            manager.setAvailableSpace(200);
+            manager.setRenderedSizes([50, 60, 50, 40]);
+            manager.setCascadeNegativeDelta(true);
+
+            manager.adjustChildSize(index: 1, delta: 100);
+
+            // index 1 only had room for +10 (60 -> 70). That 10 must come
+            // entirely from the immediate neighbor; the outer sibling stays.
+            expect(controller.pixels[2], equals(40));
+            expect(controller.pixels[3], equals(40));
+          },
+        );
+      });
+
+      group('when dragging left (delta < 0)', () {
+        test(
+          'does not grow the right sibling past its max constraint',
+          () {
+            controller.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.pixels(40, min: 20),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.pixels(50, min: 20),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.pixels(60, min: 20),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.pixels(50, max: 60),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            manager.setAvailableSpace(200);
+            manager.setRenderedSizes([40, 50, 60, 50]);
+            manager.setCascadeNegativeDelta(true);
+
+            // Drag divider after index=2 to the left. Index 2 is at min 20
+            // possible (60 -> 20 = 40 freed), index 1 (50 -> 20 = 30), index
+            // 0 (40 -> 20 = 20). Naively, that could grow index 3 by up to
+            // 90 to 140 — past its max of 60.
+            manager.adjustChildSize(index: 2, delta: -100);
+
+            expect(controller.pixels[3], lessThanOrEqualTo(60));
+            expect(controller.pixels[3], equals(60));
+            // total width is preserved
+            expect(controller.pixels.reduce((a, b) => a + b), equals(200));
+          },
+        );
+      });
+    });
+
     group('#setSizes', () {
       setUp(() {
         controller.setChildren(const [
