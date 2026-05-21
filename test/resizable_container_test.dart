@@ -1951,6 +1951,126 @@ void main() {
         },
       );
     });
+
+    group('controller swap', () {
+      Widget buildApp(ResizableController? controller) {
+        return MaterialApp(
+          home: Scaffold(
+            body: ResizableContainer(
+              controller: controller,
+              direction: Axis.horizontal,
+              children: const [
+                ResizableChild(
+                  divider: ResizableDivider(thickness: 2),
+                  size: ResizableSize.ratio(0.5),
+                  child: SizedBox.expand(key: Key('A')),
+                ),
+                ResizableChild(
+                  size: ResizableSize.ratio(0.5),
+                  child: SizedBox.expand(key: Key('B')),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
+      testWidgets('rebinds when a new controller is supplied', (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1000, 1000));
+        final first = ResizableController();
+        addTearDown(first.dispose);
+        final second = ResizableController();
+        addTearDown(second.dispose);
+
+        await tester.pumpWidget(buildApp(first));
+        await tester.pumpAndSettle();
+
+        await tester.pumpWidget(buildApp(second));
+        await tester.pumpAndSettle();
+
+        // The new controller drives the container.
+        second.setSizes(const [
+          ResizableSize.ratio(0.8),
+          ResizableSize.ratio(0.2),
+        ]);
+        await tester.pump();
+
+        const available = 1000 - 2;
+        expect(
+          tester.getSize(find.byKey(const Key('A'))).width,
+          available * 0.8,
+        );
+
+        // The old controller is detached — mutating it does not affect layout.
+        first.setSizes(const [
+          ResizableSize.ratio(0.1),
+          ResizableSize.ratio(0.9),
+        ]);
+        await tester.pump();
+
+        expect(
+          tester.getSize(find.byKey(const Key('A'))).width,
+          available * 0.8,
+        );
+      });
+
+      testWidgets(
+        'disposes the internal default when swapped to an external controller',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(1000, 1000));
+
+          await tester.pumpWidget(buildApp(null));
+          await tester.pumpAndSettle();
+
+          final external = ResizableController();
+          addTearDown(external.dispose);
+
+          await tester.pumpWidget(buildApp(external));
+          await tester.pumpAndSettle();
+
+          // The new external controller is functional after the swap.
+          external.setSizes(const [
+            ResizableSize.ratio(0.3),
+            ResizableSize.ratio(0.7),
+          ]);
+          await tester.pump();
+
+          const available = 1000 - 2;
+          expect(
+            tester.getSize(find.byKey(const Key('A'))).width,
+            available * 0.3,
+          );
+        },
+      );
+
+      testWidgets(
+        'creates a fresh default when swapped from external to null',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(1000, 1000));
+          final external = ResizableController();
+          addTearDown(external.dispose);
+
+          await tester.pumpWidget(buildApp(external));
+          await tester.pumpAndSettle();
+
+          await tester.pumpWidget(buildApp(null));
+          await tester.pumpAndSettle();
+
+          // Mutating the now-detached external controller has no effect.
+          external.setSizes(const [
+            ResizableSize.ratio(0.9),
+            ResizableSize.ratio(0.1),
+          ]);
+          await tester.pump();
+
+          const available = 1000 - 2;
+          expect(
+            tester.getSize(find.byKey(const Key('A'))).width,
+            available * 0.5,
+          );
+        },
+      );
+    });
   });
 }
 

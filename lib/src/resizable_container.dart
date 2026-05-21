@@ -57,9 +57,9 @@ class ResizableContainer extends StatefulWidget {
 
 class _ResizableContainerState extends State<ResizableContainer>
     with TickerProviderStateMixin {
-  late final controller = widget.controller ?? ResizableController();
-  late final isDefaultController = widget.controller == null;
-  late final manager = ResizableControllerManager(controller);
+  late ResizableController controller;
+  late bool isDefaultController;
+  late ResizableControllerManager manager;
 
   late final _animation = HideAnimationCoordinator(
     vsync: this,
@@ -73,6 +73,10 @@ class _ResizableContainerState extends State<ResizableContainer>
   void initState() {
     super.initState();
 
+    isDefaultController = widget.controller == null;
+    controller = widget.controller ?? ResizableController();
+    manager = ResizableControllerManager(controller);
+
     manager.initChildren(widget.children);
     manager.setCascadeNegativeDelta(widget.cascadeNegativeDelta);
     _prevHiddenIndices = Set.of(controller.hiddenIndices);
@@ -81,22 +85,39 @@ class _ResizableContainerState extends State<ResizableContainer>
 
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
+    final controllerChanged = oldWidget.controller != widget.controller;
     final childrenChanged = !listEquals(oldWidget.children, widget.children);
     final directionChanged = oldWidget.direction != widget.direction;
     final cascadeChanged =
         oldWidget.cascadeNegativeDelta != widget.cascadeNegativeDelta;
 
-    if (childrenChanged) {
+    if (controllerChanged) {
+      _animation.cancel();
+      controller.removeListener(_onControllerChanged);
+      if (isDefaultController) {
+        controller.dispose();
+      }
+
+      controller = widget.controller ?? ResizableController();
+      isDefaultController = widget.controller == null;
+      manager = ResizableControllerManager(controller);
+
+      manager.initChildren(widget.children);
+      manager.setCascadeNegativeDelta(widget.cascadeNegativeDelta);
+      _prevHiddenIndices = Set.of(controller.hiddenIndices);
+      _lastAvailableSpace = null;
+      controller.addListener(_onControllerChanged);
+    } else if (childrenChanged) {
       _animation.cancel();
       controller.setChildren(widget.children);
       _prevHiddenIndices = Set.of(controller.hiddenIndices);
     }
 
-    if (cascadeChanged) {
+    if (!controllerChanged && cascadeChanged) {
       manager.setCascadeNegativeDelta(widget.cascadeNegativeDelta);
     }
 
-    if (childrenChanged || directionChanged) {
+    if (!controllerChanged && (childrenChanged || directionChanged)) {
       manager.setNeedsLayout();
     }
 
