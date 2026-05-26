@@ -144,8 +144,17 @@ class ResizableController with ChangeNotifier {
       if (delta < 0) {
         // and the divider is being dragged to the left
 
+        // cap the cascaded delta so the right neighbor (the receiver of the
+        // freed space) cannot grow past its max constraint
+        final maxGrowth =
+            (_sizes[index + 1].max ?? double.infinity) - _pixels[index + 1];
+        final cascadeDelta = -min(delta.abs(), maxGrowth);
+
         // distribute the delta amongst the leftward siblings
-        final changes = _distributeDeltaLeft(index: index, delta: delta);
+        final changes = _distributeDeltaLeft(
+          index: index,
+          delta: cascadeDelta,
+        );
 
         // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
@@ -162,8 +171,17 @@ class ResizableController with ChangeNotifier {
       } else {
         // and the divider is being dragged to the right
 
+        // cap the cascaded delta so the selected index (the receiver of the
+        // freed space) cannot grow past its max constraint
+        final maxGrowth =
+            (_sizes[index].max ?? double.infinity) - _pixels[index];
+        final cascadeDelta = min(delta, maxGrowth);
+
         // distribute the delta amongst the rightward siblings
-        final changes = _distributeDeltaRight(index: index, delta: delta);
+        final changes = _distributeDeltaRight(
+          index: index,
+          delta: cascadeDelta,
+        );
 
         // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
