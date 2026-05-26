@@ -191,23 +191,19 @@ void main() {
 
     group('#setChildren', () {
       test('sets the list of ResizableChild', () {
-        controller.setChildren(const [
+        const child = SizedBox.shrink();
+        const children = [
           ResizableChild(
             size: ResizableSize.pixels(100),
-            child: SizedBox.shrink(),
+            child: child,
           ),
-        ]);
+        ];
+
+        controller.setChildren(children);
 
         expect(
           ResizableControllerTestHelper.getChildren(controller),
-          equals(
-            const [
-              ResizableChild(
-                size: ResizableSize.pixels(100),
-                child: SizedBox.shrink(),
-              ),
-            ],
-          ),
+          equals(children),
         );
       });
 

@@ -227,6 +227,16 @@ class ResizableController with ChangeNotifier {
     }
   }
 
+  /// Rebinds [_children] without resetting pixel, hidden, or saved-size state.
+  ///
+  /// Used when the children list differs only in non-structural ways (e.g. a
+  /// new divider config or a new child widget instance) — the declared sizes
+  /// and child count are unchanged, so the controller's layout state remains
+  /// valid.
+  void _updateChildrenInPlace(List<ResizableChild> children) {
+    _children = children;
+  }
+
   void _setRenderedSizes(List<double> pixels) {
     _pixels = pixels;
     _needsLayout = false;
@@ -540,6 +550,13 @@ final class ResizableControllerManager {
 
   void initChildren(List<ResizableChild> children) {
     _controller._initChildren(children);
+  }
+
+  /// Rebinds the controller's children list without resetting any layout
+  /// state. Use when the new children differ only in non-structural ways
+  /// (e.g. divider config or child widget instances).
+  void updateChildrenInPlace(List<ResizableChild> children) {
+    _controller._updateChildrenInPlace(children);
   }
 
   void setCascadeNegativeDelta(bool cascadeNegativeDelta) {

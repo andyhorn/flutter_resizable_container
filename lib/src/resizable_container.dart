@@ -86,7 +86,10 @@ class _ResizableContainerState extends State<ResizableContainer>
   @override
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
     final controllerChanged = oldWidget.controller != widget.controller;
-    final childrenChanged = !listEquals(oldWidget.children, widget.children);
+    final structuralChange =
+        _isStructuralChange(oldWidget.children, widget.children);
+    final configChange =
+        !structuralChange && !listEquals(oldWidget.children, widget.children);
     final directionChanged = oldWidget.direction != widget.direction;
     final cascadeChanged =
         oldWidget.cascadeNegativeDelta != widget.cascadeNegativeDelta;
@@ -107,17 +110,19 @@ class _ResizableContainerState extends State<ResizableContainer>
       _prevHiddenIndices = Set.of(controller.hiddenIndices);
       _lastAvailableSpace = null;
       controller.addListener(_onControllerChanged);
-    } else if (childrenChanged) {
+    } else if (structuralChange) {
       _animation.cancel();
       controller.setChildren(widget.children);
       _prevHiddenIndices = Set.of(controller.hiddenIndices);
+    } else if (configChange) {
+      manager.updateChildrenInPlace(widget.children);
     }
 
     if (!controllerChanged && cascadeChanged) {
       manager.setCascadeNegativeDelta(widget.cascadeNegativeDelta);
     }
 
-    if (!controllerChanged && (childrenChanged || directionChanged)) {
+    if (!controllerChanged && (structuralChange || directionChanged)) {
       manager.setNeedsLayout();
     }
 
@@ -127,6 +132,25 @@ class _ResizableContainerState extends State<ResizableContainer>
     }
 
     super.didUpdateWidget(oldWidget);
+  }
+
+  /// Whether [oldChildren] and [newChildren] differ in ways that invalidate
+  /// the controller's layout state — the number of children or any of their
+  /// declared sizes. Differences confined to divider config or child widget
+  /// instances are not structural.
+  bool _isStructuralChange(
+    List<ResizableChild> oldChildren,
+    List<ResizableChild> newChildren,
+  ) {
+    if (oldChildren.length != newChildren.length) {
+      return true;
+    }
+    for (var i = 0; i < oldChildren.length; i++) {
+      if (oldChildren[i].size != newChildren[i].size) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @override
