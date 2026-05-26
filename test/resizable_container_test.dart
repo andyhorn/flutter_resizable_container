@@ -2161,6 +2161,101 @@ void main() {
         expect(notifies, 2);
       });
     });
+
+    group('resizable', () {
+      testWidgets(
+        'locks every divider when false',
+        (tester) async {
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.binding.setSurfaceSize(const Size(600, 100));
+          addTearDown(() async => await tester.binding.setSurfaceSize(null));
+
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  controller: controller,
+                  direction: Axis.horizontal,
+                  resizable: false,
+                  children: const [
+                    ResizableChild(
+                      size: ResizableSize.ratio(0.33),
+                      child: SizedBox.expand(),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.ratio(0.33),
+                      child: SizedBox.expand(),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.ratio(0.34),
+                      child: SizedBox.expand(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          final beforeSizes = List<double>.of(controller.pixels);
+          final dividers = find.byType(ResizableContainerDivider);
+          expect(dividers, findsNWidgets(2));
+
+          await tester.drag(dividers.first, const Offset(80, 0));
+          await tester.pumpAndSettle();
+          await tester.drag(dividers.last, const Offset(-80, 0));
+          await tester.pumpAndSettle();
+
+          expect(controller.pixels, beforeSizes);
+        },
+      );
+
+      testWidgets(
+        'programmatic resize still works when false',
+        (tester) async {
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.binding.setSurfaceSize(const Size(600, 100));
+          addTearDown(() async => await tester.binding.setSurfaceSize(null));
+
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  controller: controller,
+                  direction: Axis.horizontal,
+                  resizable: false,
+                  children: const [
+                    ResizableChild(
+                      size: ResizableSize.ratio(0.5),
+                      child: SizedBox.expand(),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.ratio(0.5),
+                      child: SizedBox.expand(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.setSizes(const [
+            ResizableSize.ratio(0.25),
+            ResizableSize.ratio(0.75),
+          ]);
+          await tester.pumpAndSettle();
+
+          const available = 600 - 1;
+          expect(controller.pixels[0], closeTo(available * 0.25, 0.001));
+          expect(controller.pixels[1], closeTo(available * 0.75, 0.001));
+        },
+      );
+    });
   });
 }
 
