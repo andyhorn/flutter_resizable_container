@@ -217,7 +217,14 @@ class _ResizableContainerState extends State<ResizableContainer>
         manager.setAvailableSpace(availableSpace);
 
         return ListenableBuilder(
-          listenable: controller,
+          // Listen to both the controller (structural changes) and the
+          // needsLayout flag so the build path swaps between the cold and
+          // live paths without depending on the main listener firing after
+          // every layout.
+          listenable: Listenable.merge([
+            controller,
+            controller.needsLayoutListenable,
+          ]),
           builder: (context, _) => _buildForPhase(constraints),
         );
       },

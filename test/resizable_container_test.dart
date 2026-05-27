@@ -2073,19 +2073,23 @@ void main() {
     });
 
     group('notify count', () {
-      // The container schedules a post-frame setRenderedSizes after every
-      // layout pass. That callback notifies controller listeners so the
-      // build path can switch from the layout widget (with placeholder
-      // dividers) to the flex widget (with interactive dividers). These
-      // tests pin the resulting notification count so a future refactor
-      // can't silently introduce another redundant notify cycle.
-      testWidgets('initial mount notifies exactly once', (tester) async {
+      // The main controller listener is reserved for structural changes
+      // (children list, declared sizes, hidden set). Build-path swaps
+      // between the cold and live paths are signalled via
+      // `needsLayoutListenable` instead. These tests pin the resulting
+      // notification counts so a future refactor cannot silently
+      // re-introduce a redundant notify cycle on the main listener.
+      testWidgets('initial mount fires no main listener', (tester) async {
         await tester.binding.setSurfaceSize(const Size(600, 400));
         final controller = ResizableController();
         addTearDown(controller.dispose);
 
-        var notifies = 0;
-        controller.addListener(() => notifies++);
+        var mainNotifies = 0;
+        var needsLayoutNotifies = 0;
+        controller.addListener(() => mainNotifies++);
+        controller.needsLayoutListenable.addListener(
+          () => needsLayoutNotifies++,
+        );
 
         await tester.pumpWidget(
           MaterialApp(
@@ -2113,12 +2117,15 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Exactly one notify: the post-frame setRenderedSizes that
-        // populates controller.pixels and switches the build path.
-        expect(notifies, 1);
+        // Main listener: no structural changes after mount, so zero fires.
+        expect(mainNotifies, 0);
+        // needsLayoutListenable: true on the first available-space call,
+        // false on the post-frame setRenderedSizes that completes the cold
+        // layout. The container observes this to swap to the live path.
+        expect(needsLayoutNotifies, 2);
       });
 
-      testWidgets('hide produces exactly two notifies', (tester) async {
+      testWidgets('hide fires the main listener once', (tester) async {
         await tester.binding.setSurfaceSize(const Size(600, 400));
         final controller = ResizableController();
         addTearDown(controller.dispose);
@@ -2149,16 +2156,22 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        var notifies = 0;
-        controller.addListener(() => notifies++);
+        var mainNotifies = 0;
+        var needsLayoutNotifies = 0;
+        controller.addListener(() => mainNotifies++);
+        controller.needsLayoutListenable.addListener(
+          () => needsLayoutNotifies++,
+        );
 
         controller.hide(1);
         await tester.pumpAndSettle();
 
-        // Two notifies: one from setHidden (sizes/hiddenIndices changed)
-        // and one from the post-frame setRenderedSizes (rendered pixels
-        // changed and the build path switches back to the flex layout).
-        expect(notifies, 2);
+        // Main listener: exactly one fire from the structural hide change.
+        expect(mainNotifies, 1);
+        // needsLayoutListenable: true from setHidden invalidating layout,
+        // false from the post-frame setRenderedSizes completing the
+        // subsequent cold layout.
+        expect(needsLayoutNotifies, 2);
       });
     });
 
