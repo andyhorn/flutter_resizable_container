@@ -2071,6 +2071,96 @@ void main() {
         },
       );
     });
+
+    group('notify count', () {
+      // The container schedules a post-frame setRenderedSizes after every
+      // layout pass. That callback notifies controller listeners so the
+      // build path can switch from the layout widget (with placeholder
+      // dividers) to the flex widget (with interactive dividers). These
+      // tests pin the resulting notification count so a future refactor
+      // can't silently introduce another redundant notify cycle.
+      testWidgets('initial mount notifies exactly once', (tester) async {
+        await tester.binding.setSurfaceSize(const Size(600, 400));
+        final controller = ResizableController();
+        addTearDown(controller.dispose);
+
+        var notifies = 0;
+        controller.addListener(() => notifies++);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: controller,
+                direction: Axis.horizontal,
+                children: const [
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(key: Key('A')),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.pixels(200),
+                    child: SizedBox.expand(key: Key('B')),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(key: Key('C')),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Exactly one notify: the post-frame setRenderedSizes that
+        // populates controller.pixels and switches the build path.
+        expect(notifies, 1);
+      });
+
+      testWidgets('hide produces exactly two notifies', (tester) async {
+        await tester.binding.setSurfaceSize(const Size(600, 400));
+        final controller = ResizableController();
+        addTearDown(controller.dispose);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: controller,
+                direction: Axis.horizontal,
+                children: const [
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(key: Key('A')),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.pixels(200),
+                    child: SizedBox.expand(key: Key('B')),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(key: Key('C')),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        var notifies = 0;
+        controller.addListener(() => notifies++);
+
+        controller.hide(1);
+        await tester.pumpAndSettle();
+
+        // Two notifies: one from setHidden (sizes/hiddenIndices changed)
+        // and one from the post-frame setRenderedSizes (rendered pixels
+        // changed and the build path switches back to the flex layout).
+        expect(notifies, 2);
+      });
+    });
   });
 }
 
