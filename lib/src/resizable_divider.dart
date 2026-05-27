@@ -17,6 +17,7 @@ class ResizableDivider extends Equatable {
     this.cursor,
     this.mainAxisAlignment = MainAxisAlignment.center,
     this.crossAxisAlignment = CrossAxisAlignment.center,
+    this.enabled = true,
   })  : assert(thickness > 0, '[thickness] must be > 0.'),
         assert(
           length is! ResizableSizeShrink,
@@ -84,6 +85,17 @@ class ResizableDivider extends Equatable {
   /// The cursor to display when hovering over this divider.
   final MouseCursor? cursor;
 
+  /// Whether this divider is interactive.
+  ///
+  /// When `false`, the divider is rendered but cannot be dragged, tapped, or
+  /// hovered — its drag, tap, and hover callbacks will not fire and the
+  /// resize cursor is not shown. Programmatic resizing via
+  /// [ResizableController] is unaffected.
+  ///
+  /// Defaults to `true`. See also [ResizableContainer.resizable], which
+  /// disables every divider in the container at once.
+  final bool enabled;
+
   @override
   List<Object?> get props => [
         thickness,
@@ -97,5 +109,6 @@ class ResizableDivider extends Equatable {
         cursor,
         mainAxisAlignment,
         crossAxisAlignment,
+        enabled,
       ];
 }

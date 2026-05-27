@@ -13,17 +13,24 @@ class ResizableContainerDivider extends StatefulWidget {
     required this.direction,
     required this.config,
     required void Function(double) this.onResizeUpdate,
+    this.enabled = true,
   });
 
   const ResizableContainerDivider.placeholder({
     super.key,
     required this.config,
     required this.direction,
-  }) : onResizeUpdate = null;
+  })  : onResizeUpdate = null,
+        enabled = true;
 
   final Axis direction;
   final void Function(double)? onResizeUpdate;
   final ResizableDivider config;
+
+  /// Whether this divider responds to drag, tap, and hover input. When
+  /// `false`, gesture handlers and the resize cursor are suppressed; the
+  /// divider remains visible.
+  final bool enabled;
 
   @override
   State<ResizableContainerDivider> createState() =>
@@ -86,6 +93,9 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   }
 
   MouseCursor _getCursor() {
+    if (!widget.enabled) {
+      return widget.config.cursor ?? MouseCursor.defer;
+    }
     return switch (widget.direction) {
       Axis.horizontal =>
         widget.config.cursor ?? SystemMouseCursors.resizeLeftRight,
@@ -118,11 +128,13 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   }
 
   void _onEnter(PointerEnterEvent _) {
+    if (!widget.enabled) return;
     setState(() => isHovered = true);
     widget.config.onHoverEnter?.call();
   }
 
   void _onExit(PointerExitEvent _) {
+    if (!widget.enabled) return;
     setState(() => isHovered = false);
 
     if (!isDragging) {
@@ -131,6 +143,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   }
 
   void _onVerticalDragStart(DragStartDetails _) {
+    if (!widget.enabled) return;
     if (widget.direction == Axis.vertical) {
       setState(() => isDragging = true);
       widget.config.onDragStart?.call();
@@ -138,12 +151,14 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   }
 
   void _onVerticalDragUpdate(DragUpdateDetails details) {
+    if (!widget.enabled) return;
     if (widget.direction == Axis.vertical) {
       widget.onResizeUpdate?.call(details.delta.dy);
     }
   }
 
   void _onVerticalDragEnd(DragEndDetails _) {
+    if (!widget.enabled) return;
     if (widget.direction == Axis.vertical) {
       setState(() => isDragging = false);
       widget.config.onDragEnd?.call();
@@ -155,6 +170,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   }
 
   void _onHorizontalDragStart(DragStartDetails _) {
+    if (!widget.enabled) return;
     if (widget.direction == Axis.horizontal) {
       setState(() => isDragging = true);
       widget.config.onDragStart?.call();
@@ -165,6 +181,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
     TextDirection textDirection,
   ) {
     return (details) {
+      if (!widget.enabled) return;
       if (widget.direction == Axis.horizontal) {
         final delta = details.delta.dx;
 
@@ -177,6 +194,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   }
 
   void _onHorizontalDragEnd(DragEndDetails _) {
+    if (!widget.enabled) return;
     if (widget.direction == Axis.horizontal) {
       setState(() => isDragging = false);
       widget.config.onDragEnd?.call();
@@ -188,10 +206,12 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   }
 
   void _onTapDown(TapDownDetails _) {
+    if (!widget.enabled) return;
     widget.config.onTapDown?.call();
   }
 
   void _onTapUp(TapUpDetails _) {
+    if (!widget.enabled) return;
     widget.config.onTapUp?.call();
   }
 }

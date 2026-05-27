@@ -24,6 +24,7 @@ class ResizableContainer extends StatefulWidget {
     this.controller,
     this.cascadeNegativeDelta = false,
     this.hideAnimation,
+    this.resizable = true,
   });
 
   /// A list of [ResizableChild] containing the child [Widget]s and
@@ -50,6 +51,17 @@ class ResizableContainer extends StatefulWidget {
   /// [ResizableHideAnimation.curve]. Other size transitions (divider drag,
   /// [ResizableController.setSizes], available-space changes) remain instant.
   final ResizableHideAnimation? hideAnimation;
+
+  /// Whether dividers in this container respond to user input.
+  ///
+  /// When `false`, every divider is locked — drag, tap, and hover callbacks
+  /// will not fire and the resize cursor is not shown. Individual dividers
+  /// can also be locked via [ResizableDivider.enabled]; a divider is
+  /// interactive only when both this flag and its own `enabled` flag are
+  /// `true`. Programmatic resizing via [ResizableController] is unaffected.
+  ///
+  /// Defaults to `true`.
+  final bool resizable;
 
   @override
   State<ResizableContainer> createState() => _ResizableContainerState();
@@ -382,9 +394,11 @@ class _ResizableContainerState extends State<ResizableContainer>
     if (size == 0) {
       return const SizedBox.shrink();
     }
+    final config = widget.children[dividerIndex].divider;
     final divider = ResizableContainerDivider(
-      config: widget.children[dividerIndex].divider,
+      config: config,
       direction: widget.direction,
+      enabled: widget.resizable && config.enabled,
       onResizeUpdate: (delta) => manager.adjustChildSize(
         index: dividerIndex,
         delta: delta,

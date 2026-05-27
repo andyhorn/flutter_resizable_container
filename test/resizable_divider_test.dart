@@ -254,6 +254,106 @@ void main() {
       });
     });
 
+    group('enabled', () {
+      testWidgets('suppresses drag-driven resizing when false', (tester) async {
+        final controller = ResizableController();
+        addTearDown(controller.dispose);
+
+        await tester.binding.setSurfaceSize(const Size(400, 100));
+        addTearDown(() async => await tester.binding.setSurfaceSize(null));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: controller,
+                direction: Axis.horizontal,
+                children: const [
+                  ResizableChild(
+                    size: ResizableSize.ratio(0.5),
+                    divider: ResizableDivider(enabled: false),
+                    child: SizedBox.expand(),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.ratio(0.5),
+                    child: SizedBox.expand(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final beforeSizes = List<double>.of(controller.pixels);
+        final divider = find.byType(ResizableContainerDivider);
+
+        await tester.drag(divider, const Offset(50, 0));
+        await tester.pumpAndSettle();
+
+        expect(controller.pixels, beforeSizes);
+      });
+
+      testWidgets('suppresses tap, hover, and drag callbacks when false',
+          (tester) async {
+        var hoverEnter = false;
+        var hoverExit = false;
+        var tappedDown = false;
+        var tappedUp = false;
+        var dragStarted = false;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: ResizableController(),
+                direction: Axis.horizontal,
+                children: [
+                  ResizableChild(
+                    divider: ResizableDivider(
+                      enabled: false,
+                      onHoverEnter: () => hoverEnter = true,
+                      onHoverExit: () => hoverExit = true,
+                      onTapDown: () => tappedDown = true,
+                      onTapUp: () => tappedUp = true,
+                      onDragStart: () => dragStarted = true,
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                  const ResizableChild(child: SizedBox.expand()),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final divider = find.byType(ResizableContainerDivider);
+
+        final gesture =
+            await tester.createGesture(kind: PointerDeviceKind.mouse);
+        await gesture.addPointer(location: Offset.zero);
+        addTearDown(() => gesture.removePointer());
+        await tester.pump();
+        await gesture.moveTo(tester.getCenter(divider));
+        await tester.pumpAndSettle();
+        await gesture.moveTo(Offset.zero);
+        await tester.pumpAndSettle();
+
+        await tester.tap(divider, kind: PointerDeviceKind.touch);
+        await tester.pumpAndSettle();
+
+        await tester.drag(divider, const Offset(40, 0));
+        await tester.pumpAndSettle();
+
+        expect(hoverEnter, isFalse);
+        expect(hoverExit, isFalse);
+        expect(tappedDown, isFalse);
+        expect(tappedUp, isFalse);
+        expect(dragStarted, isFalse);
+      });
+    });
+
     group('onTapUp', () {
       testWidgets('fires when the divider tap is released', (tester) async {
         bool tappedUp = false;
