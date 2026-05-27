@@ -80,6 +80,71 @@ void main() {
         expect(mainNotifyCount, 0);
       },
     );
+
+    testWidgets(
+      'child widgets do not rebuild while a vertical divider is dragged',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1000, 1000));
+
+        final aBuildCounter = _BuildCounter();
+        final bBuildCounter = _BuildCounter();
+
+        final controller = ResizableController();
+        addTearDown(controller.dispose);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: controller,
+                direction: Axis.vertical,
+                children: [
+                  ResizableChild(
+                    size: const ResizableSize.ratio(0.5),
+                    child: _CountingChild(
+                      counter: aBuildCounter,
+                      key: const Key('BoxA'),
+                    ),
+                  ),
+                  ResizableChild(
+                    size: const ResizableSize.ratio(0.5),
+                    child: _CountingChild(
+                      counter: bBuildCounter,
+                      key: const Key('BoxB'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        final aBaseline = aBuildCounter.count;
+        final bBaseline = bBuildCounter.count;
+        final preDragHeight =
+            tester.getSize(find.byKey(const Key('BoxA'))).height;
+
+        var mainNotifyCount = 0;
+        controller.addListener(() => mainNotifyCount++);
+
+        await tester.timedDrag(
+          find.byType(ResizableContainerDivider),
+          const Offset(0, 120),
+          const Duration(milliseconds: 200),
+        );
+        await tester.pump();
+
+        final postDragHeight =
+            tester.getSize(find.byKey(const Key('BoxA'))).height;
+        expect(postDragHeight, greaterThan(preDragHeight));
+
+        expect(aBuildCounter.count, aBaseline);
+        expect(bBuildCounter.count, bBaseline);
+        expect(mainNotifyCount, 0);
+      },
+    );
   });
 }
 

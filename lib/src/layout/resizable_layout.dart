@@ -313,6 +313,10 @@ class ResizableLayoutRenderObject extends RenderBox
     if (_textDirection != TextDirection.rtl) return;
     if (!_layoutDirection.isHorizontal) return;
 
+    assert(
+      constraints.maxWidth.isFinite,
+      'Resizable in RTL horizontal layout requires bounded width.',
+    );
     final totalWidth = constraints.maxWidth;
     var child = firstChild;
     while (child != null) {

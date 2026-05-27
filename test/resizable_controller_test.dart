@@ -684,6 +684,26 @@ void main() {
         expect(notified, isFalse);
       });
 
+      test('show notifies pixelsListenable with the restored distribution', () {
+        controller.hide(1);
+
+        var notified = false;
+        final snapshots = <List<double>>[];
+        controller.pixelsListenable.addListener(() {
+          notified = true;
+          snapshots.add(List.of(controller.pixelsListenable.value));
+        });
+
+        controller.show(1);
+
+        expect(notified, isTrue);
+        // The visible-index sizes are unchanged by show(); only the hidden
+        // entry is restored from zero. The exact distribution is owned by
+        // the next layout pass, but the listenable must reflect the
+        // controller's current `_pixels` list at notification time.
+        expect(snapshots.single, equals(controller.pixels));
+      });
+
       test('hide throws when index is out of range', () {
         expect(() => controller.hide(-1), throwsRangeError);
         expect(() => controller.hide(3), throwsRangeError);

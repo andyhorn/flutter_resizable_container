@@ -14,8 +14,9 @@ const ResizableSize _hiddenSize = ResizableSize.pixels(0, min: 0, max: 0);
 /// Notification surface:
 ///
 /// * The controller's own [Listenable] (via [addListener]) fires on
-///   *structural* changes only — children list, declared sizes, hidden set,
-///   layout invalidation. It does **not** fire during a divider drag.
+///   *structural* changes — children list, declared sizes, hidden set,
+///   layout invalidation — and on the post-layout rendered-size update that
+///   follows each layout pass. It does **not** fire during a divider drag.
 /// * [pixelsListenable] fires on every pixel change, including the per-tick
 ///   updates produced by a divider drag. Subscribe here when you need to
 ///   react to live size changes.
@@ -30,8 +31,8 @@ class ResizableController with ChangeNotifier {
   final Map<int, ResizableSize> _savedSizes = <int, ResizableSize>{};
   bool _needsLayout = false;
   bool _cascadeNegativeDelta = false;
-  late final _PixelsListenable _pixelsListenable =
-      _PixelsListenable(() => _pixels);
+  final ValueNotifier<List<double>> _pixelsListenable =
+      ValueNotifier<List<double>>(UnmodifiableListView<double>(const []));
 
   /// Whether or not the container needs to (re)layout its children.
   bool get needsLayout => _needsLayout;
@@ -39,18 +40,16 @@ class ResizableController with ChangeNotifier {
   /// The physical size, in pixels, of each child.
   UnmodifiableListView<double> get pixels => UnmodifiableListView(_pixels);
 
-  /// A [ValueListenable] that exposes the current per-child pixel sizes and
-  /// fires on drag-induced and post-layout updates (`_adjustChildSize`,
-  /// `_setRenderedSizes`, structural changes).
+  /// A [ValueListenable] exposing the current per-child pixel sizes.
   ///
-  /// Does **not** fire when pixels shift purely due to a viewport-driven
-  /// available-space change — those mutations happen mid-build and are
-  /// picked up by the next layout pass via the listenable's [value]. Read
-  /// [pixels] (or `pixelsListenable.value`) inside [WidgetsBinding.addPostFrameCallback]
-  /// if you need the post-resize snapshot.
+  /// Fires whenever the pixel sizes change: divider drag ticks, programmatic
+  /// size updates (e.g. [setSizes]), hide/show, and children replacement.
+  /// Each notification publishes a fresh immutable snapshot as [value].
   ///
-  /// Prefer this over [addListener] when you only care about live size
-  /// changes — the main controller listener fires only on structural events.
+  /// Migration: callers that previously listened to the controller via
+  /// [addListener] to observe size changes should listen to this listenable
+  /// instead — the main controller listener is reserved for structural
+  /// changes and post-layout updates.
   ValueListenable<List<double>> get pixelsListenable => _pixelsListenable;
 
   /// The [ResizableSize] of each child.
@@ -102,7 +101,9 @@ class ResizableController with ChangeNotifier {
     }
 
     _needsLayout = true;
-    _pixelsListenable.notify();
+    _pixelsListenable.value = UnmodifiableListView<double>(
+      List<double>.from(_pixels),
+    );
     notifyListeners();
   }
 
@@ -153,7 +154,9 @@ class ResizableController with ChangeNotifier {
 
     _sizes = effective;
     _needsLayout = true;
-    _pixelsListenable.notify();
+    _pixelsListenable.value = UnmodifiableListView<double>(
+      List<double>.from(_pixels),
+    );
     notifyListeners();
   }
 
@@ -238,7 +241,9 @@ class ResizableController with ChangeNotifier {
       _pixels[index + 1] -= adjustedDelta;
     }
 
-    _pixelsListenable.notify();
+    _pixelsListenable.value = UnmodifiableListView<double>(
+      List<double>.from(_pixels),
+    );
   }
 
   void setChildren(List<ResizableChild> children) {
@@ -257,7 +262,9 @@ class ResizableController with ChangeNotifier {
     _savedSizes.clear();
     _needsLayout = true;
 
-    _pixelsListenable.notify();
+    _pixelsListenable.value = UnmodifiableListView<double>(
+      List<double>.from(_pixels),
+    );
 
     if (notify) {
       notifyListeners();
@@ -277,7 +284,9 @@ class ResizableController with ChangeNotifier {
   void _setRenderedSizes(List<double> pixels) {
     _pixels = pixels;
     _needsLayout = false;
-    _pixelsListenable.notify();
+    _pixelsListenable.value = UnmodifiableListView<double>(
+      List<double>.from(_pixels),
+    );
     notifyListeners();
   }
 
@@ -316,6 +325,14 @@ class ResizableController with ChangeNotifier {
     }
 
     _availableSpace = availableSpace;
+
+    // Publish the redistributed pixels so the live-pixel render path reads
+    // current values. This is called during the enclosing LayoutBuilder build
+    // pass; the render object's listener marks itself needs-layout, which is
+    // a no-op when the widget rebuild already dirties it in the same frame.
+    _pixelsListenable.value = UnmodifiableListView<double>(
+      List<double>.from(_pixels),
+    );
   }
 
   double _getDelta(double availableSpace) {
@@ -607,24 +624,4 @@ abstract class ResizableControllerTestHelper {
 
   static List<ResizableChild> getChildren(ResizableController controller) =>
       controller._children;
-}
-
-/// A [ChangeNotifier] that exposes the controller's current pixel snapshot
-/// and serves as the pixel-update channel for [ResizableController].
-///
-/// Exposed via [ResizableController.pixelsListenable] — kept private so
-/// callers cannot fire it themselves. The getter is closure-based rather
-/// than a stored field so [value] always returns the controller's current
-/// `_pixels` list without the controller having to push every mutation
-/// through a separate update method.
-class _PixelsListenable extends ChangeNotifier
-    implements ValueListenable<List<double>> {
-  _PixelsListenable(this._getPixels);
-
-  final List<double> Function() _getPixels;
-
-  @override
-  List<double> get value => UnmodifiableListView(_getPixels());
-
-  void notify() => notifyListeners();
 }

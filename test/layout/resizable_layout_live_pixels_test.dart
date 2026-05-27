@@ -189,6 +189,125 @@ void main() {
     );
 
     testWidgets(
+      'detached render object does not relayout from pixel mutations, '
+      'and rewires when reattached',
+      (tester) async {
+        final pixels = ValueNotifier<List<double>>(const [120, 280]);
+        addTearDown(pixels.dispose);
+
+        await _pumpLayout(tester, pixels: pixels);
+        expect(_widthOf(tester, const Key('A')), 120);
+
+        // Unmount the layout: the render object detaches and must remove its
+        // listener from the notifier so subsequent value changes do not
+        // schedule layout against a dead pipeline.
+        await tester.pumpWidget(const SizedBox());
+
+        // Mutating pixels while detached must not crash and must not produce
+        // a relayout request (there is no layout to observe — the assertion
+        // here is the absence of a thrown error after pumping a frame).
+        pixels.value = const [50, 50];
+        await tester.pump();
+
+        // Re-mount with the same controller / notifier. The render object
+        // re-attaches and must re-subscribe so the live path drives layout.
+        await _pumpLayout(tester, pixels: pixels);
+        expect(_widthOf(tester, const Key('A')), 50);
+
+        pixels.value = const [200, 200];
+        await tester.pump();
+        expect(_widthOf(tester, const Key('A')), 200);
+        expect(_widthOf(tester, const Key('B')), 200);
+      },
+    );
+
+    testWidgets(
+      'vertical layout lays out children using the supplied pixel values '
+      'and relayouts on pixel changes',
+      (tester) async {
+        final pixels = ValueNotifier<List<double>>(const [120, 280]);
+        addTearDown(pixels.dispose);
+
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: SizedBox(
+              width: 100,
+              height: 402,
+              child: ResizableLayout(
+                direction: Axis.vertical,
+                onComplete: (_) {},
+                sizes: const [
+                  ResizableSize.pixels(120),
+                  ResizableSize.pixels(280),
+                ],
+                resizableChildren: const [
+                  ResizableChild(
+                    size: ResizableSize.pixels(120),
+                    divider: ResizableDivider(thickness: 2),
+                    child: SizedBox(key: Key('A')),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.pixels(280),
+                    child: SizedBox(key: Key('B')),
+                  ),
+                ],
+                livePixels: pixels,
+                children: const [
+                  SizedBox(key: Key('A')),
+                  ResizableContainerDivider.placeholder(
+                    config: ResizableDivider(thickness: 2),
+                    direction: Axis.vertical,
+                  ),
+                  SizedBox(key: Key('B')),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        expect(_heightOf(tester, const Key('A')), 120);
+        expect(_heightOf(tester, const Key('B')), 280);
+
+        pixels.value = const [200, 200];
+        await tester.pump();
+
+        expect(_heightOf(tester, const Key('A')), 200);
+        expect(_heightOf(tester, const Key('B')), 200);
+      },
+    );
+
+    testWidgets(
+      'falls back to cold path when livePixels length does not match the '
+      'resizable child count',
+      (tester) async {
+        // Mid-children-swap, the controller's pixels list and the widget's
+        // resizableChildren list briefly disagree on length. The render
+        // object must not index past pixels.length — _canUseLivePixels
+        // detects the mismatch and routes through the cold (resolve-from-
+        // sizes) path. We stage that transient state directly by handing
+        // the layout a notifier whose value length differs from the child
+        // count.
+        final pixels = ValueNotifier<List<double>>(const [50, 50, 50]);
+        addTearDown(pixels.dispose);
+
+        await _pumpLayout(tester, pixels: pixels);
+
+        // Cold-path sizes from the declared ResizableSize.pixels values
+        // (120 + 280), not from the mismatched live pixel list.
+        expect(_widthOf(tester, const Key('A')), 120);
+        expect(_widthOf(tester, const Key('B')), 280);
+
+        // Recovering: align the pixel list length with the child count
+        // and confirm the live path resumes.
+        pixels.value = const [100, 300];
+        await tester.pump();
+        expect(_widthOf(tester, const Key('A')), 100);
+        expect(_widthOf(tester, const Key('B')), 300);
+      },
+    );
+
+    testWidgets(
       'collapses divider to zero when adjacent child is hidden',
       (tester) async {
         final pixels = ValueNotifier<List<double>>(const [100, 0, 300]);
@@ -257,6 +376,10 @@ void main() {
 
 double _widthOf(WidgetTester tester, Key key) {
   return tester.getSize(find.byKey(key)).width;
+}
+
+double _heightOf(WidgetTester tester, Key key) {
+  return tester.getSize(find.byKey(key)).height;
 }
 
 Future<void> _pumpLayout(

@@ -107,9 +107,12 @@ final controller = ResizableController();
 void initState() {
     super.initState();
 
-    controller.addListener(() {
+    // Use `pixelsListenable` for live pixel updates (including during a
+    // divider drag). `controller.addListener` only fires on structural
+    // changes (children list, hidden set, declared sizes).
+    controller.pixelsListenable.addListener(() {
         // ... react to size change events
-        final List<double> pixels = controller.pixels;
+        final List<double> pixels = controller.pixelsListenable.value;
         print(pixels.join(', '));
     });
 }
