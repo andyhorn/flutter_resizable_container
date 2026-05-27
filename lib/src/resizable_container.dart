@@ -224,7 +224,7 @@ class _ResizableContainerState extends State<ResizableContainer>
         return Stack(
           fit: StackFit.expand,
           children: [
-            _buildOffstageMeasureLayout(),
+            _buildOffstageMeasureLayout(constraints),
             _flexFromFullSizes(
               constraints: constraints,
               sizes: _animation.currentSizes!,
@@ -234,7 +234,7 @@ class _ResizableContainerState extends State<ResizableContainer>
 
       case HideAnimationPhase.idle:
         if (controller.needsLayout) {
-          return _buildLayout(_scheduleSetRenderedSizes);
+          return _buildLayout(_scheduleSetRenderedSizes, constraints);
         }
         return _flexFromFullSizes(
           constraints: constraints,
@@ -243,18 +243,24 @@ class _ResizableContainerState extends State<ResizableContainer>
     }
   }
 
-  Widget _buildLayout(ValueChanged<List<double>> onComplete) {
+  Widget _buildLayout(
+    ValueChanged<List<double>> onComplete,
+    BoxConstraints constraints,
+  ) {
     return ResizableLayout(
       direction: widget.direction,
       onComplete: onComplete,
       sizes: controller.sizes,
       resizableChildren: widget.children,
       hiddenIndices: controller.hiddenIndices,
-      children: _buildLayoutChildren((i) => widget.children[i].child),
+      children: _buildLayoutChildren(
+        (i) => widget.children[i].child,
+        constraints,
+      ),
     );
   }
 
-  Widget _buildOffstageMeasureLayout() {
+  Widget _buildOffstageMeasureLayout(BoxConstraints constraints) {
     // Run the layout offstage with placeholder children so the real widgets
     // aren't inflated twice. Any [ResizableSizeShrink] entry is replaced with
     // a fixed-pixel size based on the controller's last-rendered value — the
@@ -275,7 +281,10 @@ class _ResizableContainerState extends State<ResizableContainer>
         sizes: overrideSizes,
         resizableChildren: widget.children,
         hiddenIndices: controller.hiddenIndices,
-        children: _buildLayoutChildren((_) => const SizedBox.shrink()),
+        children: _buildLayoutChildren(
+          (_) => const SizedBox.shrink(),
+          constraints,
+        ),
       ),
     );
   }
@@ -284,7 +293,13 @@ class _ResizableContainerState extends State<ResizableContainer>
   /// expects. [childBuilder] supplies the widget rendered for each child
   /// slot — the real child for the live layout, a placeholder for the
   /// offstage measurement.
-  List<Widget> _buildLayoutChildren(Widget Function(int index) childBuilder) {
+  List<Widget> _buildLayoutChildren(
+    Widget Function(int index) childBuilder,
+    BoxConstraints constraints,
+  ) {
+    final crossAxis =
+        widget.direction == Axis.horizontal ? Axis.vertical : Axis.horizontal;
+    final crossAxisMax = constraints.maxForDirection(crossAxis);
     return [
       for (var i = 0; i < widget.children.length; i++) ...[
         childBuilder(i),
@@ -292,6 +307,10 @@ class _ResizableContainerState extends State<ResizableContainer>
           ResizableContainerDivider.placeholder(
             config: widget.children[i].divider,
             direction: widget.direction,
+            crossAxisSize: resolveDividerCrossAxisSize(
+              widget.children[i].divider.length,
+              crossAxisMax,
+            ),
           ),
       ],
     ];
@@ -382,9 +401,16 @@ class _ResizableContainerState extends State<ResizableContainer>
     if (size == 0) {
       return const SizedBox.shrink();
     }
+    final config = widget.children[dividerIndex].divider;
+    final crossAxis =
+        widget.direction == Axis.horizontal ? Axis.vertical : Axis.horizontal;
     final divider = ResizableContainerDivider(
-      config: widget.children[dividerIndex].divider,
+      config: config,
       direction: widget.direction,
+      crossAxisSize: resolveDividerCrossAxisSize(
+        config.length,
+        constraints.maxForDirection(crossAxis),
+      ),
       onResizeUpdate: (delta) => manager.adjustChildSize(
         index: dividerIndex,
         delta: delta,
