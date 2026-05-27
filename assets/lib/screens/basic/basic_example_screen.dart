@@ -6,8 +6,15 @@ import 'package:example/widgets/size_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 
-class BasicExampleScreen extends StatelessWidget {
+class BasicExampleScreen extends StatefulWidget {
   const BasicExampleScreen({super.key});
+
+  @override
+  State<BasicExampleScreen> createState() => _BasicExampleScreenState();
+}
+
+class _BasicExampleScreenState extends State<BasicExampleScreen> {
+  bool _locked = false;
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +22,11 @@ class BasicExampleScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Basic two-pane example'),
         actions: [
+          IconButton(
+            icon: Icon(_locked ? Icons.lock : Icons.lock_open),
+            tooltip: _locked ? 'Unlock divider' : 'Lock divider',
+            onPressed: () => setState(() => _locked = !_locked),
+          ),
           IconButton(
             icon: const Icon(Icons.help_center),
             onPressed: () => BasicExampleHelpDialog.show(context: context),
@@ -31,6 +43,7 @@ class BasicExampleScreen extends StatelessWidget {
       drawer: const NavDrawer(),
       body: ResizableContainer(
         direction: Axis.horizontal,
+        resizable: !_locked,
         children: [
           ResizableChild(
             child: ColoredBox(
