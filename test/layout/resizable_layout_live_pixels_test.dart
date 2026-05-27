@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_layout.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
@@ -371,6 +371,364 @@ void main() {
         expect(boxC.dx, 100);
       },
     );
+
+    // These tests pin the contract that during a live divider drag, the
+    // pixels published to `pixelsListenable` — and therefore the sizes the
+    // live render path uses — already respect each child's `ResizableSize`
+    // min/max constraints. Clamping is enforced by the controller's
+    // `_adjustChildSize` (which calls `_getAdjustedReducingDelta` /
+    // `_getAdjustedIncreasingDelta`) before publication. The render object's
+    // `_performLiveLayout` reads those pixels verbatim and does NOT re-clamp,
+    // so the controller-side enforcement is the only line of defense.
+    group('drag clamping', () {
+      testWidgets(
+        'horizontal drag past child A max stops A at max and gives '
+        'overflow to neighbor',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(402, 100));
+          addTearDown(() => tester.binding.setSurfaceSize(null));
+
+          await tester.pumpWidget(
+            const MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  direction: Axis.horizontal,
+                  children: [
+                    ResizableChild(
+                      size: ResizableSize.pixels(100, max: 150),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('A')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.pixels(300, min: 50),
+                      child: SizedBox.expand(key: Key('B')),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          // Sanity: starting widths reflect the declared sizes.
+          expect(_widthOf(tester, const Key('A')), 100);
+          expect(_widthOf(tester, const Key('B')), 300);
+
+          // Drag the divider far to the right — naive math would push A to
+          // 100 + 200 = 300, but A's max is 150. The live drag path must
+          // stop A at 150 and absorb the overflow into B.
+          final handle = find.byType(ResizableContainerDivider).first;
+          await tester.drag(handle, const Offset(kDragSlopDefault + 200, 0));
+          await tester.pump();
+
+          expect(_widthOf(tester, const Key('A')), 150);
+          // A grew by 50; B shrinks by the same amount. Divider is 2px so
+          // A + B = 400.
+          expect(_widthOf(tester, const Key('B')), 250);
+        },
+      );
+
+      testWidgets(
+        'horizontal drag past child A min stops A at min',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(402, 100));
+          addTearDown(() => tester.binding.setSurfaceSize(null));
+
+          await tester.pumpWidget(
+            const MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  direction: Axis.horizontal,
+                  children: [
+                    ResizableChild(
+                      size: ResizableSize.pixels(200, min: 150),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('A')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.pixels(200),
+                      child: SizedBox.expand(key: Key('B')),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          expect(_widthOf(tester, const Key('A')), 200);
+          expect(_widthOf(tester, const Key('B')), 200);
+
+          // Drag far left — naive math would push A to 0, but A's min is 150.
+          final handle = find.byType(ResizableContainerDivider).first;
+          await tester.drag(handle, const Offset(-(kDragSlopDefault + 200), 0));
+          await tester.pump();
+
+          expect(_widthOf(tester, const Key('A')), 150);
+          expect(_widthOf(tester, const Key('B')), 250);
+        },
+      );
+
+      testWidgets(
+        'horizontal drag halts when sender is at max and receiver is at min',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(402, 100));
+          addTearDown(() => tester.binding.setSurfaceSize(null));
+
+          await tester.pumpWidget(
+            const MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  direction: Axis.horizontal,
+                  children: [
+                    ResizableChild(
+                      // A is already at its max; dragging right cannot grow it
+                      size: ResizableSize.pixels(150, max: 150),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('A')),
+                    ),
+                    ResizableChild(
+                      // B is already at its min; dragging right cannot shrink
+                      // it further either.
+                      size: ResizableSize.pixels(250, min: 250),
+                      child: SizedBox.expand(key: Key('B')),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          expect(_widthOf(tester, const Key('A')), 150);
+          expect(_widthOf(tester, const Key('B')), 250);
+
+          final handle = find.byType(ResizableContainerDivider).first;
+          await tester.drag(handle, const Offset(kDragSlopDefault + 100, 0));
+          await tester.pump();
+
+          // Neither end can move — widths are unchanged.
+          expect(_widthOf(tester, const Key('A')), 150);
+          expect(_widthOf(tester, const Key('B')), 250);
+        },
+      );
+
+      testWidgets(
+        'vertical drag past child A max stops A at max',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(100, 402));
+          addTearDown(() => tester.binding.setSurfaceSize(null));
+
+          await tester.pumpWidget(
+            const MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  direction: Axis.vertical,
+                  children: [
+                    ResizableChild(
+                      size: ResizableSize.pixels(100, max: 150),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('A')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.pixels(300),
+                      child: SizedBox.expand(key: Key('B')),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          expect(_heightOf(tester, const Key('A')), 100);
+          expect(_heightOf(tester, const Key('B')), 300);
+
+          final handle = find.byType(ResizableContainerDivider).first;
+          await tester.drag(handle, const Offset(0, kDragSlopDefault + 200));
+          await tester.pump();
+
+          expect(_heightOf(tester, const Key('A')), 150);
+          expect(_heightOf(tester, const Key('B')), 250);
+        },
+      );
+
+      testWidgets(
+        'vertical drag past child A min stops A at min',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(100, 402));
+          addTearDown(() => tester.binding.setSurfaceSize(null));
+
+          await tester.pumpWidget(
+            const MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  direction: Axis.vertical,
+                  children: [
+                    ResizableChild(
+                      size: ResizableSize.pixels(200, min: 150),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('A')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.pixels(200),
+                      child: SizedBox.expand(key: Key('B')),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          expect(_heightOf(tester, const Key('A')), 200);
+          expect(_heightOf(tester, const Key('B')), 200);
+
+          final handle = find.byType(ResizableContainerDivider).first;
+          await tester.drag(handle, const Offset(0, -(kDragSlopDefault + 200)));
+          await tester.pump();
+
+          expect(_heightOf(tester, const Key('A')), 150);
+          expect(_heightOf(tester, const Key('B')), 250);
+        },
+      );
+
+      testWidgets(
+        'cascading negative delta drag does not grow receiver past its max '
+        '(regression for 9f06c32)',
+        (tester) async {
+          // Mirrors the controller-level cascade test at
+          // test/resizable_controller_test.dart:505 but pins the same
+          // property at the rendered-pixel level — i.e. the value the live
+          // layout path actually consumes.
+          await tester.binding.setSurfaceSize(const Size(206, 100));
+          addTearDown(() => tester.binding.setSurfaceSize(null));
+
+          await tester.pumpWidget(
+            const MaterialApp(
+              home: Scaffold(
+                body: ResizableContainer(
+                  cascadeNegativeDelta: true,
+                  direction: Axis.horizontal,
+                  children: [
+                    ResizableChild(
+                      size: ResizableSize.pixels(40, min: 20),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('A')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.pixels(50, min: 20),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('B')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.pixels(60, min: 20),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('C')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.pixels(50, max: 60),
+                      child: SizedBox.expand(key: Key('D')),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          // 40 + 2 + 50 + 2 + 60 + 2 + 50 = 206. Sanity check.
+          expect(_widthOf(tester, const Key('A')), 40);
+          expect(_widthOf(tester, const Key('B')), 50);
+          expect(_widthOf(tester, const Key('C')), 60);
+          expect(_widthOf(tester, const Key('D')), 50);
+
+          // Drag the divider between C and D (the third one) far to the
+          // left. Naive cascading would free up to 40 + 30 + 20 = 90 from C,
+          // B, A — pushing D past its max of 60. The clamp at 9f06c32 must
+          // hold through the live path: D stops at 60.
+          final handle = find.byType(ResizableContainerDivider).at(2);
+          await tester.drag(
+            handle,
+            const Offset(-(kDragSlopDefault + 100), 0),
+          );
+          await tester.pump();
+
+          expect(_widthOf(tester, const Key('D')), lessThanOrEqualTo(60));
+          expect(_widthOf(tester, const Key('D')), 60);
+          // Container width is preserved (children + 3 dividers = 206).
+          final total = _widthOf(tester, const Key('A')) +
+              _widthOf(tester, const Key('B')) +
+              _widthOf(tester, const Key('C')) +
+              _widthOf(tester, const Key('D'));
+          expect(total, 200);
+        },
+      );
+
+      testWidgets(
+        'live render path itself does not re-clamp: violating pixels are '
+        'rendered as-is (defense-in-depth lives in the controller)',
+        (tester) async {
+          // Documents the architectural split: the controller is the sole
+          // enforcer of min/max during drag. If a caller feeds the layout a
+          // hand-built `ValueListenable` whose values violate the declared
+          // `ResizableSize` constraints, the live path will render them
+          // verbatim — there is no second clamp inside the render object.
+          //
+          // This test exists so a future change that adds (or removes)
+          // re-clamping in `_performLiveLayout` flips a meaningful signal.
+          final pixels = ValueNotifier<List<double>>(const [50, 350]);
+          addTearDown(pixels.dispose);
+
+          await tester.pumpWidget(
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: SizedBox(
+                width: 402,
+                height: 100,
+                child: ResizableLayout(
+                  direction: Axis.horizontal,
+                  onComplete: (_) {},
+                  sizes: const [
+                    // Declared min 100 / max 200 — both deliberately violated
+                    // by the live pixel list (50, 350).
+                    ResizableSize.pixels(120, min: 100, max: 200),
+                    ResizableSize.pixels(280, min: 100, max: 200),
+                  ],
+                  resizableChildren: const [
+                    ResizableChild(
+                      size: ResizableSize.pixels(120, min: 100, max: 200),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox(key: Key('A')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.pixels(280, min: 100, max: 200),
+                      child: SizedBox(key: Key('B')),
+                    ),
+                  ],
+                  livePixels: pixels,
+                  children: const [
+                    SizedBox(key: Key('A')),
+                    ResizableContainerDivider.placeholder(
+                      config: ResizableDivider(thickness: 2),
+                      direction: Axis.horizontal,
+                    ),
+                    SizedBox(key: Key('B')),
+                  ],
+                ),
+              ),
+            ),
+          );
+
+          // The render object renders the supplied (constraint-violating)
+          // values exactly. If this ever fails because A == 100 / B == 200,
+          // someone added re-clamping in the live path — update the test
+          // and the architectural note above.
+          expect(_widthOf(tester, const Key('A')), 50);
+          expect(_widthOf(tester, const Key('B')), 350);
+        },
+      );
+    });
   });
 }
 
