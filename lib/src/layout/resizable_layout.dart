@@ -22,6 +22,7 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
     required this.sizes,
     required this.resizableChildren,
     this.hiddenIndices = const <int>{},
+    this.livePixels,
   });
 
   final Axis direction;
@@ -29,6 +30,16 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
   final List<ResizableSize> sizes;
   final List<ResizableChild> resizableChildren;
   final Set<int> hiddenIndices;
+
+  /// Source of authoritative per-child pixel sizes. When non-null, the
+  /// render object lays out children directly from `livePixels.value` and
+  /// subscribes for change notifications so drag updates can trigger
+  /// `markNeedsLayout` without rebuilding the widget tree. When `null`, the
+  /// render object falls back to resolving [sizes] from the
+  /// [ResizableSize] declarations and reports the resolved values via
+  /// [onComplete] — used for the initial layout pass and the offstage
+  /// measurement pass.
+  final ValueListenable<List<double>>? livePixels;
 
   @override
   RenderObject createRenderObject(BuildContext context) {
@@ -38,6 +49,8 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
       onComplete: onComplete,
       resizableChildren: resizableChildren,
       hiddenIndices: hiddenIndices,
+      livePixels: livePixels,
+      textDirection: Directionality.maybeOf(context),
     );
   }
 
@@ -51,7 +64,9 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
       ..sizes = sizes
       ..onComplete = onComplete
       ..resizableChildren = resizableChildren
-      ..hiddenIndices = hiddenIndices;
+      ..hiddenIndices = hiddenIndices
+      ..livePixels = livePixels
+      ..textDirection = Directionality.maybeOf(context);
   }
 }
 
@@ -63,17 +78,23 @@ class ResizableLayoutRenderObject extends RenderBox
     required ValueChanged<List<double>> onComplete,
     required List<ResizableChild> resizableChildren,
     Set<int> hiddenIndices = const <int>{},
+    ValueListenable<List<double>>? livePixels,
+    TextDirection? textDirection,
   })  : _layoutDirection = layoutDirection,
         _sizes = sizes,
         _onComplete = onComplete,
         _resizableChildren = resizableChildren,
-        _hiddenIndices = hiddenIndices;
+        _hiddenIndices = hiddenIndices,
+        _livePixels = livePixels,
+        _textDirection = textDirection;
 
   ResizableLayoutDirection _layoutDirection;
   List<ResizableSize> _sizes;
   ValueChanged<List<double>> _onComplete;
   List<ResizableChild> _resizableChildren;
   Set<int> _hiddenIndices;
+  ValueListenable<List<double>>? _livePixels;
+  TextDirection? _textDirection;
   double _currentPosition = 0.0;
   final Map<int, double> _shrinkSizes = {};
 
@@ -82,6 +103,46 @@ class ResizableLayoutRenderObject extends RenderBox
   ValueChanged<List<double>> get onComplete => _onComplete;
   List<ResizableChild> get resizableChildren => _resizableChildren;
   Set<int> get hiddenIndices => _hiddenIndices;
+  ValueListenable<List<double>>? get livePixels => _livePixels;
+  TextDirection? get textDirection => _textDirection;
+
+  set textDirection(TextDirection? value) {
+    if (_textDirection == value) {
+      return;
+    }
+    _textDirection = value;
+    // RTL reversal only affects horizontal layouts; vertical layouts are
+    // unchanged by directionality so a relayout would be wasted work.
+    if (_layoutDirection.isHorizontal) {
+      markNeedsLayout();
+    }
+  }
+
+  set livePixels(ValueListenable<List<double>>? value) {
+    if (identical(_livePixels, value)) {
+      return;
+    }
+    if (attached) {
+      _livePixels?.removeListener(_handleLivePixelsChanged);
+      value?.addListener(_handleLivePixelsChanged);
+    }
+    _livePixels = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _livePixels?.addListener(_handleLivePixelsChanged);
+  }
+
+  @override
+  void detach() {
+    _livePixels?.removeListener(_handleLivePixelsChanged);
+    super.detach();
+  }
+
+  void _handleLivePixelsChanged() => markNeedsLayout();
 
   set hiddenIndices(Set<int> hiddenIndices) {
     if (setEquals(_hiddenIndices, hiddenIndices)) {
@@ -144,6 +205,12 @@ class ResizableLayoutRenderObject extends RenderBox
     _shrinkSizes.clear();
 
     final children = getChildrenAsList();
+
+    if (_canUseLivePixels()) {
+      _performLiveLayout(children);
+      return;
+    }
+
     final dividerSpace = _getDividerSpace();
     final pixelSpace = _getPixelsSpace();
     final shrinkCap = layoutDirection.getMaxConstraint(constraints) -
@@ -197,7 +264,63 @@ class ResizableLayoutRenderObject extends RenderBox
     }
 
     size = constraints.biggest;
+    _maybeReverseOffsetsForRtl();
     onComplete(finalSizes);
+  }
+
+  bool _canUseLivePixels() {
+    final pixels = _livePixels?.value;
+    return pixels != null && pixels.length == _resizableChildren.length;
+  }
+
+  /// Fast path used when [_livePixels] is present and its value matches the
+  /// expected child count. Lays out children directly from those values and
+  /// dividers from their static config — no resolution of [ResizableSize]
+  /// declarations and no [onComplete] callback, since the pixels are
+  /// already authoritative.
+  void _performLiveLayout(List<RenderBox> children) {
+    final pixels = _livePixels!.value;
+    for (var i = 0; i < childCount; i += 2) {
+      final childIndex = i ~/ 2;
+      final childMainSize = pixels[childIndex];
+      final childConstraints = BoxConstraints.tight(
+        layoutDirection.getSize(childMainSize, constraints),
+      );
+      _layoutChild(children[i], childConstraints);
+
+      if (i < childCount - 1) {
+        final dividerIndex = childIndex;
+        final divider = _resizableChildren[dividerIndex].divider;
+        final dividerMainSize = _isDividerHidden(dividerIndex)
+            ? 0.0
+            : divider.thickness + divider.padding;
+        final dividerConstraints = BoxConstraints.tight(
+          layoutDirection.getSize(dividerMainSize, constraints),
+        );
+        _layoutChild(children[i + 1], dividerConstraints);
+      }
+    }
+
+    size = constraints.biggest;
+    _maybeReverseOffsetsForRtl();
+  }
+
+  /// Reverses each child's main-axis offset when the layout is horizontal
+  /// and the ambient text direction is RTL. The forward layout always
+  /// positions children left-to-right; this hook flips them to match
+  /// [Flex]'s RTL semantics.
+  void _maybeReverseOffsetsForRtl() {
+    if (_textDirection != TextDirection.rtl) return;
+    if (!_layoutDirection.isHorizontal) return;
+
+    final totalWidth = constraints.maxWidth;
+    var child = firstChild;
+    while (child != null) {
+      final parentData = child.parentData! as _ResizableLayoutParentData;
+      final width = child.size.width;
+      parentData.offset = Offset(totalWidth - parentData.offset.dx - width, 0);
+      child = parentData.nextSibling;
+    }
   }
 
   Map<int, Decimal> _getExpandSizes(double availableSpace) {

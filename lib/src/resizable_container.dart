@@ -216,8 +216,8 @@ class _ResizableContainerState extends State<ResizableContainer>
 
         manager.setAvailableSpace(availableSpace);
 
-        return AnimatedBuilder(
-          animation: controller,
+        return ListenableBuilder(
+          listenable: controller,
           builder: (context, _) => _buildForPhase(constraints),
         );
       },
@@ -245,25 +245,54 @@ class _ResizableContainerState extends State<ResizableContainer>
         );
 
       case HideAnimationPhase.idle:
-        if (controller.needsLayout) {
-          return _buildLayout(_scheduleSetRenderedSizes);
-        }
-        return _flexFromFullSizes(
-          constraints: constraints,
-          sizes: _deriveFullSizesFromController(),
+        // The cold (size-resolution) path runs whenever the controller's
+        // sizes need re-resolving; otherwise feed live pixels into the
+        // render object so drag updates relayout without rebuilding.
+        return _buildLayout(
+          onComplete: _scheduleSetRenderedSizes,
+          livePixels:
+              controller.needsLayout ? null : controller.pixelsListenable,
         );
     }
   }
 
-  Widget _buildLayout(ValueChanged<List<double>> onComplete) {
+  Widget _buildLayout({
+    required ValueChanged<List<double>> onComplete,
+    required ValueListenable<List<double>>? livePixels,
+  }) {
     return ResizableLayout(
       direction: widget.direction,
       onComplete: onComplete,
       sizes: controller.sizes,
       resizableChildren: widget.children,
       hiddenIndices: controller.hiddenIndices,
-      children: _buildLayoutChildren((i) => widget.children[i].child),
+      livePixels: livePixels,
+      children: _buildLayoutChildren(
+        childBuilder: (i) => widget.children[i].child,
+        dividerBuilder: _buildInteractiveDivider,
+      ),
     );
+  }
+
+  Widget _buildInteractiveDivider(int dividerIndex) {
+    if (_isDividerHidden(dividerIndex, controller.hiddenIndices)) {
+      return const SizedBox.shrink();
+    }
+    return ResizableContainerDivider(
+      config: widget.children[dividerIndex].divider,
+      direction: widget.direction,
+      onResizeUpdate: (delta) => manager.adjustChildSize(
+        index: dividerIndex,
+        delta: delta,
+      ),
+    );
+  }
+
+  /// Whether the divider at [dividerIndex] is hidden — true when either
+  /// adjacent child is in [hiddenIndices].
+  static bool _isDividerHidden(int dividerIndex, Set<int> hiddenIndices) {
+    return hiddenIndices.contains(dividerIndex) ||
+        hiddenIndices.contains(dividerIndex + 1);
   }
 
   Widget _buildOffstageMeasureLayout() {
@@ -287,24 +316,32 @@ class _ResizableContainerState extends State<ResizableContainer>
         sizes: overrideSizes,
         resizableChildren: widget.children,
         hiddenIndices: controller.hiddenIndices,
-        children: _buildLayoutChildren((_) => const SizedBox.shrink()),
+        children: _buildLayoutChildren(
+          childBuilder: (_) => const SizedBox.shrink(),
+          dividerBuilder: (i) => ResizableContainerDivider.placeholder(
+            config: widget.children[i].divider,
+            direction: widget.direction,
+          ),
+        ),
       ),
     );
   }
 
   /// Builds the alternating child/divider list that [ResizableLayout]
   /// expects. [childBuilder] supplies the widget rendered for each child
-  /// slot — the real child for the live layout, a placeholder for the
-  /// offstage measurement.
-  List<Widget> _buildLayoutChildren(Widget Function(int index) childBuilder) {
+  /// slot; [dividerBuilder] supplies the widget rendered for each divider
+  /// slot (interactive divider for the live layout, placeholder for the
+  /// offstage measurement). Children are wrapped in [RepaintBoundary] so a
+  /// single child's paint dirtiness doesn't propagate to siblings during a
+  /// drag.
+  List<Widget> _buildLayoutChildren({
+    required Widget Function(int index) childBuilder,
+    required Widget Function(int dividerIndex) dividerBuilder,
+  }) {
     return [
       for (var i = 0; i < widget.children.length; i++) ...[
-        childBuilder(i),
-        if (i < widget.children.length - 1)
-          ResizableContainerDivider.placeholder(
-            config: widget.children[i].divider,
-            direction: widget.direction,
-          ),
+        RepaintBoundary(child: childBuilder(i)),
+        if (i < widget.children.length - 1) dividerBuilder(i),
       ],
     ];
   }
@@ -337,15 +374,19 @@ class _ResizableContainerState extends State<ResizableContainer>
     });
   }
 
-  List<double> _deriveFullSizesFromController({Set<int>? hiddenIndices}) {
-    final hidden = hiddenIndices ?? controller.hiddenIndices;
+  List<double> _deriveFullSizesFromController({
+    required Set<int> hiddenIndices,
+  }) {
     final result = <double>[];
     for (var i = 0; i < widget.children.length; i++) {
       result.add(controller.pixels[i]);
       if (i < widget.children.length - 1) {
-        final dividerHidden = hidden.contains(i) || hidden.contains(i + 1);
         final config = widget.children[i].divider;
-        result.add(dividerHidden ? 0.0 : config.thickness + config.padding);
+        result.add(
+          _isDividerHidden(i, hiddenIndices)
+              ? 0.0
+              : config.thickness + config.padding,
+        );
       }
     }
     return result;
@@ -371,7 +412,7 @@ class _ResizableContainerState extends State<ResizableContainer>
                 height: widget.direction == Axis.vertical
                     ? mainSize
                     : constraints.maxForDirection(Axis.vertical),
-                child: widget.children[i].child,
+                child: RepaintBoundary(child: widget.children[i].child),
               );
             },
           ),
