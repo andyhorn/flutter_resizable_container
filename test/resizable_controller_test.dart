@@ -501,7 +501,10 @@ void main() {
 
         expect(controller.isHidden(1), isTrue);
         expect(controller.hiddenIndices, equals({1}));
-        expect(controller.sizes[1], equals(const ResizableSize.pixels(0)));
+        expect(
+          controller.sizes[1],
+          equals(const ResizableSize.pixels(0, min: 0, max: 0)),
+        );
         expect(controller.needsLayout, isTrue);
       });
 
@@ -558,7 +561,10 @@ void main() {
         ]);
 
         // hidden index still zero-sized
-        expect(controller.sizes[1], equals(const ResizableSize.pixels(0)));
+        expect(
+          controller.sizes[1],
+          equals(const ResizableSize.pixels(0, min: 0, max: 0)),
+        );
         expect(controller.isHidden(1), isTrue);
 
         controller.show(1);

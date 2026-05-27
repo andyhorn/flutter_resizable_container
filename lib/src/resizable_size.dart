@@ -76,10 +76,13 @@ final class ResizableSizePixels extends ResizableSize {
 
   @override
   operator ==(Object other) =>
-      other is ResizableSizePixels && other.pixels == pixels;
+      other is ResizableSizePixels &&
+      other.pixels == pixels &&
+      other.min == min &&
+      other.max == max;
 
   @override
-  int get hashCode => pixels.hashCode;
+  int get hashCode => Object.hash(pixels, min, max);
 }
 
 final class ResizableSizeRatio extends ResizableSize {
@@ -95,10 +98,13 @@ final class ResizableSizeRatio extends ResizableSize {
 
   @override
   operator ==(Object other) =>
-      other is ResizableSizeRatio && other.ratio == ratio;
+      other is ResizableSizeRatio &&
+      other.ratio == ratio &&
+      other.min == min &&
+      other.max == max;
 
   @override
-  int get hashCode => ratio.hashCode;
+  int get hashCode => Object.hash(ratio, min, max);
 }
 
 final class ResizableSizeExpand extends ResizableSize {
@@ -113,10 +119,13 @@ final class ResizableSizeExpand extends ResizableSize {
 
   @override
   operator ==(Object other) =>
-      other is ResizableSizeExpand && other.flex == flex;
+      other is ResizableSizeExpand &&
+      other.flex == flex &&
+      other.min == min &&
+      other.max == max;
 
   @override
-  int get hashCode => flex.hashCode;
+  int get hashCode => Object.hash(flex, min, max);
 }
 
 final class ResizableSizeShrink extends ResizableSize {
@@ -124,4 +133,11 @@ final class ResizableSizeShrink extends ResizableSize {
 
   @override
   String toString() => 'ResizableSizeShrink()';
+
+  @override
+  operator ==(Object other) =>
+      other is ResizableSizeShrink && other.min == min && other.max == max;
+
+  @override
+  int get hashCode => Object.hash(min, max);
 }
