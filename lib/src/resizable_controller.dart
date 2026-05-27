@@ -369,53 +369,47 @@ class ResizableController with ChangeNotifier {
     required double delta,
     required List<double> sizes,
   }) {
-    final indices = List.generate(_children.length, (i) => i);
-    final changeableIndices = _getChangeableIndices(delta < 0 ? -1 : 1, sizes);
+    final changes = List<double>.filled(sizes.length, 0.0);
+    final workingSizes = List<double>.of(sizes);
+    var remainingDelta = delta;
 
-    if (changeableIndices.isEmpty) {
-      return List.filled(sizes.length, 0.0);
-    }
-
-    final changePerItem = delta / changeableIndices.length;
-
-    final maximums = indices.map((i) {
-      if (changeableIndices.contains(i)) {
-        return _getAllowableChange(delta: delta, index: i, sizes: sizes);
-      }
-
-      return 0.0;
-    }).toList();
-
-    final changes = indices.map((index) {
-      if (!changeableIndices.contains(index)) {
-        return 0.0;
-      }
-
-      final max = maximums[index];
-
-      if (max.abs() < changePerItem.abs()) {
-        return max;
-      }
-
-      return changePerItem;
-    }).toList();
-
-    final changesSum = changes.sum();
-    final remainingChange = delta - changesSum;
-
-    if (remainingChange.abs() > 0) {
-      final adjustedSizes = indices.map(
-        (index) => sizes[index] + changes[index],
+    // Iterative water-filling: each pass distributes `remainingDelta` equally
+    // amongst changeable children, capping each at its allowable change. A
+    // child capped below the equal share is saturated and drops out of the
+    // next pass, so the loop terminates in at most 2n iterations (the
+    // expand-priority set, then the fallback set).
+    while (remainingDelta != 0.0) {
+      final changeableIndices = _getChangeableIndices(
+        remainingDelta < 0 ? -1 : 1,
+        workingSizes,
       );
 
-      final redistributed = _distributeAvailableSpaceDelta(
-        delta: remainingChange,
-        sizes: adjustedSizes.toList(),
-      );
-
-      for (var i = 0; i < changes.length; i++) {
-        changes[i] += redistributed[i];
+      if (changeableIndices.isEmpty) {
+        break;
       }
+
+      final changePerItem = remainingDelta / changeableIndices.length;
+      var allocated = 0.0;
+
+      for (final index in changeableIndices) {
+        final allowable = _getAllowableChange(
+          delta: remainingDelta,
+          index: index,
+          sizes: workingSizes,
+        );
+        final change =
+            allowable.abs() < changePerItem.abs() ? allowable : changePerItem;
+
+        changes[index] += change;
+        workingSizes[index] += change;
+        allocated += change;
+      }
+
+      if (allocated == 0.0) {
+        break;
+      }
+
+      remainingDelta -= allocated;
     }
 
     return changes;
