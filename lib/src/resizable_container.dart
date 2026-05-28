@@ -285,9 +285,11 @@ class _ResizableContainerState extends State<ResizableContainer>
     if (_isDividerHidden(dividerIndex, controller.hiddenIndices)) {
       return const SizedBox.shrink();
     }
+    final config = widget.children[dividerIndex].divider;
     return ResizableContainerDivider(
-      config: widget.children[dividerIndex].divider,
+      config: config,
       direction: widget.direction,
+      enabled: widget.resizable && config.enabled,
       onResizeUpdate: (delta) => manager.adjustChildSize(
         index: dividerIndex,
         delta: delta,
