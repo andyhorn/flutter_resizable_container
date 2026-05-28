@@ -1,7 +1,7 @@
 import "dart:collection";
 import "dart:math";
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import "package:flutter_resizable_container/flutter_resizable_container.dart";
 import "package:flutter_resizable_container/src/extensions/num_ext.dart";
 import "package:flutter_resizable_container/src/resizable_size.dart";
@@ -10,21 +10,57 @@ import "package:flutter_resizable_container/src/resizable_size.dart";
 const ResizableSize _hiddenSize = ResizableSize.pixels(0, min: 0, max: 0);
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
+///
+/// Notification surface:
+///
+/// * The controller's own [Listenable] (via [addListener]) fires on
+///   *structural* changes only — children list, declared sizes, and hidden
+///   set. It does **not** fire during a divider drag or on post-layout
+///   rendered-size updates.
+/// * [pixelsListenable] fires on every pixel change, including the per-tick
+///   updates produced by a divider drag. Subscribe here when you need to
+///   react to live size changes.
+/// * [needsLayoutListenable] fires when [needsLayout] flips, signalling that
+///   the container's build path is about to switch between the cold
+///   (size-resolution) path and the live (pixel-driven) path.
 class ResizableController with ChangeNotifier {
+  ResizableController();
+
   double _availableSpace = -1;
   List<double> _pixels = [];
   List<ResizableSize> _sizes = const [];
   List<ResizableChild> _children = const [];
   final Set<int> _hiddenIndices = <int>{};
   final Map<int, ResizableSize> _savedSizes = <int, ResizableSize>{};
-  bool _needsLayout = false;
   bool _cascadeNegativeDelta = false;
+  final ValueNotifier<bool> _needsLayoutListenable = ValueNotifier<bool>(false);
+  final ValueNotifier<List<double>> _pixelsListenable =
+      ValueNotifier<List<double>>(UnmodifiableListView<double>(const []));
 
   /// Whether or not the container needs to (re)layout its children.
-  bool get needsLayout => _needsLayout;
+  bool get needsLayout => _needsLayoutListenable.value;
+
+  /// A [ValueListenable] exposing the current [needsLayout] state.
+  ///
+  /// Fires whenever [needsLayout] transitions, which the container uses to
+  /// swap between the cold-path layout (driven by [ResizableSize] resolution)
+  /// and the live-pixel path (driven by [pixelsListenable]).
+  ValueListenable<bool> get needsLayoutListenable => _needsLayoutListenable;
 
   /// The physical size, in pixels, of each child.
   UnmodifiableListView<double> get pixels => UnmodifiableListView(_pixels);
+
+  /// A [ValueListenable] exposing the current per-child pixel sizes.
+  ///
+  /// Fires whenever the pixel sizes change: divider drag ticks, programmatic
+  /// size updates (e.g. [setSizes]), hide/show, and children replacement.
+  /// Each notification publishes a fresh immutable snapshot as [value].
+  ///
+  /// Migration: callers that previously listened to the controller via
+  /// [addListener] to observe size changes should listen to this listenable
+  /// instead — the main controller listener is reserved for structural
+  /// changes.
+  ValueListenable<List<double>> get pixelsListenable => _pixelsListenable;
 
   /// The [ResizableSize] of each child.
   UnmodifiableListView<ResizableSize> get sizes => UnmodifiableListView(_sizes);
@@ -74,7 +110,10 @@ class ResizableController with ChangeNotifier {
       _hiddenIndices.remove(index);
     }
 
-    _needsLayout = true;
+    _needsLayoutListenable.value = true;
+    _pixelsListenable.value = UnmodifiableListView<double>(
+      List<double>.from(_pixels),
+    );
     notifyListeners();
   }
 
@@ -124,8 +163,18 @@ class ResizableController with ChangeNotifier {
     }
 
     _sizes = effective;
-    _needsLayout = true;
+    _needsLayoutListenable.value = true;
+    _pixelsListenable.value = UnmodifiableListView<double>(
+      List<double>.from(_pixels),
+    );
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _needsLayoutListenable.dispose();
+    _pixelsListenable.dispose();
+    super.dispose();
   }
 
   void _validateIndex(int index) {
@@ -203,7 +252,9 @@ class ResizableController with ChangeNotifier {
       _pixels[index + 1] -= adjustedDelta;
     }
 
-    notifyListeners();
+    _pixelsListenable.value = UnmodifiableListView<double>(
+      List<double>.from(_pixels),
+    );
   }
 
   void setChildren(List<ResizableChild> children) {
@@ -220,7 +271,11 @@ class ResizableController with ChangeNotifier {
     _pixels = List.filled(children.length, 0);
     _hiddenIndices.clear();
     _savedSizes.clear();
-    _needsLayout = true;
+    _needsLayoutListenable.value = true;
+
+    _pixelsListenable.value = UnmodifiableListView<double>(
+      List<double>.from(_pixels),
+    );
 
     if (notify) {
       notifyListeners();
@@ -239,13 +294,18 @@ class ResizableController with ChangeNotifier {
 
   void _setRenderedSizes(List<double> pixels) {
     _pixels = pixels;
-    _needsLayout = false;
-    notifyListeners();
+    // The build-path swap (live ↔ cold) is signalled via
+    // [needsLayoutListenable]; the main listener is reserved for structural
+    // changes only and intentionally does not fire here.
+    _needsLayoutListenable.value = false;
+    _pixelsListenable.value = UnmodifiableListView<double>(
+      List<double>.from(_pixels),
+    );
   }
 
   void _setAvailableSpace(double availableSpace) {
     if (_availableSpace == -1) {
-      _needsLayout = true;
+      _needsLayoutListenable.value = true;
       _availableSpace = availableSpace;
       return;
     }
@@ -278,6 +338,14 @@ class ResizableController with ChangeNotifier {
     }
 
     _availableSpace = availableSpace;
+
+    // Publish the redistributed pixels so the live-pixel render path reads
+    // current values. This is called during the enclosing LayoutBuilder build
+    // pass; the render object's listener marks itself needs-layout, which is
+    // a no-op when the widget rebuild already dirties it in the same frame.
+    _pixelsListenable.value = UnmodifiableListView<double>(
+      List<double>.from(_pixels),
+    );
   }
 
   double _getDelta(double availableSpace) {
@@ -545,7 +613,7 @@ final class ResizableControllerManager {
   }
 
   void setNeedsLayout() {
-    _controller._needsLayout = true;
+    _controller._needsLayoutListenable.value = true;
   }
 
   void initChildren(List<ResizableChild> children) {

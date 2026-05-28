@@ -10,6 +10,7 @@ sealed class ResizableLayoutDirection {
     };
   }
 
+  bool get isHorizontal;
   double getMaxConstraint(BoxConstraints constraints);
   double getSizeDimension(Size size);
   Offset getOffset(double currentPosition);
@@ -25,6 +26,9 @@ sealed class ResizableLayoutDirection {
 @visibleForTesting
 class ResizableHorizontalLayout extends ResizableLayoutDirection {
   const ResizableHorizontalLayout() : super._();
+
+  @override
+  bool get isHorizontal => true;
 
   @override
   double getMaxConstraint(BoxConstraints constraints) {
@@ -73,6 +77,9 @@ class ResizableHorizontalLayout extends ResizableLayoutDirection {
 @visibleForTesting
 class ResizableVerticalLayout extends ResizableLayoutDirection {
   const ResizableVerticalLayout() : super._();
+
+  @override
+  bool get isHorizontal => false;
 
   @override
   double getMaxConstraint(BoxConstraints constraints) {

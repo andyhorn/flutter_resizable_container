@@ -278,12 +278,150 @@ void main() {
           expect(controller.pixels[2], equals(40));
         });
 
-        test('notifies listeners', () {
+        test('does not notify the main controller listener', () {
+          // Drag is a pixel-only event; the main listener is reserved for
+          // structural changes. Drag updates flow through
+          // [ResizableController.pixelsListenable] instead.
           var notified = false;
           controller.addListener(() => notified = true);
           manager.adjustChildSize(index: 1, delta: 10);
+          expect(notified, isFalse);
+        });
+
+        test('notifies pixelsListenable', () {
+          var notified = false;
+          controller.pixelsListenable.addListener(() => notified = true);
+          manager.adjustChildSize(index: 1, delta: 10);
           expect(notified, isTrue);
         });
+
+        test('pixelsListenable exposes the latest pixel values', () {
+          final snapshots = <List<double>>[];
+          controller.pixelsListenable.addListener(() {
+            snapshots.add(List.of(controller.pixelsListenable.value));
+          });
+          manager.adjustChildSize(index: 1, delta: 10);
+          expect(snapshots.single, equals([100, 60, 40]));
+        });
+
+        test('pixelsListenable.value is unmodifiable', () {
+          expect(
+            () => controller.pixelsListenable.value[0] = 999,
+            throwsUnsupportedError,
+          );
+        });
+      });
+    });
+
+    group('pixelsListenable', () {
+      test('is stable across reads (same instance returned)', () {
+        expect(
+          identical(
+            controller.pixelsListenable,
+            controller.pixelsListenable,
+          ),
+          isTrue,
+        );
+      });
+
+      test('fires from setRenderedSizes', () {
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+        ]);
+        manager.setAvailableSpace(200);
+
+        var notified = false;
+        controller.pixelsListenable.addListener(() => notified = true);
+        manager.setRenderedSizes([120, 80]);
+
+        expect(notified, isTrue);
+        expect(controller.pixelsListenable.value, equals([120, 80]));
+      });
+
+      test('fires from setSizes', () {
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+        ]);
+        manager.setAvailableSpace(200);
+        manager.setRenderedSizes([100, 100]);
+
+        var notified = false;
+        controller.pixelsListenable.addListener(() => notified = true);
+        controller.setSizes(const [
+          ResizableSize.pixels(150),
+          ResizableSize.pixels(50),
+        ]);
+
+        expect(notified, isTrue);
+      });
+
+      test('fires from setHidden', () {
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+        ]);
+        manager.setAvailableSpace(200);
+        manager.setRenderedSizes([100, 100]);
+
+        var notified = false;
+        controller.pixelsListenable.addListener(() => notified = true);
+        controller.hide(0);
+
+        expect(notified, isTrue);
+      });
+
+      test('fires from setChildren', () {
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+        ]);
+
+        var notified = false;
+        controller.pixelsListenable.addListener(() => notified = true);
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(50),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(50),
+            child: SizedBox.shrink(),
+          ),
+        ]);
+
+        expect(notified, isTrue);
+      });
+
+      test('throws after the controller is disposed', () {
+        final localController = ResizableController();
+        localController.dispose();
+
+        expect(
+          () => localController.pixelsListenable.addListener(() {}),
+          throwsFlutterError,
+        );
       });
     });
 
@@ -544,6 +682,26 @@ void main() {
         controller.show(0);
 
         expect(notified, isFalse);
+      });
+
+      test('show notifies pixelsListenable with the restored distribution', () {
+        controller.hide(1);
+
+        var notified = false;
+        final snapshots = <List<double>>[];
+        controller.pixelsListenable.addListener(() {
+          notified = true;
+          snapshots.add(List.of(controller.pixelsListenable.value));
+        });
+
+        controller.show(1);
+
+        expect(notified, isTrue);
+        // The visible-index sizes are unchanged by show(); only the hidden
+        // entry is restored from zero. The exact distribution is owned by
+        // the next layout pass, but the listenable must reflect the
+        // controller's current `_pixels` list at notification time.
+        expect(snapshots.single, equals(controller.pixels));
       });
 
       test('hide throws when index is out of range', () {
