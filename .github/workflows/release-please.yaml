@@ -13,7 +13,25 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      - name: Load GitHub App credentials
+        id: op
+        uses: 1password/load-secrets-action@v5
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          APP_CLIENT_ID: op://flutter-resizable-container/release-please/client-id
+          APP_PRIVATE_KEY: op://flutter-resizable-container/release-please/resizable-container-release-please.private-key.pem
+
+      # Tags and PRs created with the default GITHUB_TOKEN do not trigger
+      # other workflows, which would skip both PR checks and publishing.
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ steps.op.outputs.APP_CLIENT_ID }}
+          private-key: ${{ steps.op.outputs.APP_PRIVATE_KEY }}
+
       - uses: googleapis/release-please-action@v4
         with:
+          token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
