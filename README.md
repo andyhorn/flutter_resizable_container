@@ -341,6 +341,8 @@ Use the `ResizableDivider` class to customize the look and feel of the dividers 
 
 You can customize the `thickness`, `length`, `crossAxisAlignment`, `mainAxisAlignment`, and `color` of the divider, as well as display a custom mouse cursor on hover and respond to `onDragStart`, `onDragEnd`, `onHoverEnter`, `onHoverExit`, `onTapDown`, and `onTapUp` events.
 
+Set `enabled: false` to lock a single divider so it cannot be dragged, tapped, or hovered. To lock every divider in a container at once, pass `resizable: false` to the `ResizableContainer`. A divider is interactive only when both flags are `true`; programmatic resizing through `ResizableController` is unaffected in either case.
+
 ```dart
 divider: ResizableDivider(
     thickness: 2,
