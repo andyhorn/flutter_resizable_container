@@ -1,10 +1,10 @@
-import "dart:collection";
-import "dart:math";
+import 'dart:collection';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
-import "package:flutter_resizable_container/flutter_resizable_container.dart";
-import "package:flutter_resizable_container/src/extensions/num_ext.dart";
-import "package:flutter_resizable_container/src/resizable_size.dart";
+import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
+import 'package:flutter_resizable_container/src/resizable_size.dart';
 
 /// The effective [ResizableSize] applied to a hidden child.
 const ResizableSize _hiddenSize = ResizableSize.pixels(0, min: 0, max: 0);
@@ -273,7 +273,7 @@ class ResizableController with ChangeNotifier {
       sizes: _pixels,
     );
 
-    for (var i = 0; i < sizes.length; i++) {
+    for (var i = 0; i < _pixels.length; i++) {
       _pixels[i] += distributed[i];
     }
 
