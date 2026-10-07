@@ -1,4 +1,3 @@
-import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -173,7 +172,7 @@ class ResizableLayoutRenderObject extends RenderBox
       final constraints = switch (size) {
         ResizableSizeExpand() => layoutDirection.copyConstraintsWith(
             this.constraints,
-            expandSizes[i ~/ 2]!.toDouble(),
+            expandSizes[i ~/ 2]!,
           ),
         _ => _getChildConstraints(
             size: size,
@@ -200,57 +199,53 @@ class ResizableLayoutRenderObject extends RenderBox
     onComplete(finalSizes);
   }
 
-  Map<int, Decimal> _getExpandSizes(double availableSpace) {
+  Map<int, double> _getExpandSizes(double availableSpace) {
     bool isExpand(ResizableSize size) => size is ResizableSizeExpand;
 
-    var expandIndices = _sizes.indicesWhere(isExpand).toList();
+    final expandIndices = _sizes.indicesWhere(isExpand).toList();
 
     if (expandIndices.isEmpty) {
       return {};
     }
 
-    final allocatedSpace = Map<int, Decimal>.fromIterable(
-      expandIndices,
-      value: (_) => Decimal.zero,
-    );
+    final allocatedSpace = <int, double>{
+      for (final index in expandIndices) index: 0.0,
+    };
 
-    var remainingFlex = _getFlexCount().toDecimal();
-    var remainingSpace = availableSpace.toDecimal();
-    var shouldContinue = true;
+    var remainingFlex = _getFlexCount();
+    var remainingSpace = availableSpace;
 
-    do {
+    // Bounded to defend against floating-point residue that could otherwise
+    // keep `didChange` true forever. Each pass either removes at least one
+    // clamped item or makes a final redistribution; the natural termination
+    // pass adds one more iteration.
+    final maxIterations = expandIndices.length + 2;
+
+    for (var iter = 0; iter < maxIterations && remainingFlex > 0; iter++) {
       var didChange = false;
       final toRemove = <int>[];
-      final targetDeltaPerFlex = (remainingSpace / remainingFlex).toDecimal(
-        scaleOnInfinitePrecision: 6,
-      );
+      final perFlex = remainingSpace / remainingFlex;
 
       for (final index in expandIndices) {
-        final size = _sizes[index];
+        final size = _sizes[index] as ResizableSizeExpand;
+        final currentValue = allocatedSpace[index]!;
+        final targetSize = currentValue + perFlex * size.flex;
+        final clampedValue = _clamp(targetSize, size);
 
-        if (size is ResizableSizeExpand) {
-          final flex = size.flex.toDecimal();
-          final currentValue = allocatedSpace[index] ?? Decimal.zero;
-          final targetDelta = targetDeltaPerFlex * flex;
-          final targetSize = (currentValue + targetDelta).toDouble();
-          final clampedValue = _clamp(targetSize, size).toDecimal();
-
-          if (clampedValue != currentValue) {
-            final difference = clampedValue - currentValue;
-            remainingSpace -= difference;
-            allocatedSpace[index] = clampedValue;
-            didChange = true;
-          } else {
-            remainingFlex -= flex;
-            toRemove.add(index);
-          }
+        if (clampedValue != currentValue) {
+          remainingSpace -= clampedValue - currentValue;
+          allocatedSpace[index] = clampedValue;
+          didChange = true;
+        } else {
+          remainingFlex -= size.flex;
+          toRemove.add(index);
         }
       }
 
       expandIndices.removeWhere(toRemove.contains);
 
-      shouldContinue = didChange && remainingFlex > Decimal.zero;
-    } while (shouldContinue);
+      if (!didChange) break;
+    }
 
     return allocatedSpace;
   }

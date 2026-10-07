@@ -10,7 +10,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  decimal: ^3.2.4
   equatable: ^2.0.8
 
 dev_dependencies:
