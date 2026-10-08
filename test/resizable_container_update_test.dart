@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Widget _harness({
@@ -193,4 +194,266 @@ void main() {
       expect(controller.hiddenIndices, isEmpty);
     });
   });
+
+  group('ResizableContainer remount with an external controller', () {
+    Future<void> remount(WidgetTester tester, Widget widget) async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(widget);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('keeps hidden indices and drags when the container remounts',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(600, 400));
+      final controller = ResizableController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_RemountApp(controller: controller));
+      await tester.pumpAndSettle();
+
+      controller.hide(2);
+      await tester.pumpAndSettle();
+      await tester.drag(
+        find.byType(ResizableContainerDivider).first,
+        const Offset(50, 0),
+      );
+      await tester.pumpAndSettle();
+
+      final pixelsBefore = List.of(controller.pixels);
+      expect(pixelsBefore[2], 0);
+      expect(pixelsBefore[0], greaterThan(pixelsBefore[1]));
+
+      await remount(tester, _RemountApp(controller: controller));
+
+      expect(controller.hiddenIndices, {2});
+      for (var i = 0; i < pixelsBefore.length; i++) {
+        expect(controller.pixels[i], closeTo(pixelsBefore[i], 0.01));
+      }
+      expect(
+        tester.getSize(find.byKey(const Key('A'))).width,
+        closeTo(pixelsBefore[0], 0.01),
+      );
+    });
+
+    testWidgets('adapts to a different available space after a remount',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 400));
+      final controller = ResizableController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_RemountApp(controller: controller));
+      await tester.pumpAndSettle();
+
+      controller.hide(2);
+      await tester.pumpAndSettle();
+
+      await remount(tester, _RemountApp(controller: controller, width: 800));
+
+      expect(controller.hiddenIndices, {2});
+      expect(controller.pixels[2], 0);
+      final total = controller.pixels.reduce((a, b) => a + b);
+      expect(total, closeTo(800 - 2, 0.01));
+    });
+
+    testWidgets('lays out afresh when the direction changes on remount',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(600, 400));
+      final controller = ResizableController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_RemountApp(controller: controller));
+      await tester.pumpAndSettle();
+
+      controller.hide(2);
+      await tester.pumpAndSettle();
+      await tester.drag(
+        find.byType(ResizableContainerDivider).first,
+        const Offset(50, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(controller.pixels[0], greaterThan(controller.pixels[1]));
+
+      await remount(tester,
+          _RemountApp(controller: controller, direction: Axis.vertical));
+
+      expect(controller.hiddenIndices, {2});
+      expect(controller.pixels[0], closeTo(controller.pixels[1], 0.01));
+      expect(
+        tester.getSize(find.byKey(const Key('A'))).height,
+        closeTo(controller.pixels[0], 0.01),
+      );
+    });
+
+    testWidgets('resets when the children change structurally on remount',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(600, 400));
+      final controller = ResizableController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_RemountApp(controller: controller));
+      await tester.pumpAndSettle();
+
+      controller.hide(1);
+      await tester.pumpAndSettle();
+
+      await remount(
+        tester,
+        _RemountApp(
+          controller: controller,
+          children: const [
+            ResizableChild(child: SizedBox.expand()),
+            ResizableChild(child: SizedBox.expand()),
+          ],
+        ),
+      );
+
+      expect(controller.hiddenIndices, isEmpty);
+      expect(controller.pixels.length, 2);
+      expect(controller.pixels[0], closeTo(299.5, 0.01));
+    });
+
+    testWidgets('resets when a declared size changes on remount',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(600, 400));
+      final controller = ResizableController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_RemountApp(controller: controller));
+      await tester.pumpAndSettle();
+
+      controller.hide(2);
+      await tester.pumpAndSettle();
+
+      await remount(
+        tester,
+        _RemountApp(
+          controller: controller,
+          children: const [
+            ResizableChild(
+              size: ResizableSize.pixels(100),
+              divider: ResizableDivider(thickness: 2),
+              child: SizedBox.expand(),
+            ),
+            ResizableChild(
+              size: ResizableSize.expand(),
+              divider: ResizableDivider(thickness: 2),
+              child: SizedBox.expand(),
+            ),
+            ResizableChild(
+              size: ResizableSize.expand(),
+              child: SizedBox.expand(),
+            ),
+          ],
+        ),
+      );
+
+      expect(controller.hiddenIndices, isEmpty);
+      expect(controller.pixels[0], closeTo(100, 0.01));
+    });
+
+    testWidgets('initialises a fresh controller', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(600, 400));
+      final controller = ResizableController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_RemountApp(controller: controller));
+      await tester.pumpAndSettle();
+
+      expect(controller.hiddenIndices, isEmpty);
+      expect(controller.pixels.length, 3);
+      expect(
+        controller.pixels.reduce((a, b) => a + b),
+        closeTo(600 - 4, 0.01),
+      );
+    });
+
+    testWidgets('renders the new child widgets when state is kept',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(600, 400));
+      final controller = ResizableController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_RemountApp(controller: controller));
+      await tester.pumpAndSettle();
+      controller.hide(2);
+      await tester.pumpAndSettle();
+
+      await remount(
+        tester,
+        _RemountApp(
+          controller: controller,
+          children: const [
+            ResizableChild(
+              size: ResizableSize.expand(),
+              divider: ResizableDivider(thickness: 2),
+              child: SizedBox.expand(key: Key('A2')),
+            ),
+            ResizableChild(
+              size: ResizableSize.expand(),
+              divider: ResizableDivider(thickness: 2),
+              child: SizedBox.expand(key: Key('B2')),
+            ),
+            ResizableChild(
+              size: ResizableSize.expand(),
+              child: SizedBox.expand(key: Key('C2')),
+            ),
+          ],
+        ),
+      );
+
+      expect(find.byKey(const Key('A2')), findsOneWidget);
+      expect(find.byKey(const Key('B2')), findsOneWidget);
+      expect(controller.hiddenIndices, {2});
+    });
+  });
+}
+
+class _RemountApp extends StatelessWidget {
+  const _RemountApp({
+    required this.controller,
+    this.width = 600,
+    this.direction = Axis.horizontal,
+    this.children,
+  });
+
+  final ResizableController controller;
+  final double width;
+  final Axis direction;
+  final List<ResizableChild>? children;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: width,
+            height: 400,
+            child: ResizableContainer(
+              controller: controller,
+              direction: direction,
+              children: children ??
+                  const [
+                    ResizableChild(
+                      size: ResizableSize.expand(),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('A')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.expand(),
+                      divider: ResizableDivider(thickness: 2),
+                      child: SizedBox.expand(key: Key('B')),
+                    ),
+                    ResizableChild(
+                      size: ResizableSize.expand(),
+                      child: SizedBox.expand(key: Key('C')),
+                    ),
+                  ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

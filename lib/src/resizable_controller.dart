@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show precisionErrorTolerance;
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
+import 'package:flutter_resizable_container/src/extensions/resizable_children_ext.dart';
 import 'package:flutter_resizable_container/src/layout/expand_sizes.dart';
 
 /// The effective [ResizableSize] applied to a hidden child.
@@ -28,6 +29,7 @@ class ResizableController with ChangeNotifier {
   bool _needsLayoutFlag = false;
   int _invalidations = 0;
   bool _cascadeNegativeDelta = false;
+  Axis? _direction;
 
   bool get _needsLayout => _needsLayoutFlag;
 
@@ -234,6 +236,10 @@ class ResizableController with ChangeNotifier {
   }
 
   void _initChildren(List<ResizableChild> children) {
+    if (_children.isNotEmpty && _children.hasSameStructureAs(children)) {
+      _updateChildrenInPlace(children);
+      return;
+    }
     _setChildren(children, notify: false);
   }
 
@@ -601,6 +607,16 @@ final class ResizableControllerManager {
 
   void setCascadeNegativeDelta(bool cascadeNegativeDelta) {
     _controller._cascadeNegativeDelta = cascadeNegativeDelta;
+  }
+
+  /// Records the axis the controller's pixels are measured along, and
+  /// invalidates the layout when it differs from the previously recorded one.
+  void setDirection(Axis direction) {
+    final previous = _controller._direction;
+    if (previous != null && previous != direction) {
+      _controller._needsLayout = true;
+    }
+    _controller._direction = direction;
   }
 }
 
