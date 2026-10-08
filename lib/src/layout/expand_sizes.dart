@@ -15,7 +15,7 @@ Map<int, double> getExpandSizes(
   final pending = unfrozen.toList();
   final resolved = <int, double>{};
   var remainingSpace = availableSpace;
-  var remainingFlex = pending.map((index) => _flexAt(sizes, index)).sum();
+  var remainingFlex = pending.map((index) => flexOf(sizes[index])).sum();
 
   for (var pass = 0; pass < unfrozen.length; pass++) {
     final targets = _getTargets(
@@ -46,7 +46,7 @@ Map<int, double> getExpandSizes(
     for (final index in violators.toList()) {
       resolved[index] = clamped[index]!;
       remainingSpace -= clamped[index]!;
-      remainingFlex -= _flexAt(sizes, index);
+      remainingFlex -= flexOf(sizes[index]);
     }
     pending.removeWhere(resolved.containsKey);
   }
@@ -64,7 +64,7 @@ Map<int, double> _getTargets({
     for (final index in indices)
       // flex 0 is only asserted against, so release builds can still get
       // here with flex == 0; return 0 instead of the NaN from 0/0.
-      index: flex == 0 ? 0.0 : space * _flexAt(sizes, index) / flex,
+      index: flex == 0 ? 0.0 : space * flexOf(sizes[index]) / flex,
   };
 }
 
@@ -87,8 +87,9 @@ bool _isViolator({
   return totalViolation > 0 ? clamped > target : clamped < target;
 }
 
-int _flexAt(List<ResizableSize> sizes, int index) {
-  return (sizes[index] as ResizableSizeExpand).flex;
+/// The flex weight of [size]: its flex if it is an expand size, otherwise 1.
+int flexOf(ResizableSize size) {
+  return size is ResizableSizeExpand ? size.flex : 1;
 }
 
 /// Clamps [value] to the min/max bounds of [size].

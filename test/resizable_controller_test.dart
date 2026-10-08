@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -182,6 +183,195 @@ void main() {
           test('adjusts the children equally', () {
             manager.setAvailableSpace(400);
             expect(controller.pixels, equals([150.0, 250.0]));
+          });
+        });
+
+        group('when expand children have different flex values', () {
+          setUp(() {
+            manager.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.expand(),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.expand(flex: 2),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            manager.setAvailableSpace(300);
+            manager.setRenderedSizes([100, 200]);
+          });
+
+          test('splits the available-space change by flex', () {
+            manager.setAvailableSpace(600);
+
+            expect(controller.pixels[0], closeTo(200, 0.001));
+            expect(controller.pixels[1], closeTo(400, 0.001));
+          });
+
+          test('weights by flex rather than by current size', () {
+            manager.setRenderedSizes([150, 150]);
+            manager.setAvailableSpace(600);
+
+            expect(controller.pixels[0], closeTo(250, 0.001));
+            expect(controller.pixels[1], closeTo(350, 0.001));
+          });
+
+          test('splits a shrinking available-space change by flex', () {
+            manager.setAvailableSpace(600);
+            manager.setAvailableSpace(300);
+
+            expect(controller.pixels[0], closeTo(100, 0.001));
+            expect(controller.pixels[1], closeTo(200, 0.001));
+          });
+        });
+
+        group('when expand children have equal flex values', () {
+          setUp(() {
+            manager.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.expand(flex: 2),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.expand(flex: 2),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            manager.setAvailableSpace(300);
+            manager.setRenderedSizes([150, 150]);
+          });
+
+          test('keeps an even split when flex values are equal', () {
+            manager.setAvailableSpace(500);
+
+            expect(controller.pixels[0], closeTo(250, 0.001));
+            expect(controller.pixels[1], closeTo(250, 0.001));
+          });
+        });
+
+        group('when a flexed split leaves a fractional remainder', () {
+          setUp(() {
+            manager.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.expand(),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.expand(flex: 2),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.expand(flex: 2),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.expand(flex: 2),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            manager.setAvailableSpace(700);
+            manager.setRenderedSizes([100, 200, 200, 200]);
+          });
+
+          test('terminates and fills the new available space', () {
+            const availableSpace = 714.06;
+            manager.setAvailableSpace(availableSpace);
+
+            expect(controller.pixels.sum(), closeTo(availableSpace, 0.001));
+            expect(controller.pixels[0], closeTo(102.009, 0.001));
+          });
+        });
+
+        group('when a flexed expand child reaches its maximum', () {
+          setUp(() {
+            manager.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.expand(),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.expand(flex: 2, max: 150),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.expand(flex: 3),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            manager.setAvailableSpace(300);
+            manager.setRenderedSizes([50, 100, 150]);
+          });
+
+          test(
+            'hands the clamped remainder to the other expand children by flex',
+            () {
+              manager.setAvailableSpace(600);
+
+              expect(controller.pixels[0], closeTo(112.5, 0.001));
+              expect(controller.pixels[1], closeTo(150, 0.001));
+              expect(controller.pixels[2], closeTo(337.5, 0.001));
+            },
+          );
+        });
+
+        group('when sizes were changed with setSizes', () {
+          setUp(() {
+            manager.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.expand(),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.pixels(200),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            manager.setAvailableSpace(300);
+            manager.setRenderedSizes([100, 200]);
+            controller.setSizes(const [
+              ResizableSize.pixels(200),
+              ResizableSize.expand(),
+            ]);
+            manager.setRenderedSizes([200, 100]);
+          });
+
+          test('redistributes using the current sizes after setSizes', () {
+            manager.setAvailableSpace(1100);
+
+            expect(controller.pixels[0], closeTo(200, 0.001));
+            expect(controller.pixels[1], closeTo(900, 0.001));
+          });
+        });
+
+        group('when no expand child can change', () {
+          setUp(() {
+            manager.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.expand(max: 100),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.shrink(),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            manager.setAvailableSpace(300);
+            manager.setRenderedSizes([100, 200]);
+          });
+
+          test('shrink child still absorbs when no expand child can change',
+              () {
+            manager.setAvailableSpace(400);
+
+            expect(controller.pixels[0], closeTo(100, 0.001));
+            expect(controller.pixels[1], closeTo(300, 0.001));
           });
         });
       });
