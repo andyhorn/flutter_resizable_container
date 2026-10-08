@@ -360,6 +360,31 @@ void main() {
             expect(controller.pixels[3], equals(40));
           },
         );
+
+        test('does not reverse when the selected child is over its max', () {
+          controller.setChildren(const [
+            ResizableChild(
+              size: ResizableSize.pixels(50),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(60, max: 70),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(50, min: 20),
+              child: SizedBox.shrink(),
+            ),
+          ]);
+
+          manager.setAvailableSpace(200);
+          manager.setRenderedSizes([50, 80, 70]);
+          manager.setCascadeNegativeDelta(true);
+
+          manager.adjustChildSize(index: 1, delta: 100);
+
+          expect(controller.pixels, equals([50, 80, 70]));
+        });
       });
 
       group('when dragging left (delta < 0)', () {
@@ -395,12 +420,111 @@ void main() {
             // 90 to 140 — past its max of 60.
             manager.adjustChildSize(index: 2, delta: -100);
 
-            expect(controller.pixels[3], lessThanOrEqualTo(60));
-            expect(controller.pixels[3], equals(60));
-            // total width is preserved
-            expect(controller.pixels.reduce((a, b) => a + b), equals(200));
+            // Index 3 can only take 10 more (50 -> 60), and that 10 comes
+            // from index 2, the child next to the divider.
+            expect(controller.pixels, equals([40, 50, 50, 60]));
           },
         );
+
+        test('shrinks the neighbor before its left siblings', () {
+          controller.setChildren(const [
+            ResizableChild(
+              size: ResizableSize.pixels(50),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(25, min: 20),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(125),
+              child: SizedBox.shrink(),
+            ),
+          ]);
+
+          manager.setAvailableSpace(200);
+          manager.setRenderedSizes([50, 25, 125]);
+          manager.setCascadeNegativeDelta(true);
+
+          manager.adjustChildSize(index: 1, delta: -20);
+
+          expect(controller.pixels, equals([35, 20, 145]));
+        });
+
+        test('applies the neighbor slack when outer siblings are at min', () {
+          controller.setChildren(const [
+            ResizableChild(
+              size: ResizableSize.pixels(20, min: 20),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(25, min: 20),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(155),
+              child: SizedBox.shrink(),
+            ),
+          ]);
+
+          manager.setAvailableSpace(200);
+          manager.setRenderedSizes([20, 25, 155]);
+          manager.setCascadeNegativeDelta(true);
+
+          manager.adjustChildSize(index: 1, delta: -20);
+
+          expect(controller.pixels, equals([20, 20, 160]));
+        });
+
+        test('does not reverse when the right sibling is over its max', () {
+          controller.setChildren(const [
+            ResizableChild(
+              size: ResizableSize.pixels(60, min: 20),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(60, min: 20),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(60, max: 70),
+              child: SizedBox.shrink(),
+            ),
+          ]);
+
+          manager.setAvailableSpace(200);
+          manager.setRenderedSizes([60, 60, 80]);
+          manager.setCascadeNegativeDelta(true);
+
+          manager.adjustChildSize(index: 1, delta: -100);
+
+          expect(controller.pixels, equals([60, 60, 80]));
+        });
+
+        test('does not grow a selected child that is below its min', () {
+          controller.setChildren(const [
+            ResizableChild(
+              size: ResizableSize.pixels(60, min: 20),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(40, min: 40),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(100),
+              child: SizedBox.shrink(),
+            ),
+          ]);
+
+          manager.setAvailableSpace(200);
+          manager.setRenderedSizes([70, 30, 100]);
+          manager.setCascadeNegativeDelta(true);
+
+          manager.adjustChildSize(index: 1, delta: -20);
+
+          expect(controller.pixels, equals([50, 30, 120]));
+        });
       });
     });
 
@@ -469,6 +593,82 @@ void main() {
         ]);
 
         expect(controller.needsLayout, isTrue);
+      });
+    });
+
+    group('#setSizes float tolerance', () {
+      void setUpChildren(int count, double availableSpace) {
+        controller.setChildren([
+          for (var i = 0; i < count; i++)
+            const ResizableChild(child: SizedBox.shrink()),
+        ]);
+        manager.setAvailableSpace(availableSpace);
+      }
+
+      test('accepts 6 even splits of 998 pixels', () {
+        setUpChildren(6, 998);
+        final pixels = ResizableSize.pixels(998 / 6);
+
+        expect(
+          [for (var i = 0; i < 6; i++) 998 / 6]
+              .fold<double>(0, (a, b) => a + b),
+          greaterThan(998),
+        );
+        expect(() => controller.setSizes([for (var i = 0; i < 6; i++) pixels]),
+            returnsNormally);
+      });
+
+      test('accepts 7 even splits of 1000 pixels', () {
+        setUpChildren(7, 1000);
+        final pixels = ResizableSize.pixels(1000 / 7);
+
+        expect(
+          [for (var i = 0; i < 7; i++) 1000 / 7]
+              .fold<double>(0, (a, b) => a + b),
+          greaterThan(1000),
+        );
+        expect(() => controller.setSizes([for (var i = 0; i < 7; i++) pixels]),
+            returnsNormally);
+      });
+
+      test('accepts 9 even ratio splits', () {
+        setUpChildren(9, 900);
+        final ratio = ResizableSize.ratio(1 / 9);
+
+        expect(
+          [for (var i = 0; i < 9; i++) 1 / 9].fold<double>(0, (a, b) => a + b),
+          greaterThan(1.0),
+        );
+        expect(() => controller.setSizes([for (var i = 0; i < 9; i++) ratio]),
+            returnsNormally);
+      });
+
+      test('still rejects pixels that are genuinely over the limit', () {
+        setUpChildren(2, 100);
+
+        for (final excess in [1.0, 0.001]) {
+          expect(
+            () => controller.setSizes([
+              ResizableSize.pixels(50 + excess),
+              const ResizableSize.pixels(50),
+            ]),
+            throwsArgumentError,
+          );
+        }
+      });
+
+      test('still rejects a ratio that is genuinely over 1.0', () {
+        setUpChildren(2, 100);
+
+        for (final excess in [0.01, 0.001]) {
+          expect(
+            () => controller.setSizes([
+              ResizableSize.ratio(0.5 + excess),
+              const ResizableSize.ratio(0.5),
+            ]),
+            throwsArgumentError,
+          );
+        }
       });
     });
 

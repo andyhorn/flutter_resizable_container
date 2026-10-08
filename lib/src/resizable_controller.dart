@@ -9,6 +9,15 @@ import 'package:flutter_resizable_container/src/resizable_size.dart';
 /// The effective [ResizableSize] applied to a hidden child.
 const ResizableSize _hiddenSize = ResizableSize.pixels(0, min: 0, max: 0);
 
+/// The slack allowed when validating [ResizableController.setSizes] totals.
+///
+/// Splitting space evenly (e.g. `998 / 6` six times) accumulates
+/// floating-point error that can push a mathematically exact total a few ulps
+/// past its limit. The same value covers both pixel totals and ratio totals:
+/// one millionth is far below a visible pixel, and as a ratio it is still
+/// sub-pixel for any container narrower than a million pixels.
+const double _sizeTotalTolerance = 1e-6;
+
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
   double _availableSpace = -1;
@@ -104,7 +113,7 @@ class ResizableController with ChangeNotifier {
         .map((size) => size.pixels)
         .sum();
 
-    if (totalPixels > _availableSpace) {
+    if (totalPixels > _availableSpace + _sizeTotalTolerance) {
       throw ArgumentError(
         'Total pixels must be less than or equal to available space',
       );
@@ -115,7 +124,7 @@ class ResizableController with ChangeNotifier {
         .map((size) => size.ratio)
         .sum();
 
-    if (totalRatio > 1.0) {
+    if (totalRatio > 1.0 + _sizeTotalTolerance) {
       throw ArgumentError('Total ratio must be less than or equal to 1.0');
     }
 
@@ -146,55 +155,45 @@ class ResizableController with ChangeNotifier {
 
         // cap the cascaded delta so the right neighbor (the receiver of the
         // freed space) cannot grow past its max constraint
-        final maxGrowth =
-            (_sizes[index + 1].max ?? double.infinity) - _pixels[index + 1];
+        final maxGrowth = max(
+          0.0,
+          (_sizes[index + 1].max ?? double.infinity) - _pixels[index + 1],
+        );
         final cascadeDelta = -min(delta.abs(), maxGrowth);
 
-        // distribute the delta amongst the leftward siblings
+        // The selected child may still have room to shrink toward its min,
+        // so it gives up space before any sibling to its left does.
         final changes = _distributeDeltaLeft(
           index: index,
           delta: cascadeDelta,
         );
 
-        // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
-          if (index - i - 1 < 0) {
-            continue;
-          }
-
-          _pixels[index - i - 1] += changes[i];
+          _pixels[index - i] += changes[i];
         }
 
-        // adjust the width of the first sibling to the right by the
-        // total amount removed from the leftward siblings
-        _pixels[index + 1] += changes.sum().abs();
+        _pixels[index + 1] -= changes.sum();
       } else {
         // and the divider is being dragged to the right
 
         // cap the cascaded delta so the selected index (the receiver of the
         // freed space) cannot grow past its max constraint
-        final maxGrowth =
-            (_sizes[index].max ?? double.infinity) - _pixels[index];
+        final maxGrowth = max(
+          0.0,
+          (_sizes[index].max ?? double.infinity) - _pixels[index],
+        );
         final cascadeDelta = min(delta, maxGrowth);
 
-        // distribute the delta amongst the rightward siblings
         final changes = _distributeDeltaRight(
           index: index,
           delta: cascadeDelta,
         );
 
-        // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
-          if (index + i + 1 >= _pixels.length) {
-            continue;
-          }
-
           _pixels[index + i + 1] += changes[i];
         }
 
-        // adjust the width of the selected index by the total amount
-        // removed from the rightward siblings
-        _pixels[index] += changes.sum().abs();
+        _pixels[index] -= changes.sum();
       }
     } else {
       // otherwise, apply the adjusted delta to the selected index and its
@@ -309,10 +308,8 @@ class ResizableController with ChangeNotifier {
     required int index,
     required double delta,
   }) {
-    // get the indices of all rightward siblings
     final indices = [for (var i = index + 1; i < _children.length; i++) i];
 
-    // calculate the allowable change for each sibling
     final allowableChanges = [
       for (final index in indices) ...[
         _getAllowableChange(delta: -delta, index: index, sizes: _pixels),
@@ -321,8 +318,6 @@ class ResizableController with ChangeNotifier {
 
     var remainingDelta = -delta;
 
-    // for each rightward sibling, starting with the closest and moving out,
-    // calculate the "effective" change and subtract it from the remaining delta
     final changes = <double>[];
     for (var i = 0; i < indices.length && remainingDelta != 0.0; i++) {
       final allowableChange = allowableChanges[i];
@@ -339,10 +334,8 @@ class ResizableController with ChangeNotifier {
     required int index,
     required double delta,
   }) {
-    // get the indices of all leftward siblings
-    final indices = [for (var i = 0; i < index; i++) i];
+    final indices = [for (var i = 0; i <= index; i++) i];
 
-    // calculate the allowable change for each sibling
     final allowableChanges = [
       for (final index in indices) ...[
         _getAllowableChange(delta: delta, index: index, sizes: _pixels),
@@ -351,8 +344,6 @@ class ResizableController with ChangeNotifier {
 
     var remainingDelta = delta;
 
-    // for each leftward sibling, starting with the closest and moving out,
-    // calculate the "effective" change and subtract it from the remaining delta
     final changes = <double>[];
     for (var i = indices.length - 1; i >= 0 && remainingDelta != 0.0; i--) {
       final allowableChange = allowableChanges[i];
@@ -431,8 +422,9 @@ class ResizableController with ChangeNotifier {
     if (delta < 0) {
       final minimumSize = _sizes[index].min ?? 0;
 
+      // A child already below its min must not report room to grow.
       if (targetSize <= minimumSize) {
-        return minimumSize - sizes[index];
+        return min(0, minimumSize - sizes[index]);
       }
 
       return delta;
@@ -441,7 +433,7 @@ class ResizableController with ChangeNotifier {
     final maximumSize = _sizes[index].max ?? double.infinity;
 
     if (targetSize >= maximumSize) {
-      return maximumSize - sizes[index];
+      return max(0, maximumSize - sizes[index]);
     }
 
     return delta;
