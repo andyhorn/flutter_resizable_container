@@ -106,6 +106,8 @@ class ResizableDivider extends Equatable {
         onHoverExit,
         onTapDown,
         onTapUp,
+        onDragStart,
+        onDragEnd,
         cursor,
         mainAxisAlignment,
         crossAxisAlignment,

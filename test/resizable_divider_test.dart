@@ -492,5 +492,250 @@ void main() {
         expect(newExits, 0);
       });
     });
+
+    group('gesture capture', () {
+      Future<void> pumpScrollable(
+        WidgetTester tester, {
+        required Axis containerDirection,
+        required ScrollController scrollController,
+        required ResizableController controller,
+        ResizableDivider divider = const ResizableDivider(),
+      }) async {
+        final isHorizontal = containerDirection == Axis.horizontal;
+        final container = SizedBox(
+          width: isHorizontal ? 400 : 100,
+          height: isHorizontal ? 100 : 400,
+          child: ResizableContainer(
+            controller: controller,
+            direction: containerDirection,
+            children: [
+              ResizableChild(
+                size: const ResizableSize.ratio(0.5),
+                divider: divider,
+                child: const SizedBox.expand(),
+              ),
+              const ResizableChild(
+                size: ResizableSize.ratio(0.5),
+                child: SizedBox.expand(),
+              ),
+            ],
+          ),
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ListView(
+                controller: scrollController,
+                scrollDirection: isHorizontal ? Axis.vertical : Axis.horizontal,
+                children: [container, SizedBox(width: 2000, height: 2000)],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      late ScrollController scrollController;
+      late ResizableController controller;
+
+      setUp(() {
+        scrollController = ScrollController();
+        controller = ResizableController();
+      });
+
+      tearDown(() {
+        scrollController.dispose();
+        controller.dispose();
+      });
+
+      testWidgets(
+        'a vertical drag on a horizontal container divider scrolls the list',
+        (tester) async {
+          await pumpScrollable(
+            tester,
+            containerDirection: Axis.horizontal,
+            scrollController: scrollController,
+            controller: controller,
+          );
+          final before = List<double>.of(controller.pixels);
+
+          await tester.drag(
+            find.byType(ResizableContainerDivider),
+            const Offset(0, -50),
+          );
+          await tester.pumpAndSettle();
+
+          expect(scrollController.offset, greaterThan(0));
+          expect(controller.pixels, before);
+        },
+      );
+
+      testWidgets(
+        'a horizontal drag on a vertical container divider scrolls the list',
+        (tester) async {
+          await pumpScrollable(
+            tester,
+            containerDirection: Axis.vertical,
+            scrollController: scrollController,
+            controller: controller,
+          );
+          final before = List<double>.of(controller.pixels);
+
+          await tester.drag(
+            find.byType(ResizableContainerDivider),
+            const Offset(-50, 0),
+          );
+          await tester.pumpAndSettle();
+
+          expect(scrollController.offset, greaterThan(0));
+          expect(controller.pixels, before);
+        },
+      );
+
+      Future<ScrollController> pumpSameAxisScrollable(
+        WidgetTester tester, {
+        bool resizable = true,
+        ResizableDivider divider = const ResizableDivider(),
+      }) async {
+        final horizontalScroll = ScrollController();
+        addTearDown(horizontalScroll.dispose);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                controller: horizontalScroll,
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: 1200,
+                  height: 100,
+                  child: ResizableContainer(
+                    controller: controller,
+                    direction: Axis.horizontal,
+                    resizable: resizable,
+                    children: [
+                      ResizableChild(
+                        size: const ResizableSize.ratio(0.5),
+                        divider: divider,
+                        child: const SizedBox.expand(),
+                      ),
+                      const ResizableChild(
+                        size: ResizableSize.ratio(0.5),
+                        child: SizedBox.expand(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        return horizontalScroll;
+      }
+
+      testWidgets(
+        'a main-axis drag on a disabled divider scrolls a same-axis '
+        'scrollable',
+        (tester) async {
+          final horizontalScroll = await pumpSameAxisScrollable(
+            tester,
+            divider: const ResizableDivider(enabled: false),
+          );
+          final before = List<double>.of(controller.pixels);
+
+          await tester.drag(
+            find.byType(ResizableContainerDivider),
+            const Offset(-50, 0),
+          );
+          await tester.pumpAndSettle();
+
+          expect(horizontalScroll.offset, greaterThan(0));
+          expect(controller.pixels, before);
+        },
+      );
+
+      testWidgets(
+        'a main-axis drag on a non-resizable container divider scrolls a '
+        'same-axis scrollable',
+        (tester) async {
+          final horizontalScroll = await pumpSameAxisScrollable(
+            tester,
+            resizable: false,
+          );
+          final before = List<double>.of(controller.pixels);
+
+          await tester.drag(
+            find.byType(ResizableContainerDivider),
+            const Offset(-50, 0),
+          );
+          await tester.pumpAndSettle();
+
+          expect(horizontalScroll.offset, greaterThan(0));
+          expect(controller.pixels, before);
+        },
+      );
+
+      testWidgets(
+        'an enabled divider still resizes on a main-axis drag and fires '
+        'onDragStart and onDragEnd once',
+        (tester) async {
+          var dragStarts = 0;
+          var dragEnds = 0;
+
+          await pumpScrollable(
+            tester,
+            containerDirection: Axis.horizontal,
+            scrollController: scrollController,
+            controller: controller,
+            divider: ResizableDivider(
+              onDragStart: () => dragStarts++,
+              onDragEnd: () => dragEnds++,
+            ),
+          );
+          final before = List<double>.of(controller.pixels);
+
+          await tester.drag(
+            find.byType(ResizableContainerDivider),
+            const Offset(50, 0),
+          );
+          await tester.pumpAndSettle();
+
+          expect(controller.pixels.first, greaterThan(before.first));
+          expect(scrollController.offset, 0);
+          expect(dragStarts, 1);
+          expect(dragEnds, 1);
+        },
+      );
+    });
+
+    group('props', () {
+      test('includes onDragStart', () {
+        void onDragStart() {}
+
+        expect(
+          ResizableDivider(onDragStart: onDragStart),
+          ResizableDivider(onDragStart: onDragStart),
+        );
+        expect(
+          ResizableDivider(onDragStart: onDragStart),
+          isNot(const ResizableDivider()),
+        );
+      });
+
+      test('includes onDragEnd', () {
+        void onDragEnd() {}
+
+        expect(
+          ResizableDivider(onDragEnd: onDragEnd),
+          ResizableDivider(onDragEnd: onDragEnd),
+        );
+        expect(
+          ResizableDivider(onDragEnd: onDragEnd),
+          isNot(const ResizableDivider()),
+        );
+      });
+    });
   });
 }

@@ -61,6 +61,12 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
     return LayoutBuilder(builder: (context, constraints) {
       final width = _getWidth(constraints.maxWidth);
       final height = _getHeight(constraints.maxHeight);
+      final canResize = widget.enabled;
+      final isHorizontal = widget.direction == Axis.horizontal;
+      final onDragStart = canResize ? _onDragStart : null;
+      final onDragUpdate =
+          canResize ? _getOnDragUpdate(Directionality.of(context)) : null;
+      final onDragEnd = canResize ? _onDragEnd : null;
 
       return Align(
         alignment: switch (widget.config.crossAxisAlignment) {
@@ -79,16 +85,14 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
           onEnter: _onEnter,
           onExit: _onExit,
           child: GestureDetector(
-            onVerticalDragStart: _onVerticalDragStart,
-            onVerticalDragUpdate: _onVerticalDragUpdate,
-            onVerticalDragEnd: _onVerticalDragEnd,
-            onHorizontalDragStart: _onHorizontalDragStart,
-            onHorizontalDragUpdate: _getOnHorizontalDragUpdate(
-              Directionality.of(context),
-            ),
-            onHorizontalDragEnd: _onHorizontalDragEnd,
-            onTapDown: _onTapDown,
-            onTapUp: _onTapUp,
+            onVerticalDragStart: isHorizontal ? null : onDragStart,
+            onVerticalDragUpdate: isHorizontal ? null : onDragUpdate,
+            onVerticalDragEnd: isHorizontal ? null : onDragEnd,
+            onHorizontalDragStart: isHorizontal ? onDragStart : null,
+            onHorizontalDragUpdate: isHorizontal ? onDragUpdate : null,
+            onHorizontalDragEnd: isHorizontal ? onDragEnd : null,
+            onTapDown: widget.enabled ? _onTapDown : null,
+            onTapUp: widget.enabled ? _onTapUp : null,
             child: CustomPaint(
               size: Size(width, height),
               painter: DividerPainter(
@@ -157,76 +161,40 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
     }
   }
 
-  void _onVerticalDragStart(DragStartDetails _) {
-    if (!widget.enabled) return;
-    if (widget.direction == Axis.vertical) {
-      setState(() => isDragging = true);
-      widget.config.onDragStart?.call();
-    }
+  void _onDragStart(DragStartDetails _) {
+    setState(() => isDragging = true);
+    widget.config.onDragStart?.call();
   }
 
-  void _onVerticalDragUpdate(DragUpdateDetails details) {
-    if (!widget.enabled) return;
-    if (widget.direction == Axis.vertical) {
-      widget.onResizeUpdate(details.delta.dy);
-    }
-  }
-
-  void _onVerticalDragEnd(DragEndDetails _) {
-    if (!widget.enabled) return;
-    if (widget.direction == Axis.vertical) {
-      setState(() => isDragging = false);
-      widget.config.onDragEnd?.call();
-
-      if (!isHovered) {
-        widget.config.onHoverExit?.call();
-      }
-    }
-  }
-
-  void _onHorizontalDragStart(DragStartDetails _) {
-    if (!widget.enabled) return;
-    if (widget.direction == Axis.horizontal) {
-      setState(() => isDragging = true);
-      widget.config.onDragStart?.call();
-    }
-  }
-
-  void Function(DragUpdateDetails) _getOnHorizontalDragUpdate(
+  void Function(DragUpdateDetails) _getOnDragUpdate(
     TextDirection textDirection,
   ) {
     return (details) {
-      if (!widget.enabled) return;
-      if (widget.direction == Axis.horizontal) {
-        final delta = details.delta.dx;
+      final delta = switch (widget.direction) {
+        Axis.horizontal => details.delta.dx,
+        Axis.vertical => details.delta.dy,
+      };
+      final isFlipped = widget.direction == Axis.horizontal &&
+          textDirection == TextDirection.rtl;
 
-        widget.onResizeUpdate(switch (textDirection) {
-          TextDirection.ltr => delta,
-          TextDirection.rtl => -delta,
-        });
-      }
+      widget.onResizeUpdate(isFlipped ? -delta : delta);
     };
   }
 
-  void _onHorizontalDragEnd(DragEndDetails _) {
-    if (!widget.enabled) return;
-    if (widget.direction == Axis.horizontal) {
-      setState(() => isDragging = false);
-      widget.config.onDragEnd?.call();
+  void _onDragEnd(DragEndDetails _) {
+    setState(() => isDragging = false);
+    widget.config.onDragEnd?.call();
 
-      if (!isHovered) {
-        widget.config.onHoverExit?.call();
-      }
+    if (!isHovered) {
+      widget.config.onHoverExit?.call();
     }
   }
 
   void _onTapDown(TapDownDetails _) {
-    if (!widget.enabled) return;
     widget.config.onTapDown?.call();
   }
 
   void _onTapUp(TapUpDetails _) {
-    if (!widget.enabled) return;
     widget.config.onTapUp?.call();
   }
 }
