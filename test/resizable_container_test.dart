@@ -1056,7 +1056,7 @@ void main() {
         expect(errors, isNotEmpty);
         expect(
           errors.first.exceptionAsString(),
-          contains('was given an infinite size during layout'),
+          contains('was given unbounded width'),
         );
       });
     });
