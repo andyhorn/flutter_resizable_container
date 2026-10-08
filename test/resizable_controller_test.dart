@@ -607,27 +607,27 @@ void main() {
 
       test('accepts 6 even splits of 998 pixels', () {
         setUpChildren(6, 998);
-        final pixels = ResizableSize.pixels(998 / 6);
+        final size = ResizableSize.pixels(998 / 6);
 
         expect(
           [for (var i = 0; i < 6; i++) 998 / 6]
               .fold<double>(0, (a, b) => a + b),
           greaterThan(998),
         );
-        expect(() => controller.setSizes([for (var i = 0; i < 6; i++) pixels]),
+        expect(() => controller.setSizes([for (var i = 0; i < 6; i++) size]),
             returnsNormally);
       });
 
       test('accepts 7 even splits of 1000 pixels', () {
         setUpChildren(7, 1000);
-        final pixels = ResizableSize.pixels(1000 / 7);
+        final size = ResizableSize.pixels(1000 / 7);
 
         expect(
           [for (var i = 0; i < 7; i++) 1000 / 7]
               .fold<double>(0, (a, b) => a + b),
           greaterThan(1000),
         );
-        expect(() => controller.setSizes([for (var i = 0; i < 7; i++) pixels]),
+        expect(() => controller.setSizes([for (var i = 0; i < 7; i++) size]),
             returnsNormally);
       });
 
@@ -641,6 +641,54 @@ void main() {
         );
         expect(() => controller.setSizes([for (var i = 0; i < 9; i++) ratio]),
             returnsNormally);
+      });
+
+      test('accepts a pixel total just under the tolerance', () {
+        setUpChildren(2, 100);
+
+        expect(
+          () => controller.setSizes(const [
+            ResizableSize.pixels(50 + 5e-7),
+            ResizableSize.pixels(50),
+          ]),
+          returnsNormally,
+        );
+      });
+
+      test('rejects a pixel total just over the tolerance', () {
+        setUpChildren(2, 100);
+
+        expect(
+          () => controller.setSizes(const [
+            ResizableSize.pixels(50 + 2e-6),
+            ResizableSize.pixels(50),
+          ]),
+          throwsArgumentError,
+        );
+      });
+
+      test('accepts a ratio total just under the tolerance', () {
+        setUpChildren(2, 100);
+
+        expect(
+          () => controller.setSizes(const [
+            ResizableSize.ratio(0.5 + 5e-7),
+            ResizableSize.ratio(0.5),
+          ]),
+          returnsNormally,
+        );
+      });
+
+      test('rejects a ratio total just over the tolerance', () {
+        setUpChildren(2, 100);
+
+        expect(
+          () => controller.setSizes(const [
+            ResizableSize.ratio(0.5 + 2e-6),
+            ResizableSize.ratio(0.5),
+          ]),
+          throwsArgumentError,
+        );
       });
 
       test('still rejects pixels that are genuinely over the limit', () {

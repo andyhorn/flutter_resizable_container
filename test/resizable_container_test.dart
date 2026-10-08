@@ -1026,30 +1026,34 @@ void main() {
         expect(widths, equals([80, 60]));
       });
 
-      testWidgets('terminates in an unbounded main axis', (tester) async {
+      testWidgets('lays out without hanging in an unbounded main axis',
+          (tester) async {
         final errors = <FlutterErrorDetails>[];
-        final onError = FlutterError.onError;
+        final originalOnError = FlutterError.onError;
         FlutterError.onError = errors.add;
 
-        await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: ResizableContainer(
-                  direction: Axis.horizontal,
-                  children: [
-                    ResizableChild(child: SizedBox.expand()),
-                    ResizableChild(child: SizedBox.expand()),
-                  ],
+        try {
+          await tester.pumpWidget(
+            const MaterialApp(
+              home: Scaffold(
+                body: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ResizableContainer(
+                    direction: Axis.horizontal,
+                    children: [
+                      ResizableChild(child: SizedBox.expand()),
+                      ResizableChild(child: SizedBox.expand()),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        );
+          );
+        } finally {
+          FlutterError.onError = originalOnError;
+        }
 
-        FlutterError.onError = onError;
-
+        expect(errors, isNotEmpty);
         expect(
           errors.first.exceptionAsString(),
           contains('was given an infinite size during layout'),

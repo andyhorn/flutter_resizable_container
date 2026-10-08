@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
 import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
-import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
 import 'package:flutter_resizable_container/src/hide_animation_coordinator.dart';
+import 'package:flutter_resizable_container/src/layout/divider_space.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_allocation.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_layout.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
@@ -79,7 +79,7 @@ class _ResizableContainerState extends State<ResizableContainer>
   );
 
   Set<int> _prevHiddenIndices = const <int>{};
-  double? _lastAvailableSpace;
+  double? _lastContainerExtent;
   double _lastExtent = 0;
 
   @override
@@ -121,7 +121,7 @@ class _ResizableContainerState extends State<ResizableContainer>
       manager.initChildren(widget.children);
       manager.setCascadeNegativeDelta(widget.cascadeNegativeDelta);
       _prevHiddenIndices = Set.of(controller.hiddenIndices);
-      _lastAvailableSpace = null;
+      _lastContainerExtent = null;
       controller.addListener(_onControllerChanged);
     } else if (structuralChange) {
       _animation.cancel();
@@ -212,6 +212,10 @@ class _ResizableContainerState extends State<ResizableContainer>
     }
 
     _prevHiddenIndices = Set.of(newHidden);
+
+    // Hiding or showing a child changes the visible divider space, which is
+    // only recomputed when the LayoutBuilder re-runs.
+    _rebuild();
   }
 
   @override
@@ -219,13 +223,14 @@ class _ResizableContainerState extends State<ResizableContainer>
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableSpace = _getAvailableSpace(constraints);
+        final containerExtent = constraints.maxForDirection(widget.direction);
 
         if (_animation.phase != HideAnimationPhase.idle &&
-            _lastAvailableSpace != null &&
-            availableSpace != _lastAvailableSpace) {
+            _lastContainerExtent != null &&
+            containerExtent != _lastContainerExtent) {
           _animation.cancel();
         }
-        _lastAvailableSpace = availableSpace;
+        _lastContainerExtent = containerExtent;
 
         manager.setAvailableSpace(availableSpace);
 
@@ -325,11 +330,10 @@ class _ResizableContainerState extends State<ResizableContainer>
 
   double _getAvailableSpace(BoxConstraints constraints) {
     final totalSpace = constraints.maxForDirection(widget.direction);
-    final dividerSpace = widget.children
-        .take(widget.children.length - 1)
-        .map((child) => child.divider)
-        .map((divider) => divider.thickness + divider.padding)
-        .sum();
+    final dividerSpace = getDividerSpace(
+      widget.children,
+      controller.hiddenIndices,
+    );
 
     return totalSpace - dividerSpace;
   }
