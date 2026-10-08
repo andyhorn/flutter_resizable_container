@@ -1,9 +1,11 @@
 import 'dart:collection';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show precisionErrorTolerance;
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
+import 'package:flutter_resizable_container/src/layout/expand_sizes.dart';
 
 /// The effective [ResizableSize] applied to a hidden child.
 const ResizableSize _hiddenSize = ResizableSize.pixels(0, min: 0, max: 0);
@@ -276,12 +278,6 @@ class ResizableController with ChangeNotifier {
       return;
     }
 
-    // Adjust the sizes of all children based on the new available space.
-    //
-    // Prioritize adjusting "expand" children first, weighted by their flex.
-    // If no "expand" child can change (they have reached 0 or a size
-    // constraint), the change is distributed evenly among all remaining
-    // children, taking into account their minimum & maximum size constraints.
     final delta = _getDelta(availableSpace);
 
     if (delta == 0.0) {
@@ -389,10 +385,11 @@ class ResizableController with ChangeNotifier {
       return List.filled(sizes.length, 0.0);
     }
 
-    final totalWeight = changeableIndices.map(_getWeight).sum();
+    final weights = _getWeights(changeableIndices);
+    final totalWeight = weights.values.sum();
 
     final maximums = indices.map((i) {
-      if (changeableIndices.contains(i)) {
+      if (weights.containsKey(i)) {
         return _getAllowableChange(delta: delta, index: i, sizes: sizes);
       }
 
@@ -400,12 +397,14 @@ class ResizableController with ChangeNotifier {
     }).toList();
 
     final changes = indices.map((index) {
-      if (!changeableIndices.contains(index)) {
+      final weight = weights[index];
+
+      if (weight == null) {
         return 0.0;
       }
 
       final max = maximums[index];
-      final changePerItem = delta * _getWeight(index) / totalWeight;
+      final changePerItem = delta * weight / totalWeight;
 
       if (max.abs() < changePerItem.abs()) {
         return max;
@@ -417,7 +416,7 @@ class ResizableController with ChangeNotifier {
     final changesSum = changes.sum();
     final remainingChange = delta - changesSum;
 
-    if (remainingChange.abs() > 0) {
+    if (remainingChange.abs() > precisionErrorTolerance) {
       final adjustedSizes = indices.map(
         (index) => sizes[index] + changes[index],
       );
@@ -435,10 +434,18 @@ class ResizableController with ChangeNotifier {
     return changes;
   }
 
-  int _getWeight(int index) {
-    final size = _sizes[index];
+  Map<int, int> _getWeights(List<int> changeableIndices) {
+    final flexWeights = {
+      for (final index in changeableIndices) index: flexOf(_sizes[index]),
+    };
 
-    return size is ResizableSizeExpand ? size.flex : 1;
+    // flex 0 is only asserted against, so release builds can reach a zero
+    // total weight; split evenly instead of dividing by zero.
+    if (flexWeights.values.sum() == 0) {
+      return {for (final index in changeableIndices) index: 1};
+    }
+
+    return flexWeights;
   }
 
   double _getAllowableChange({

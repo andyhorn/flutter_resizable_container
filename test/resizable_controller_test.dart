@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -187,7 +188,7 @@ void main() {
 
         group('when expand children have different flex values', () {
           setUp(() {
-            controller.setChildren(const [
+            manager.setChildren(const [
               ResizableChild(
                 size: ResizableSize.expand(),
                 child: SizedBox.shrink(),
@@ -228,7 +229,7 @@ void main() {
 
         group('when expand children have equal flex values', () {
           setUp(() {
-            controller.setChildren(const [
+            manager.setChildren(const [
               ResizableChild(
                 size: ResizableSize.expand(flex: 2),
                 child: SizedBox.shrink(),
@@ -251,9 +252,43 @@ void main() {
           });
         });
 
+        group('when a flexed split leaves a fractional remainder', () {
+          setUp(() {
+            manager.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.expand(),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.expand(flex: 2),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.expand(flex: 2),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.expand(flex: 2),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            manager.setAvailableSpace(700);
+            manager.setRenderedSizes([100, 200, 200, 200]);
+          });
+
+          test('terminates and fills the new available space', () {
+            const availableSpace = 714.06;
+            manager.setAvailableSpace(availableSpace);
+
+            expect(controller.pixels.sum(), closeTo(availableSpace, 0.001));
+            expect(controller.pixels[0], closeTo(102.009, 0.001));
+          });
+        });
+
         group('when a flexed expand child reaches its maximum', () {
           setUp(() {
-            controller.setChildren(const [
+            manager.setChildren(const [
               ResizableChild(
                 size: ResizableSize.expand(),
                 child: SizedBox.shrink(),
@@ -286,7 +321,7 @@ void main() {
 
         group('when sizes were changed with setSizes', () {
           setUp(() {
-            controller.setChildren(const [
+            manager.setChildren(const [
               ResizableChild(
                 size: ResizableSize.expand(),
                 child: SizedBox.shrink(),
@@ -316,7 +351,7 @@ void main() {
 
         group('when no expand child can change', () {
           setUp(() {
-            controller.setChildren(const [
+            manager.setChildren(const [
               ResizableChild(
                 size: ResizableSize.expand(max: 100),
                 child: SizedBox.shrink(),
