@@ -2256,6 +2256,84 @@ void main() {
         },
       );
     });
+
+    group('repaint isolation', () {
+      late List<int> builds;
+      late List<_CountingPainter> painters;
+
+      setUp(() {
+        builds = [0, 0, 0];
+        painters = [_CountingPainter(), _CountingPainter(), _CountingPainter()];
+      });
+
+      Future<void> pumpThreePanes(WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                direction: Axis.horizontal,
+                children: [
+                  for (var i = 0; i < 3; i++)
+                    ResizableChild(
+                      child: Builder(
+                        builder: (_) {
+                          builds[i]++;
+                          return CustomPaint(
+                            painter: painters[i],
+                            child: const SizedBox.expand(),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      Future<void> dragFirstDivider(WidgetTester tester) async {
+        final divider = find.byType(ResizableContainerDivider).first;
+        final gesture = await tester.startGesture(tester.getCenter(divider));
+        await gesture.moveBy(const Offset(kDragSlopDefault + 1, 0));
+        await tester.pump();
+        for (var i = 0; i < 20; i++) {
+          await gesture.moveBy(const Offset(5, 0));
+          await tester.pump();
+        }
+        await gesture.up();
+        await tester.pump();
+      }
+
+      testWidgets('does not repaint panes whose size did not change',
+          (tester) async {
+        await pumpThreePanes(tester);
+        final paintsBefore = painters.map((p) => p.paints).toList();
+
+        await dragFirstDivider(tester);
+
+        expect(painters[0].paints - paintsBefore[0], greaterThan(0));
+        expect(painters[1].paints - paintsBefore[1], greaterThan(0));
+        expect(
+          painters[2].paints - paintsBefore[2],
+          0,
+          reason: 'pane 2 did not resize, so its RepaintBoundary should '
+              'isolate it from the drag',
+        );
+      });
+
+      testWidgets('does not rebuild user children', (tester) async {
+        await pumpThreePanes(tester);
+        final buildsBefore = [...builds];
+
+        await dragFirstDivider(tester);
+
+        for (var i = 0; i < builds.length; i++) {
+          expect(builds[i] - buildsBefore[i], 0, reason: 'pane $i');
+        }
+      });
+    });
   });
 }
 
@@ -2306,4 +2384,14 @@ class __ToggleChildAppState extends State<_ToggleChildApp> {
       ),
     );
   }
+}
+
+class _CountingPainter extends CustomPainter {
+  int paints = 0;
+
+  @override
+  void paint(Canvas canvas, Size size) => paints++;
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
