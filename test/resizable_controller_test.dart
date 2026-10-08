@@ -17,7 +17,7 @@ void main() {
 
     group('.pixels', () {
       setUp(() {
-        controller.setChildren(const [
+        manager.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -39,7 +39,7 @@ void main() {
 
     group('.ratios', () {
       setUp(() {
-        controller.setChildren(const [
+        manager.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -62,7 +62,7 @@ void main() {
     group('#setAvailableSpace', () {
       group('when the new value is the same', () {
         setUp(() {
-          controller.setChildren(const [
+          manager.setChildren(const [
             ResizableChild(
               size: ResizableSize.pixels(100),
               child: SizedBox.shrink(),
@@ -90,7 +90,7 @@ void main() {
       group('when changing the available space', () {
         group('when only pixel sizes are present', () {
           setUp(() {
-            controller.setChildren(const [
+            manager.setChildren(const [
               ResizableChild(
                 size: ResizableSize.pixels(100),
                 child: SizedBox.shrink(),
@@ -113,7 +113,7 @@ void main() {
 
         group('when an expand child is present', () {
           setUp(() {
-            controller.setChildren(const [
+            manager.setChildren(const [
               ResizableChild(
                 size: ResizableSize.pixels(100),
                 child: SizedBox.shrink(),
@@ -136,7 +136,7 @@ void main() {
 
         group('when an expandable is present and has a constraint', () {
           setUp(() {
-            controller.setChildren(const [
+            manager.setChildren(const [
               ResizableChild(
                 size: ResizableSize.pixels(100),
                 child: SizedBox.shrink(),
@@ -164,7 +164,7 @@ void main() {
 
         group('when a shrink size is present', () {
           setUp(() {
-            controller.setChildren(const [
+            manager.setChildren(const [
               ResizableChild(
                 size: ResizableSize.pixels(100),
                 child: SizedBox.shrink(),
@@ -197,7 +197,7 @@ void main() {
           ),
         ];
 
-        controller.setChildren(children);
+        manager.setChildren(children);
 
         expect(
           ResizableControllerTestHelper.getChildren(controller),
@@ -205,20 +205,20 @@ void main() {
         );
       });
 
-      test('notifies listeners', () {
-        var notified = false;
-        controller.addListener(() => notified = true);
-        controller.setChildren(const [
+      test('notifies listeners once', () {
+        var notified = 0;
+        controller.addListener(() => notified++);
+        manager.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
           ),
         ]);
-        expect(notified, isTrue);
+        expect(notified, equals(1));
       });
 
       test('sets the list of children', () {
-        controller.setChildren(const [
+        manager.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -238,7 +238,7 @@ void main() {
       });
 
       test('requests a new layout', () {
-        controller.setChildren([
+        manager.setChildren([
           ResizableChild(child: SizedBox.shrink()),
         ]);
 
@@ -246,9 +246,34 @@ void main() {
       });
     });
 
+    group('#setChildren (deprecated)', () {
+      test('resets sizes and notifies listeners', () {
+        var notified = 0;
+        controller.addListener(() => notified++);
+
+        // ignore: deprecated_member_use_from_same_package
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            child: SizedBox.shrink(),
+          ),
+        ]);
+
+        expect(
+          ResizableControllerTestHelper.getChildren(controller).length,
+          equals(2),
+        );
+        expect(controller.needsLayout, isTrue);
+        expect(notified, equals(1));
+      });
+    });
+
     group('#adjustChildSize', () {
       setUp(() {
-        controller.setChildren(const [
+        manager.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -290,7 +315,7 @@ void main() {
         test(
           'does not grow the selected child past its max constraint',
           () {
-            controller.setChildren(const [
+            manager.setChildren(const [
               ResizableChild(
                 size: ResizableSize.pixels(50),
                 child: SizedBox.shrink(),
@@ -329,7 +354,7 @@ void main() {
         test(
           'shrinks rightward siblings only by what the selected child can absorb',
           () {
-            controller.setChildren(const [
+            manager.setChildren(const [
               ResizableChild(
                 size: ResizableSize.pixels(50),
                 child: SizedBox.shrink(),
@@ -391,7 +416,7 @@ void main() {
         test(
           'does not grow the right sibling past its max constraint',
           () {
-            controller.setChildren(const [
+            manager.setChildren(const [
               ResizableChild(
                 size: ResizableSize.pixels(40, min: 20),
                 child: SizedBox.shrink(),
@@ -530,7 +555,7 @@ void main() {
 
     group('#setSizes', () {
       setUp(() {
-        controller.setChildren(const [
+        manager.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -722,7 +747,7 @@ void main() {
 
     group('#hide / #show', () {
       setUp(() {
-        controller.setChildren(const [
+        manager.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(100),
             child: SizedBox.shrink(),
@@ -834,7 +859,7 @@ void main() {
       test('setChildren clears hidden state', () {
         controller.hide(0);
 
-        controller.setChildren(const [
+        manager.setChildren(const [
           ResizableChild(
             size: ResizableSize.pixels(50),
             child: SizedBox.shrink(),

@@ -128,7 +128,7 @@ class _ResizableContainerState extends State<ResizableContainer>
       // `setChildren` clears the hidden set and notifies synchronously, so the
       // listener must already expect the empty set.
       _prevHiddenIndices = const <int>{};
-      controller.setChildren(widget.children);
+      manager.setChildren(widget.children);
     } else if (configChange) {
       manager.updateChildrenInPlace(widget.children);
     }
