@@ -153,9 +153,14 @@ the next time the child is shown; the child stays hidden until you call
 
 An external controller keeps its hidden indices and dragged sizes when its
 container is unmounted and mounted again (for example, switching tabs) with
-unchanged children (same count and declared sizes). If the children differ, the
-controller resets. Two containers that share a controller with identically
-shaped children share its state.
+unchanged children: the same number of children, each with the same declared
+`size` and `key`. Changes to dividers or child widgets don't count. If the
+children differ, the controller resets. If the direction differs, the controller
+keeps its hidden indices but lays out its children again. To start fresh, give
+the container a new `ResizableController`.
+
+A controller drives one mounted container at a time. Don't attach it to two
+containers that are on screen together, such as both pages of a `TabBarView`.
 
 ##### Animating hide/show
 

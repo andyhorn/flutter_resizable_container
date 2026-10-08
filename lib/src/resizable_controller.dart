@@ -29,6 +29,7 @@ class ResizableController with ChangeNotifier {
   bool _needsLayoutFlag = false;
   int _invalidations = 0;
   bool _cascadeNegativeDelta = false;
+  Axis? _direction;
 
   bool get _needsLayout => _needsLayoutFlag;
 
@@ -606,6 +607,16 @@ final class ResizableControllerManager {
 
   void setCascadeNegativeDelta(bool cascadeNegativeDelta) {
     _controller._cascadeNegativeDelta = cascadeNegativeDelta;
+  }
+
+  /// Records the axis the controller's pixels are measured along, and
+  /// invalidates the layout when it differs from the previously recorded one.
+  void setDirection(Axis direction) {
+    final previous = _controller._direction;
+    if (previous != null && previous != direction) {
+      _controller._needsLayout = true;
+    }
+    _controller._direction = direction;
   }
 }
 

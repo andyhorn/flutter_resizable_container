@@ -103,6 +103,7 @@ class _ResizableContainerState extends State<ResizableContainer>
 
     manager.initChildren(widget.children);
     manager.setCascadeNegativeDelta(widget.cascadeNegativeDelta);
+    manager.setDirection(widget.direction);
     _prevHiddenIndices = Set.of(controller.hiddenIndices);
     controller.addListener(_onControllerChanged);
   }
@@ -111,7 +112,7 @@ class _ResizableContainerState extends State<ResizableContainer>
   void didUpdateWidget(covariant ResizableContainer oldWidget) {
     final controllerChanged = oldWidget.controller != widget.controller;
     final structuralChange =
-        _isStructuralChange(oldWidget.children, widget.children);
+        !oldWidget.children.hasSameStructureAs(widget.children);
     final configChange =
         !structuralChange && !listEquals(oldWidget.children, widget.children);
     final directionChanged = oldWidget.direction != widget.direction;
@@ -155,6 +156,7 @@ class _ResizableContainerState extends State<ResizableContainer>
     if ((!controllerChanged && structuralChange) || directionChanged) {
       manager.setNeedsLayout();
     }
+    manager.setDirection(widget.direction);
 
     if (oldWidget.hideAnimation != widget.hideAnimation &&
         widget.hideAnimation == null) {
@@ -164,20 +166,14 @@ class _ResizableContainerState extends State<ResizableContainer>
     super.didUpdateWidget(oldWidget);
   }
 
-  /// Whether [oldChildren] and [newChildren] differ in ways that invalidate
-  /// the controller's layout state — the number of children, any of their
-  /// declared sizes, or their keys. Differences confined to divider config or
-  /// child widget instances are not structural.
-  bool _isStructuralChange(
-    List<ResizableChild> oldChildren,
-    List<ResizableChild> newChildren,
-  ) {
-    return !oldChildren.hasSameStructureAs(newChildren);
-  }
-
   @override
   void dispose() {
     controller.removeListener(_onControllerChanged);
+    // The controller's state can outlive this container, so a remount must
+    // still re-measure the shrink children this animation would have.
+    if (_remeasureShrinkOnIdle) {
+      manager.setNeedsLayout();
+    }
     _animation.dispose();
     if (isDefaultController) {
       controller.dispose();

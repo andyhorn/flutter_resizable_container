@@ -2518,28 +2518,8 @@ void main() {
         final second = ResizableController();
         addTearDown(second.dispose);
 
-        Widget build(ResizableController controller, Axis direction) {
-          return MaterialApp(
-            home: Scaffold(
-              body: ResizableContainer(
-                controller: controller,
-                direction: direction,
-                children: const [
-                  ResizableChild(
-                    size: ResizableSize.ratio(0.5),
-                    child: SizedBox.expand(key: Key('A')),
-                  ),
-                  ResizableChild(
-                    size: ResizableSize.ratio(0.5),
-                    child: SizedBox.expand(key: Key('B')),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        await tester.pumpWidget(build(first, Axis.horizontal));
+        await tester.pumpWidget(
+            _DirectionSwapApp(controller: first, direction: Axis.horizontal));
         await tester.pumpAndSettle();
         await tester.drag(
           find.byType(ResizableContainerDivider),
@@ -2548,10 +2528,12 @@ void main() {
         await tester.pumpAndSettle();
         expect(first.pixels[0], greaterThan(600));
 
-        await tester.pumpWidget(build(second, Axis.horizontal));
+        await tester.pumpWidget(
+            _DirectionSwapApp(controller: second, direction: Axis.horizontal));
         await tester.pumpAndSettle();
 
-        await tester.pumpWidget(build(first, Axis.vertical));
+        await tester.pumpWidget(
+            _DirectionSwapApp(controller: first, direction: Axis.vertical));
         await tester.pumpAndSettle();
 
         final size = tester.getSize(find.byKey(const Key('A')));
@@ -2978,4 +2960,33 @@ class _CountingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _DirectionSwapApp extends StatelessWidget {
+  const _DirectionSwapApp({required this.controller, required this.direction});
+
+  final ResizableController controller;
+  final Axis direction;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: ResizableContainer(
+          controller: controller,
+          direction: direction,
+          children: const [
+            ResizableChild(
+              size: ResizableSize.ratio(0.5),
+              child: SizedBox.expand(key: Key('A')),
+            ),
+            ResizableChild(
+              size: ResizableSize.ratio(0.5),
+              child: SizedBox.expand(key: Key('B')),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
