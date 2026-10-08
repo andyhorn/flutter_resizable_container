@@ -278,11 +278,10 @@ class ResizableController with ChangeNotifier {
 
     // Adjust the sizes of all children based on the new available space.
     //
-    // Prioritize adjusting "expand" children first. Any remaining change in
-    // available space (if the "expand" children have reached 0 or a size
-    // constraint) should be uniformly distributed among the remaining
-    // non-shrink children, taking into account their minimum & maximum size
-    // constraints.
+    // Prioritize adjusting "expand" children first, weighted by their flex.
+    // If no "expand" child can change (they have reached 0 or a size
+    // constraint), the change is distributed evenly among all remaining
+    // children, taking into account their minimum & maximum size constraints.
     final delta = _getDelta(availableSpace);
 
     if (delta == 0.0) {
@@ -390,7 +389,7 @@ class ResizableController with ChangeNotifier {
       return List.filled(sizes.length, 0.0);
     }
 
-    final changePerItem = delta / changeableIndices.length;
+    final totalWeight = changeableIndices.map(_getWeight).sum();
 
     final maximums = indices.map((i) {
       if (changeableIndices.contains(i)) {
@@ -406,6 +405,7 @@ class ResizableController with ChangeNotifier {
       }
 
       final max = maximums[index];
+      final changePerItem = delta * _getWeight(index) / totalWeight;
 
       if (max.abs() < changePerItem.abs()) {
         return max;
@@ -433,6 +433,12 @@ class ResizableController with ChangeNotifier {
     }
 
     return changes;
+  }
+
+  int _getWeight(int index) {
+    final size = _sizes[index];
+
+    return size is ResizableSizeExpand ? size.flex : 1;
   }
 
   double _getAllowableChange({
@@ -480,7 +486,7 @@ class ResizableController with ChangeNotifier {
     }
 
     for (final index in indices) {
-      if (_children[index].size is! ResizableSizeExpand) {
+      if (_sizes[index] is! ResizableSizeExpand) {
         continue;
       }
 
