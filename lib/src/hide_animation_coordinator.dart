@@ -8,8 +8,9 @@ enum HideAnimationPhase {
   idle,
 
   /// A transition is starting: the from-snapshot has been captured, but the
-  /// target has not yet been measured. The widget should still render the
-  /// from-snapshot while a layout pass measures the target offstage.
+  /// animation has not started. The widget should still render the
+  /// from-snapshot for one frame, after which the target is computed and the
+  /// animation begins.
   capturing,
 
   /// The animation is running. The widget should render
@@ -37,6 +38,7 @@ class HideAnimationCoordinator {
   List<double>? _from;
   List<double>? _to;
   Curve _curve = Curves.linear;
+  bool _targetScheduled = false;
 
   HideAnimationPhase get phase {
     if (_from == null) return HideAnimationPhase.idle;
@@ -76,6 +78,19 @@ class HideAnimationCoordinator {
     _to = null;
   }
 
+  /// Whether the caller should schedule the work that ends the current
+  /// [HideAnimationPhase.capturing] phase.
+  ///
+  /// Returns `true` at most once per capture, so repeated builds within the
+  /// capture frame schedule a single callback.
+  bool claimTargetSlot() {
+    if (phase != HideAnimationPhase.capturing || _targetScheduled) {
+      return false;
+    }
+    _targetScheduled = true;
+    return true;
+  }
+
   /// Begin the animation toward [target] using [animation].
   ///
   /// Must be called after [beginCapture]. Lazily constructs the underlying
@@ -87,6 +102,7 @@ class HideAnimationCoordinator {
     if (_from == null) return;
 
     _to = target;
+    _targetScheduled = false;
     _curve = animation.curve;
 
     final controller = _controller ??= AnimationController(vsync: _vsync)
@@ -103,6 +119,7 @@ class HideAnimationCoordinator {
     _controller?.stop();
     _from = null;
     _to = null;
+    _targetScheduled = false;
   }
 
   /// Cancel and dispose the underlying [AnimationController]. The coordinator
@@ -118,6 +135,7 @@ class HideAnimationCoordinator {
     }
     _from = null;
     _to = null;
+    _targetScheduled = false;
   }
 
   void dispose() => reset();

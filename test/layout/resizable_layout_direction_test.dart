@@ -11,6 +11,23 @@ void main() {
         expect(direction, isA<ResizableVerticalLayout>());
       });
 
+      test('returns identical instances for the same Axis', () {
+        expect(
+          identical(
+            ResizableLayoutDirection.forAxis(Axis.horizontal),
+            ResizableLayoutDirection.forAxis(Axis.horizontal),
+          ),
+          isTrue,
+        );
+        expect(
+          identical(
+            ResizableLayoutDirection.forAxis(Axis.vertical),
+            ResizableLayoutDirection.forAxis(Axis.vertical),
+          ),
+          isTrue,
+        );
+      });
+
       test('returns horizontal layout for horizontal Axis', () {
         final direction = ResizableLayoutDirection.forAxis(Axis.horizontal);
 

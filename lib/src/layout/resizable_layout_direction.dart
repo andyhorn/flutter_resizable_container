@@ -5,14 +5,18 @@ sealed class ResizableLayoutDirection {
 
   factory ResizableLayoutDirection.forAxis(Axis direction) {
     return switch (direction) {
-      Axis.horizontal => ResizableHorizontalLayout(),
-      Axis.vertical => ResizableVerticalLayout(),
+      Axis.horizontal => const ResizableHorizontalLayout(),
+      Axis.vertical => const ResizableVerticalLayout(),
     };
   }
 
   double getMaxConstraint(BoxConstraints constraints);
   double getSizeDimension(Size size);
   Offset getOffset(double currentPosition);
+
+  /// Offset of a child spanning [extent] at [position] in a right-to-left
+  /// layout of [containerSize].
+  Offset getRtlOffset(double position, double extent, Size containerSize);
   Size getSize(double value, BoxConstraints constraints);
   double getMinIntrinsicDimension(RenderBox child);
   BoxConstraints copyConstraintsWith(BoxConstraints constraints, double value);
@@ -34,6 +38,11 @@ class ResizableHorizontalLayout extends ResizableLayoutDirection {
   @override
   Offset getOffset(double currentPosition) {
     return Offset(currentPosition, 0.0);
+  }
+
+  @override
+  Offset getRtlOffset(double position, double extent, Size containerSize) {
+    return Offset(containerSize.width - position - extent, 0.0);
   }
 
   @override
@@ -82,6 +91,11 @@ class ResizableVerticalLayout extends ResizableLayoutDirection {
   @override
   Offset getOffset(double currentPosition) {
     return Offset(0.0, currentPosition);
+  }
+
+  @override
+  Offset getRtlOffset(double position, double extent, Size containerSize) {
+    return getOffset(position);
   }
 
   @override

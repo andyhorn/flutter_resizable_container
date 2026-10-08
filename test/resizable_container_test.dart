@@ -1022,7 +1022,7 @@ void main() {
           ],
         );
 
-        expect(tester.takeException(), isFlutterError);
+        expect(tester.takeException(), isNull);
         expect(widths, equals([80, 60]));
       });
 
@@ -1052,7 +1052,7 @@ void main() {
 
         expect(
           errors.first.exceptionAsString(),
-          contains('BoxConstraints forces an infinite width'),
+          contains('was given an infinite size during layout'),
         );
       });
     });
@@ -1632,6 +1632,15 @@ void main() {
         );
       }
 
+      void expectDividersCollapsed(WidgetTester tester) {
+        final dividers = find.byType(ResizableContainerDivider);
+        expect(dividers, findsNWidgets(2));
+        for (var i = 0; i < 2; i++) {
+          expect(tester.getSize(dividers.at(i)).width, 0);
+        }
+        expect(dividers.hitTestable(), findsNothing);
+      }
+
       testWidgets(
         'collapses immediately when hideAnimation is null',
         (tester) async {
@@ -1646,8 +1655,8 @@ void main() {
           await tester.pumpAndSettle();
 
           expect(tester.getSize(find.byKey(const Key('B'))).width, 0);
-          // Both dividers adjacent to the hidden child are also removed.
-          expect(find.byType(ResizableContainerDivider), findsNothing);
+          // Both dividers adjacent to the hidden child collapse to zero.
+          expectDividersCollapsed(tester);
         },
       );
 
@@ -1739,7 +1748,7 @@ void main() {
       );
 
       testWidgets(
-        'removes the adjacent divider once the animation settles',
+        'collapses the adjacent divider once the animation settles',
         (tester) async {
           await tester.binding.setSurfaceSize(const Size(600, 400));
           final controller = ResizableController();
@@ -1756,8 +1765,8 @@ void main() {
           controller.hide(1);
           await tester.pumpAndSettle();
 
-          // Both dividers adjacent to the hidden child are removed.
-          expect(find.byType(ResizableContainerDivider), findsNothing);
+          // Both dividers adjacent to the hidden child collapse to zero.
+          expectDividersCollapsed(tester);
         },
       );
 
@@ -2089,6 +2098,39 @@ void main() {
           expect(controller.pixels[0], 0);
 
           await tester.pumpAndSettle();
+        },
+      );
+
+      testWidgets(
+        'finishes the capture phase when a hide is reversed in the same frame',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller
+            ..hide(1)
+            ..show(1);
+          await tester.pumpAndSettle();
+
+          expect(tester.getSize(find.byKey(const Key('B'))).width, 200);
+
+          controller.hide(1);
+          await tester.pump();
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 100));
+
+          final midWidth = tester.getSize(find.byKey(const Key('B'))).width;
+          expect(midWidth, lessThan(200));
+          expect(midWidth, greaterThan(0));
         },
       );
     });
