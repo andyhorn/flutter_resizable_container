@@ -1,3 +1,7 @@
+/// Describes how a [ResizableChild] is sized along the container's main axis.
+///
+/// Use the factory constructors to create a size and a `switch` over the
+/// subtypes to read it back from [ResizableController.sizes].
 sealed class ResizableSize {
   const ResizableSize._({this.min, this.max})
       : assert(
@@ -21,7 +25,10 @@ sealed class ResizableSize {
           'min must be less than or equal to max',
         );
 
+  /// The lower bound, in logical pixels, that the size may not shrink below.
   final double? min;
+
+  /// The upper bound, in logical pixels, that the size may not grow beyond.
   final double? max;
 
   /// Creates a [ResizableSize] with a fixed size in pixels.
@@ -64,11 +71,13 @@ sealed class ResizableSize {
   }) = ResizableSizeShrink._;
 }
 
+/// A [ResizableSize] with a fixed size in logical pixels.
 final class ResizableSizePixels extends ResizableSize {
   const ResizableSizePixels._(this.pixels, {super.min, super.max})
       : assert(pixels >= 0, 'pixels must be greater than or equal to 0'),
         super._();
 
+  /// The size in logical pixels.
   final double pixels;
 
   @override
@@ -85,12 +94,14 @@ final class ResizableSizePixels extends ResizableSize {
   int get hashCode => Object.hash(pixels, min, max);
 }
 
+/// A [ResizableSize] equal to a ratio of the available space.
 final class ResizableSizeRatio extends ResizableSize {
   const ResizableSizeRatio._(this.ratio, {super.min, super.max})
       : assert(ratio >= 0, 'ratio must be greater than or equal to 0'),
         assert(ratio <= 1, 'ratio must be less than or equal to 1'),
         super._();
 
+  /// The fraction of the available space, from 0 to 1.
   final double ratio;
 
   @override
@@ -107,11 +118,13 @@ final class ResizableSizeRatio extends ResizableSize {
   int get hashCode => Object.hash(ratio, min, max);
 }
 
+/// A [ResizableSize] that expands to fill the space left by other children.
 final class ResizableSizeExpand extends ResizableSize {
   const ResizableSizeExpand._({this.flex = 1, super.min, super.max})
       : assert(flex > 0, 'flex must be greater than 0'),
         super._();
 
+  /// The share of the remaining space relative to other expanding children.
   final int flex;
 
   @override
@@ -128,6 +141,7 @@ final class ResizableSizeExpand extends ResizableSize {
   int get hashCode => Object.hash(flex, min, max);
 }
 
+/// A [ResizableSize] that shrinks to fit the intrinsic size of its child.
 final class ResizableSizeShrink extends ResizableSize {
   const ResizableSizeShrink._({super.min, super.max}) : super._();
 
