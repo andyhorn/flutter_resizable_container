@@ -137,10 +137,8 @@ class _ResizableContainerState extends State<ResizableContainer>
       controller.addListener(_onControllerChanged);
     } else if (structuralChange) {
       _animation.cancel();
-      // `manager.setChildren` clears the hidden set and notifies synchronously,
-      // so the listener must already expect the empty set.
-      _prevHiddenIndices = const <int>{};
-      manager.setChildren(widget.children);
+      manager.initChildren(widget.children);
+      _prevHiddenIndices = Set.of(controller.hiddenIndices);
     } else if (configChange) {
       manager.updateChildrenInPlace(widget.children);
     }
@@ -299,7 +297,10 @@ class _ResizableContainerState extends State<ResizableContainer>
         }
         _lastContainerExtent = containerExtent;
 
-        manager.setAvailableSpace(availableSpace);
+        final availableSpaceChanged = manager.setAvailableSpace(availableSpace);
+        if (availableSpaceChanged && !controller.needsLayout) {
+          _scheduleNotifyAfterResize();
+        }
 
         return AnimatedBuilder(
           animation: controller,
@@ -402,6 +403,19 @@ class _ResizableContainerState extends State<ResizableContainer>
       target: fullTarget,
       animation: widget.hideAnimation!,
     );
+  }
+
+  void _scheduleNotifyAfterResize() {
+    final scheduledController = controller;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // A pending layout ends in setRenderedSizes, which notifies on its own.
+      final shouldNotify = mounted &&
+          controller == scheduledController &&
+          !controller.needsLayout;
+      if (shouldNotify) {
+        manager.notify();
+      }
+    });
   }
 
   List<double> _deriveFullSizesFromController({
