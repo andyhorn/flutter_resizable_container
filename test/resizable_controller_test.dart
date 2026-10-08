@@ -395,12 +395,61 @@ void main() {
             // 90 to 140 — past its max of 60.
             manager.adjustChildSize(index: 2, delta: -100);
 
-            expect(controller.pixels[3], lessThanOrEqualTo(60));
-            expect(controller.pixels[3], equals(60));
-            // total width is preserved
-            expect(controller.pixels.reduce((a, b) => a + b), equals(200));
+            // Index 3 can only take 10 more (50 -> 60), and that 10 comes
+            // from index 2, the child next to the divider.
+            expect(controller.pixels, equals([40, 50, 50, 60]));
           },
         );
+
+        test('shrinks the neighbor before its left siblings', () {
+          controller.setChildren(const [
+            ResizableChild(
+              size: ResizableSize.pixels(50),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(25, min: 20),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(125),
+              child: SizedBox.shrink(),
+            ),
+          ]);
+
+          manager.setAvailableSpace(200);
+          manager.setRenderedSizes([50, 25, 125]);
+          manager.setCascadeNegativeDelta(true);
+
+          manager.adjustChildSize(index: 1, delta: -20);
+
+          expect(controller.pixels, equals([35, 20, 145]));
+        });
+
+        test('applies the neighbor slack when outer siblings are at min', () {
+          controller.setChildren(const [
+            ResizableChild(
+              size: ResizableSize.pixels(20, min: 20),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(25, min: 20),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(155),
+              child: SizedBox.shrink(),
+            ),
+          ]);
+
+          manager.setAvailableSpace(200);
+          manager.setRenderedSizes([20, 25, 155]);
+          manager.setCascadeNegativeDelta(true);
+
+          manager.adjustChildSize(index: 1, delta: -20);
+
+          expect(controller.pixels, equals([20, 20, 160]));
+        });
       });
     });
 

@@ -158,11 +158,7 @@ class ResizableController with ChangeNotifier {
 
         // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
-          if (index - i - 1 < 0) {
-            continue;
-          }
-
-          _pixels[index - i - 1] += changes[i];
+          _pixels[index - i] += changes[i];
         }
 
         // adjust the width of the first sibling to the right by the
@@ -339,8 +335,8 @@ class ResizableController with ChangeNotifier {
     required int index,
     required double delta,
   }) {
-    // get the indices of all leftward siblings
-    final indices = [for (var i = 0; i < index; i++) i];
+    // get the indices of the selected child and all leftward siblings
+    final indices = [for (var i = 0; i <= index; i++) i];
 
     // calculate the allowable change for each sibling
     final allowableChanges = [
@@ -351,8 +347,9 @@ class ResizableController with ChangeNotifier {
 
     var remainingDelta = delta;
 
-    // for each leftward sibling, starting with the closest and moving out,
-    // calculate the "effective" change and subtract it from the remaining delta
+    // for the selected child and each leftward sibling, starting with the
+    // selected child and moving out, calculate the "effective" change and
+    // subtract it from the remaining delta
     final changes = <double>[];
     for (var i = indices.length - 1; i >= 0 && remainingDelta != 0.0; i--) {
       final allowableChange = allowableChanges[i];
