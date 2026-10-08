@@ -371,7 +371,9 @@ class _ResizableContainerState extends State<ResizableContainer>
                 height: widget.direction == Axis.vertical
                     ? mainSize
                     : constraints.maxForDirection(Axis.vertical),
-                child: widget.children[i].child,
+                // Keeps panes whose size didn't change from repainting
+                // during a drag.
+                child: RepaintBoundary(child: widget.children[i].child),
               );
             },
           ),
