@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
 import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
+import 'package:flutter_resizable_container/src/hidden_child_scope.dart';
 import 'package:flutter_resizable_container/src/hide_animation_coordinator.dart';
 import 'package:flutter_resizable_container/src/layout/divider_space.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_allocation.dart';
@@ -252,6 +253,7 @@ class _ResizableContainerState extends State<ResizableContainer>
       sizes: controller.sizes,
       hiddenIndices: controller.hiddenIndices,
       fixedSizes: _fixedSizesForPhase(),
+      collapsing: _animation.phase != HideAnimationPhase.idle,
       onComplete: _scheduleSetRenderedSizes,
       onResizeUpdate: (index, delta) => manager.adjustChildSize(
         index: index,
@@ -360,6 +362,7 @@ class _ContainerLayout extends StatelessWidget {
     required this.sizes,
     required this.hiddenIndices,
     required this.fixedSizes,
+    required this.collapsing,
     required this.onComplete,
     required this.onResizeUpdate,
   });
@@ -370,6 +373,7 @@ class _ContainerLayout extends StatelessWidget {
   final List<ResizableSize> sizes;
   final Set<int> hiddenIndices;
   final List<double>? fixedSizes;
+  final bool collapsing;
   final ValueChanged<List<double>> onComplete;
   final void Function(int index, double delta) onResizeUpdate;
 
@@ -385,7 +389,13 @@ class _ContainerLayout extends StatelessWidget {
 
     for (var i = 0; i <= lastIndex; i++) {
       final child = resizableChildren[i];
-      children.add(_PaneSlot(key: child.key, child: child.child));
+      final hidden = hiddenIndices.contains(i);
+      final scopedChild = HiddenChildScope(
+        hidden: hidden,
+        tickersEnabled: !hidden || collapsing,
+        child: child.child,
+      );
+      children.add(_PaneSlot(key: child.key, child: scopedChild));
 
       if (i == lastIndex) continue;
 
