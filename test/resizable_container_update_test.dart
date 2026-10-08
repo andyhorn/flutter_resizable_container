@@ -193,6 +193,56 @@ void main() {
 
       expect(controller.hiddenIndices, isEmpty);
     });
+
+    testWidgets(
+        'structural change with a hidden child does not start a hide animation',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(600, 400));
+      addTearDown(() async => await tester.binding.setSurfaceSize(null));
+      final controller = ResizableController();
+      addTearDown(controller.dispose);
+
+      Widget build(double pixels) => MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: controller,
+                direction: Axis.horizontal,
+                hideAnimation: const ResizableHideAnimation(),
+                children: [
+                  ResizableChild(
+                    size: ResizableSize.pixels(pixels),
+                    child: const ColoredBox(color: Color(0xFF0000FF)),
+                  ),
+                  const ResizableChild(
+                    child: ColoredBox(color: Color(0xFFFF0000)),
+                  ),
+                ],
+              ),
+            ),
+          );
+
+      final offstage = find.descendant(
+        of: find.byType(ResizableContainer),
+        matching: find.byType(Offstage),
+      );
+
+      await tester.pumpWidget(build(200));
+      await tester.pumpAndSettle();
+
+      controller.hide(0);
+      await tester.pumpAndSettle();
+      expect(controller.isHidden(0), isTrue);
+
+      await tester.pumpWidget(build(300));
+
+      expect(controller.hiddenIndices, isEmpty);
+      expect(offstage, findsNothing);
+
+      await tester.pump();
+      expect(offstage, findsNothing);
+      await tester.pumpAndSettle();
+      expect(controller.pixels[0], 300);
+    });
   });
 
   group('ResizableContainer remount with an external controller', () {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -2947,6 +2948,188 @@ void main() {
         // and no layout pass follows.
         expect(notifies, 1);
       });
+
+      testWidgets('structural change notifies exactly once', (tester) async {
+        await tester.binding.setSurfaceSize(const Size(600, 400));
+        addTearDown(() async => await tester.binding.setSurfaceSize(null));
+        final controller = ResizableController();
+        addTearDown(controller.dispose);
+
+        await tester.pumpWidget(
+          _buildNotifyApp(controller, const ResizableSize.pixels(200)),
+        );
+        await tester.pumpAndSettle();
+
+        var notifies = 0;
+        controller.addListener(() => notifies++);
+
+        await tester.pumpWidget(
+          _buildNotifyApp(controller, const ResizableSize.pixels(300)),
+        );
+        await tester.pumpAndSettle();
+
+        expect(notifies, 1);
+        expect(controller.pixels[0], 300);
+      });
+
+      testWidgets('resize notifies exactly once', (tester) async {
+        await tester.binding.setSurfaceSize(const Size(600, 400));
+        addTearDown(() async => await tester.binding.setSurfaceSize(null));
+        final controller = ResizableController();
+        addTearDown(controller.dispose);
+
+        await tester.pumpWidget(
+          _buildNotifyApp(controller, const ResizableSize.expand()),
+        );
+        await tester.pumpAndSettle();
+        final before = List.of(controller.pixels);
+
+        final phases = <SchedulerPhase>[];
+        final pixelsAtNotify = <List<double>>[];
+        controller.addListener(() {
+          phases.add(SchedulerBinding.instance.schedulerPhase);
+          pixelsAtNotify.add(List.of(controller.pixels));
+        });
+
+        await tester.binding.setSurfaceSize(const Size(1000, 400));
+        await tester.pumpAndSettle();
+
+        // Notifying during build or layout is illegal, so the single
+        // notification must arrive after the frame's persistent callbacks.
+        expect(phases, [SchedulerPhase.postFrameCallbacks]);
+        expect(pixelsAtNotify.single, controller.pixels);
+        expect(pixelsAtNotify.single[0], pixelsAtNotify.single[1]);
+        final totalBefore = before.fold<double>(0, (a, b) => a + b);
+        final totalAfter = pixelsAtNotify.single.fold<double>(
+          0,
+          (a, b) => a + b,
+        );
+        expect(totalAfter, closeTo(totalBefore + 400, 0.001));
+      });
+
+      testWidgets(
+        'resize and structural change in the same frame notify exactly once',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          addTearDown(() async => await tester.binding.setSurfaceSize(null));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            _buildNotifyApp(controller, const ResizableSize.pixels(200)),
+          );
+          await tester.pumpAndSettle();
+
+          var notifies = 0;
+          controller.addListener(() => notifies++);
+
+          await tester.binding.setSurfaceSize(const Size(1000, 400));
+          await tester.pumpWidget(
+            _buildNotifyApp(controller, const ResizableSize.pixels(300)),
+          );
+          await tester.pumpAndSettle();
+
+          expect(notifies, 1);
+          expect(controller.pixels[0], 300);
+        },
+      );
+
+      testWidgets('parent rebuild with the same size does not notify',
+          (tester) async {
+        await tester.binding.setSurfaceSize(const Size(600, 400));
+        addTearDown(() async => await tester.binding.setSurfaceSize(null));
+        final controller = ResizableController();
+        addTearDown(controller.dispose);
+
+        await tester.pumpWidget(
+          _buildNotifyApp(controller, const ResizableSize.expand()),
+        );
+        await tester.pumpAndSettle();
+
+        var notifies = 0;
+        controller.addListener(() => notifies++);
+
+        await tester.pumpWidget(
+          _buildNotifyApp(controller, const ResizableSize.expand()),
+        );
+        await tester.pumpAndSettle();
+
+        expect(notifies, 0);
+      });
+
+      testWidgets('resize that does not move any pixels notifies once',
+          (tester) async {
+        await tester.binding.setSurfaceSize(const Size(600, 400));
+        addTearDown(() async => await tester.binding.setSurfaceSize(null));
+        final controller = ResizableController();
+        addTearDown(controller.dispose);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: controller,
+                direction: Axis.horizontal,
+                children: const [
+                  ResizableChild(
+                    size: ResizableSize.pixels(200, min: 200, max: 200),
+                    child: SizedBox.expand(key: Key('A')),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.pixels(300, min: 300, max: 300),
+                    child: SizedBox.expand(key: Key('B')),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final pixelsBefore = List.of(controller.pixels);
+        final ratiosBefore = List.of(controller.ratios);
+
+        var notifies = 0;
+        controller.addListener(() => notifies++);
+
+        await tester.binding.setSurfaceSize(const Size(1000, 400));
+        await tester.pumpAndSettle();
+
+        expect(notifies, 1);
+        expect(controller.pixels, pixelsBefore);
+        expect(controller.ratios, isNot(ratiosBefore));
+      });
+
+      testWidgets(
+        'listener that calls setState does not throw when children change',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          addTearDown(() async => await tester.binding.setSurfaceSize(null));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+          final size = ValueNotifier<ResizableSize>(
+            const ResizableSize.pixels(200),
+          );
+          addTearDown(size.dispose);
+
+          await tester.pumpWidget(
+            _SetStateOnNotify(
+              controller: controller,
+              child: ValueListenableBuilder<ResizableSize>(
+                valueListenable: size,
+                builder: (context, value, _) =>
+                    _buildNotifyApp(controller, value),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          size.value = const ResizableSize.pixels(300);
+          await tester.pumpAndSettle();
+
+          expect(tester.takeException(), isNull);
+          expect(controller.pixels[0], 300);
+        },
+      );
     });
 
     group('resizable', () {
@@ -3210,4 +3393,54 @@ class _DirectionSwapApp extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _buildNotifyApp(ResizableController controller, ResizableSize size) {
+  return MaterialApp(
+    home: Scaffold(
+      body: ResizableContainer(
+        controller: controller,
+        direction: Axis.horizontal,
+        children: [
+          ResizableChild(
+            size: size,
+            child: const SizedBox.expand(key: Key('A')),
+          ),
+          const ResizableChild(
+            size: ResizableSize.expand(),
+            child: SizedBox.expand(key: Key('B')),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _SetStateOnNotify extends StatefulWidget {
+  const _SetStateOnNotify({required this.controller, required this.child});
+
+  final ResizableController controller;
+  final Widget child;
+
+  @override
+  State<_SetStateOnNotify> createState() => _SetStateOnNotifyState();
+}
+
+class _SetStateOnNotifyState extends State<_SetStateOnNotify> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onChanged);
+    super.dispose();
+  }
+
+  void _onChanged() => setState(() {});
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

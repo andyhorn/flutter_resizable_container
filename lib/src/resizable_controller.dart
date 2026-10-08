@@ -324,7 +324,11 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Replaces the controller's children and resets its sizes.
+  /// Replaces the children managed by this controller, resetting every size
+  /// to the one declared by its child and clearing any hidden state.
+  ///
+  /// Listeners are notified synchronously, so this must not be called while
+  /// the widget tree is building.
   @Deprecated(
     'Calling this directly desyncs the controller from the '
     'ResizableContainer, whose children are the source of truth. Update the '
@@ -372,22 +376,26 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
-  void _setAvailableSpace(double availableSpace) {
+  /// Returns whether the available space changed after the initial layout.
+  ///
+  /// Never notifies, because this runs during layout; the caller is
+  /// responsible for notifying once the frame has completed.
+  bool _setAvailableSpace(double availableSpace) {
     if (_availableSpace == -1) {
       _needsLayout = true;
       _availableSpace = availableSpace;
-      return;
+      return false;
     }
 
     if (availableSpace == _availableSpace) {
-      return;
+      return false;
     }
 
     final delta = _getDelta(availableSpace);
 
     if (delta == 0.0) {
       _availableSpace = availableSpace;
-      return;
+      return true;
     }
 
     final distributed = _distributeAvailableSpaceDelta(
@@ -400,7 +408,10 @@ class ResizableController with ChangeNotifier {
     }
 
     _availableSpace = availableSpace;
+    return true;
   }
+
+  void _notify() => notifyListeners();
 
   double _getDelta(double availableSpace) {
     var delta = availableSpace - _availableSpace;
@@ -673,9 +684,13 @@ final class ResizableControllerManager {
     _controller._setRenderedSizes(sizes);
   }
 
-  void setAvailableSpace(double availableSpace) {
-    _controller._setAvailableSpace(availableSpace);
+  /// Returns whether the available space changed after the initial layout,
+  /// in which case listeners have not yet been notified.
+  bool setAvailableSpace(double availableSpace) {
+    return _controller._setAvailableSpace(availableSpace);
   }
+
+  void notify() => _controller._notify();
 
   void setNeedsLayout() {
     _controller._needsLayout = true;
