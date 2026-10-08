@@ -360,6 +360,31 @@ void main() {
             expect(controller.pixels[3], equals(40));
           },
         );
+
+        test('does not reverse when the selected child is over its max', () {
+          controller.setChildren(const [
+            ResizableChild(
+              size: ResizableSize.pixels(50),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(60, max: 70),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(50, min: 20),
+              child: SizedBox.shrink(),
+            ),
+          ]);
+
+          manager.setAvailableSpace(200);
+          manager.setRenderedSizes([50, 80, 70]);
+          manager.setCascadeNegativeDelta(true);
+
+          manager.adjustChildSize(index: 1, delta: 100);
+
+          expect(controller.pixels, equals([50, 80, 70]));
+        });
       });
 
       group('when dragging left (delta < 0)', () {
@@ -449,6 +474,56 @@ void main() {
           manager.adjustChildSize(index: 1, delta: -20);
 
           expect(controller.pixels, equals([20, 20, 160]));
+        });
+
+        test('does not reverse when the right sibling is over its max', () {
+          controller.setChildren(const [
+            ResizableChild(
+              size: ResizableSize.pixels(60, min: 20),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(60, min: 20),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(60, max: 70),
+              child: SizedBox.shrink(),
+            ),
+          ]);
+
+          manager.setAvailableSpace(200);
+          manager.setRenderedSizes([60, 60, 80]);
+          manager.setCascadeNegativeDelta(true);
+
+          manager.adjustChildSize(index: 1, delta: -100);
+
+          expect(controller.pixels, equals([60, 60, 80]));
+        });
+
+        test('does not grow a selected child that is below its min', () {
+          controller.setChildren(const [
+            ResizableChild(
+              size: ResizableSize.pixels(60, min: 20),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(40, min: 40),
+              child: SizedBox.shrink(),
+            ),
+            ResizableChild(
+              size: ResizableSize.pixels(100),
+              child: SizedBox.shrink(),
+            ),
+          ]);
+
+          manager.setAvailableSpace(200);
+          manager.setRenderedSizes([70, 30, 100]);
+          manager.setCascadeNegativeDelta(true);
+
+          manager.adjustChildSize(index: 1, delta: -20);
+
+          expect(controller.pixels, equals([50, 30, 120]));
         });
       });
     });

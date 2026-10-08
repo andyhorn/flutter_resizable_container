@@ -155,13 +155,14 @@ class ResizableController with ChangeNotifier {
 
         // cap the cascaded delta so the right neighbor (the receiver of the
         // freed space) cannot grow past its max constraint
-        final maxGrowth =
-            (_sizes[index + 1].max ?? double.infinity) - _pixels[index + 1];
+        final maxGrowth = max(
+          0.0,
+          (_sizes[index + 1].max ?? double.infinity) - _pixels[index + 1],
+        );
         final cascadeDelta = -min(delta.abs(), maxGrowth);
 
-        // The selected child is part of the cascade, not just its leftward
-        // siblings: it may still have room to shrink toward its min before
-        // any sibling has to give up space.
+        // The selected child may still have room to shrink toward its min,
+        // so it gives up space before any sibling to its left does.
         final changes = _distributeDeltaLeft(
           index: index,
           delta: cascadeDelta,
@@ -177,8 +178,10 @@ class ResizableController with ChangeNotifier {
 
         // cap the cascaded delta so the selected index (the receiver of the
         // freed space) cannot grow past its max constraint
-        final maxGrowth =
-            (_sizes[index].max ?? double.infinity) - _pixels[index];
+        final maxGrowth = max(
+          0.0,
+          (_sizes[index].max ?? double.infinity) - _pixels[index],
+        );
         final cascadeDelta = min(delta, maxGrowth);
 
         final changes = _distributeDeltaRight(
@@ -419,8 +422,9 @@ class ResizableController with ChangeNotifier {
     if (delta < 0) {
       final minimumSize = _sizes[index].min ?? 0;
 
+      // A child already below its min must not report room to grow.
       if (targetSize <= minimumSize) {
-        return minimumSize - sizes[index];
+        return min(0, minimumSize - sizes[index]);
       }
 
       return delta;
@@ -429,7 +433,7 @@ class ResizableController with ChangeNotifier {
     final maximumSize = _sizes[index].max ?? double.infinity;
 
     if (targetSize >= maximumSize) {
-      return maximumSize - sizes[index];
+      return max(0, maximumSize - sizes[index]);
     }
 
     return delta;

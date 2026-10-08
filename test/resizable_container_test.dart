@@ -1027,6 +1027,10 @@ void main() {
       });
 
       testWidgets('terminates in an unbounded main axis', (tester) async {
+        final errors = <FlutterErrorDetails>[];
+        final onError = FlutterError.onError;
+        FlutterError.onError = errors.add;
+
         await tester.pumpWidget(
           const MaterialApp(
             home: Scaffold(
@@ -1044,7 +1048,12 @@ void main() {
           ),
         );
 
-        expect(tester.takeException(), isNotNull);
+        FlutterError.onError = onError;
+
+        expect(
+          errors.first.exceptionAsString(),
+          contains('BoxConstraints forces an infinite width'),
+        );
       });
     });
 

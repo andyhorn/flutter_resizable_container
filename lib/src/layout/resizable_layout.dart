@@ -211,7 +211,10 @@ class ResizableLayoutRenderObject extends RenderBox
     for (var pass = 0; pass < passLimit; pass++) {
       final passSpace = remainingSpace;
       final passFlex = remainingFlex;
-      double targetAt(int index) => passSpace * _flexAt(index) / passFlex;
+      // flex 0 is only asserted against, so release builds can still get
+      // here with passFlex == 0; return 0 instead of the NaN from 0/0.
+      double targetAt(int index) =>
+          passFlex == 0 ? 0 : passSpace * _flexAt(index) / passFlex;
 
       var totalViolation = 0.0;
       for (final index in unfrozen) {
@@ -219,10 +222,9 @@ class ResizableLayoutRenderObject extends RenderBox
         totalViolation += _clamp(target, _sizes[index]) - target;
       }
 
-      // A NaN violation (unbounded space, or flex 0 once asserts are
-      // stripped) matches no violator and would otherwise never terminate.
-      final isLastPass = pass == passLimit - 1;
-      if (totalViolation == 0 || totalViolation.isNaN || isLastPass) {
+      // A NaN violation (unbounded space) matches no violator, so clamp the
+      // targets as-is rather than leave them unassigned.
+      if (totalViolation == 0 || totalViolation.isNaN) {
         for (final index in unfrozen) {
           sizes[index] = _clamp(targetAt(index), _sizes[index]);
         }
