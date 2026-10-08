@@ -155,5 +155,42 @@ void main() {
           reason: 'structural change should reset hidden state');
       expect(controller.pixels.length, equals(3));
     });
+
+    testWidgets('resets hidden state when keyed children are reordered',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(600, 400));
+      final controller = ResizableController();
+
+      Widget build(List<String> order) => MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                width: 600,
+                height: 400,
+                child: ResizableContainer(
+                  controller: controller,
+                  direction: Axis.horizontal,
+                  children: [
+                    for (final id in order)
+                      ResizableChild(
+                        key: ValueKey(id),
+                        child: const ColoredBox(color: Color(0xFF000000)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+
+      await tester.pumpWidget(build(['a', 'b']));
+      await tester.pumpAndSettle();
+
+      controller.hide(0);
+      await tester.pumpAndSettle();
+
+      await tester.pumpWidget(build(['b', 'a']));
+      await tester.pumpAndSettle();
+
+      expect(controller.hiddenIndices, isEmpty);
+    });
   });
 }

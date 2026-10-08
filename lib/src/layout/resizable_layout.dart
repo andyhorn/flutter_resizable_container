@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -180,9 +182,9 @@ class ResizableLayoutRenderObject extends RenderBox
     final laidOutSizes = <double>[];
     for (var i = 0; i < children.length; i++) {
       final child = children[i];
+      final childExtent = math.max(0.0, fullSizes[i]);
       child.layout(
-        BoxConstraints.tight(
-            layoutDirection.getSize(fullSizes[i], constraints)),
+        BoxConstraints.tight(layoutDirection.getSize(childExtent, constraints)),
         parentUsesSize: true,
       );
       final extent = layoutDirection.getSizeDimension(child.size);

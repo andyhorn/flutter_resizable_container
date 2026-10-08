@@ -68,9 +68,12 @@ class HideAnimationCoordinator {
   ///
   /// If an animation is already running, the currently interpolated sizes
   /// are kept as the new from-snapshot — preserving visual continuity when
-  /// the user reverses direction mid-flight. Otherwise [fallbackFrom] is
-  /// used.
+  /// the user reverses direction mid-flight. If a capture is already pending
+  /// its from-snapshot is kept, since it is the last thing actually rendered.
+  /// Otherwise [fallbackFrom] is used.
   void beginCapture(List<double> fallbackFrom) {
+    if (phase == HideAnimationPhase.capturing) return;
+
     final newFrom =
         phase == HideAnimationPhase.animating ? currentSizes! : fallbackFrom;
     _controller?.stop();

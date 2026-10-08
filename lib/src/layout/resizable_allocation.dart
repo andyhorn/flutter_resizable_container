@@ -1,4 +1,5 @@
 import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
+import 'package:flutter_resizable_container/src/extensions/resizable_children_ext.dart';
 import 'package:flutter_resizable_container/src/layout/expand_sizes.dart';
 import 'package:flutter_resizable_container/src/resizable_child.dart';
 import 'package:flutter_resizable_container/src/resizable_divider.dart';
@@ -20,17 +21,23 @@ double dividerExtent(
         ? 0.0
         : divider.thickness + divider.padding;
 
+/// The main-axis extent of each divider in [dividers], where `dividers[i]`
+/// follows child `i`.
+List<double> dividerExtents(
+  List<ResizableDivider> dividers,
+  Set<int> hiddenIndices,
+) =>
+    [
+      for (var i = 0; i < dividers.length; i++)
+        dividerExtent(dividers[i], hiddenIndices, i),
+    ];
+
 /// The total main-axis space taken by the visible dividers between [children].
 double getDividerSpace(
   List<ResizableChild> children,
   Set<int> hiddenIndices,
-) {
-  var total = 0.0;
-  for (var i = 0; i < children.length - 1; i++) {
-    total += dividerExtent(children[i].divider, hiddenIndices, i);
-  }
-  return total;
-}
+) =>
+    dividerExtents(children.dividers, hiddenIndices).sum();
 
 /// Returns alternating child/divider main-axis sizes for a container with
 /// [extent] pixels of main-axis space.
@@ -47,10 +54,7 @@ List<double> allocateSizes({
   required Set<int> hiddenIndices,
   required double Function(int index, double cap) measureShrink,
 }) {
-  final dividerSizes = [
-    for (var i = 0; i < dividers.length; i++)
-      dividerExtent(dividers[i], hiddenIndices, i),
-  ];
+  final dividerSizes = dividerExtents(dividers, hiddenIndices);
   final dividerSpace = dividerSizes.sum();
   final pixelSpace = _pixelsSpace(sizes);
   final shrinkCap = extent - pixelSpace - dividerSpace;

@@ -873,6 +873,87 @@ void main() {
         expect(controller.hiddenIndices, isEmpty);
       });
 
+      test('hide remembers the rendered size for show', () {
+        manager.setRenderedSizes([100, 80, 100]);
+
+        controller.hide(1);
+
+        expect(manager.savedPixels(1), 80);
+        expect(manager.savedPixels(0), isNull);
+      });
+
+      test('a zero size does not replace the remembered size', () {
+        controller.hide(0);
+        manager.setRenderedSizes([0, 100, 100]);
+        controller.show(0);
+
+        controller.hide(0);
+
+        expect(manager.savedPixels(0), 100);
+      });
+
+      test('savedPixels is null for a child that was never rendered', () {
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+        ]);
+
+        controller.hide(0);
+
+        expect(manager.savedPixels(0), isNull);
+      });
+
+      test('setSizes discards the remembered size of a hidden child only', () {
+        controller.hide(0);
+        controller.hide(1);
+        manager.setRenderedSizes([0, 0, 100]);
+        controller.show(1);
+        manager.setRenderedSizes([0, 100, 100]);
+        controller.hide(1);
+
+        controller.setSizes(const [
+          ResizableSize.pixels(50),
+          ResizableSize.pixels(50),
+          ResizableSize.pixels(50),
+        ]);
+
+        expect(manager.savedPixels(0), isNull);
+        expect(manager.savedPixels(1), isNull);
+      });
+
+      test('setSizes keeps the remembered size of a visible child', () {
+        manager.setRenderedSizes([100, 100, 100]);
+        controller.hide(0);
+        controller.show(0);
+
+        controller.setSizes(const [
+          ResizableSize.pixels(50),
+          ResizableSize.pixels(50),
+          ResizableSize.pixels(50),
+        ]);
+
+        expect(manager.savedPixels(0), 100);
+      });
+
+      test('setChildren discards the remembered sizes', () {
+        controller.hide(0);
+
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(50),
+            child: SizedBox.shrink(),
+          ),
+        ]);
+
+        expect(manager.savedPixels(0), isNull);
+      });
+
       test('setHidden(true) and setHidden(false) match hide/show', () {
         controller.setHidden(0, true);
         expect(controller.isHidden(0), isTrue);
