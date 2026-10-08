@@ -36,7 +36,8 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   void didUpdateWidget(covariant ResizableContainerDivider oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (!(oldWidget.enabled && !widget.enabled)) return;
+    final becameDisabled = oldWidget.enabled && !widget.enabled;
+    if (!becameDisabled) return;
 
     final wasDragging = isDragging;
     final wasHovered = isHovered;

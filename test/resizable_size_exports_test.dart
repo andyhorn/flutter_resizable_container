@@ -2,15 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-String describe(ResizableSize size) {
-  return switch (size) {
-    ResizableSizePixels(:final pixels) => 'pixels:$pixels',
-    ResizableSizeRatio(:final ratio) => 'ratio:$ratio',
-    ResizableSizeExpand(:final flex) => 'expand:$flex',
-    ResizableSizeShrink() => 'shrink',
-  };
-}
-
 void main() {
   group('exported ResizableSize subtypes', () {
     testWidgets('can be read from controller.sizes and switched on', (
@@ -53,10 +44,12 @@ void main() {
       );
       await tester.pump();
 
-      expect(
-        controller.sizes.map(describe).toList(),
-        ['pixels:100.0', 'ratio:0.5', 'expand:2', 'shrink'],
-      );
+      expect(controller.sizes, [
+        isA<ResizableSizePixels>().having((s) => s.pixels, 'pixels', 100),
+        isA<ResizableSizeRatio>().having((s) => s.ratio, 'ratio', 0.5),
+        isA<ResizableSizeExpand>().having((s) => s.flex, 'flex', 2),
+        isA<ResizableSizeShrink>(),
+      ]);
     });
   });
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/layout/divider_space.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_allocation.dart';
 import 'package:flutter_test/flutter_test.dart';
 

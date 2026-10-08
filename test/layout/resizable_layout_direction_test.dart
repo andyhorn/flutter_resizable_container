@@ -11,23 +11,6 @@ void main() {
         expect(direction, isA<ResizableVerticalLayout>());
       });
 
-      test('returns identical instances for the same Axis', () {
-        expect(
-          identical(
-            ResizableLayoutDirection.forAxis(Axis.horizontal),
-            ResizableLayoutDirection.forAxis(Axis.horizontal),
-          ),
-          isTrue,
-        );
-        expect(
-          identical(
-            ResizableLayoutDirection.forAxis(Axis.vertical),
-            ResizableLayoutDirection.forAxis(Axis.vertical),
-          ),
-          isTrue,
-        );
-      });
-
       test('returns horizontal layout for horizontal Axis', () {
         final direction = ResizableLayoutDirection.forAxis(Axis.horizontal);
 
@@ -52,6 +35,12 @@ void main() {
         expect(result, const Offset(100, 0));
       });
 
+      test('getRtlOffset mirrors the x position within the container', () {
+        final result = layout.getRtlOffset(100, 50, const Size(400, 200));
+
+        expect(result, const Offset(250, 0));
+      });
+
       test('getSizeDimension returns width from size', () {
         final size = const Size(100, 200);
 
@@ -66,30 +55,6 @@ void main() {
         final result = layout.getSize(100, constraints);
 
         expect(result, const Size(100, 200));
-      });
-
-      testWidgets('getMinIntrinsicDimension return min intrinsic width',
-          (tester) async {
-        final key = GlobalKey();
-        final child = SizedBox(key: key, height: 100, width: 200);
-
-        await tester.pumpWidget(MaterialApp(
-          home: Scaffold(
-            body: Center(
-              child: child,
-            ),
-          ),
-        ));
-
-        final renderBox = key.currentContext?.findRenderObject() as RenderBox?;
-
-        if (renderBox == null) {
-          throw Exception('RenderBox not found');
-        }
-
-        final result = layout.getMinIntrinsicDimension(renderBox);
-
-        expect(result, 200);
       });
     });
 
@@ -110,6 +75,12 @@ void main() {
         expect(result, const Offset(0, 100));
       });
 
+      test('getRtlOffset leaves the y position unchanged', () {
+        final result = layout.getRtlOffset(100, 50, const Size(400, 200));
+
+        expect(result, const Offset(0, 100));
+      });
+
       test('getSizeDimension returns height from size', () {
         final size = const Size(100, 200);
 
@@ -124,30 +95,6 @@ void main() {
         final result = layout.getSize(200, constraints);
 
         expect(result, const Size(100, 200));
-      });
-
-      testWidgets('getMinIntrinsicDimension return min intrinsic height',
-          (tester) async {
-        final key = GlobalKey();
-        final child = SizedBox(key: key, height: 100, width: 200);
-
-        await tester.pumpWidget(MaterialApp(
-          home: Scaffold(
-            body: Center(
-              child: child,
-            ),
-          ),
-        ));
-
-        final renderBox = key.currentContext?.findRenderObject() as RenderBox?;
-
-        if (renderBox == null) {
-          throw Exception('RenderBox not found');
-        }
-
-        final result = layout.getMinIntrinsicDimension(renderBox);
-
-        expect(result, 100);
       });
     });
   });

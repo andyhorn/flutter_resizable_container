@@ -38,7 +38,7 @@ class _HiddenChildScopeState extends State<HiddenChildScope> {
   @override
   void didUpdateWidget(covariant HiddenChildScope oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _releaseFocusIfHidden();
+    if (!oldWidget.hidden) _releaseFocusIfHidden();
   }
 
   @override
@@ -62,8 +62,6 @@ class _HiddenChildScopeState extends State<HiddenChildScope> {
   Widget build(BuildContext context) {
     return Focus(
       focusNode: _focusNode,
-      skipTraversal: true,
-      canRequestFocus: false,
       descendantsAreFocusable: !widget.hidden,
       child: TickerMode(
         enabled: widget.tickersEnabled,

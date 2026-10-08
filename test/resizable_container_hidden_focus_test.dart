@@ -49,7 +49,7 @@ void main() {
       secondNode = FocusNode();
     });
 
-    Future<void> registerCleanup(WidgetTester tester) async {
+    void registerCleanup(WidgetTester tester) {
       addTearDown(controller.dispose);
       addTearDown(firstNode.dispose);
       addTearDown(secondNode.dispose);
@@ -62,7 +62,7 @@ void main() {
       ResizableHideAnimation? hideAnimation,
     }) async {
       await tester.binding.setSurfaceSize(const Size(800, 600));
-      await registerCleanup(tester);
+      registerCleanup(tester);
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

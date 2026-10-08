@@ -1,5 +1,6 @@
 import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
 import 'package:flutter_resizable_container/src/layout/expand_sizes.dart';
+import 'package:flutter_resizable_container/src/resizable_child.dart';
 import 'package:flutter_resizable_container/src/resizable_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_size.dart';
 
@@ -18,6 +19,18 @@ double dividerExtent(
     isDividerHidden(hiddenIndices, index)
         ? 0.0
         : divider.thickness + divider.padding;
+
+/// The total main-axis space taken by the visible dividers between [children].
+double getDividerSpace(
+  List<ResizableChild> children,
+  Set<int> hiddenIndices,
+) {
+  var total = 0.0;
+  for (var i = 0; i < children.length - 1; i++) {
+    total += dividerExtent(children[i].divider, hiddenIndices, i);
+  }
+  return total;
+}
 
 /// Returns alternating child/divider main-axis sizes for a container with
 /// [extent] pixels of main-axis space.
@@ -45,7 +58,7 @@ List<double> allocateSizes({
   final shrinkSizes = <int, double>{
     for (var i = 0; i < sizes.length; i++)
       if (sizes[i] is ResizableSizeShrink)
-        i: _clamp(measureShrink(i, shrinkCap), sizes[i]),
+        i: clampToSize(measureShrink(i, shrinkCap), sizes[i]),
   };
   final shrinkSpace = shrinkSizes.values.sum();
 
@@ -59,9 +72,9 @@ List<double> allocateSizes({
   for (var i = 0; i < sizes.length; i++) {
     final size = sizes[i];
     final value = switch (size) {
-      ResizableSizePixels(:final pixels) => _clamp(pixels, size),
+      ResizableSizePixels(:final pixels) => clampToSize(pixels, size),
       ResizableSizeRatio(:final ratio) =>
-        _clamp(ratio * availableRatioSpace, size),
+        clampToSize(ratio * availableRatioSpace, size),
       ResizableSizeShrink() => shrinkSizes[i] ?? 0.0,
       ResizableSizeExpand() => expandSizes[i] ?? 0.0,
     };
@@ -76,7 +89,8 @@ List<double> allocateSizes({
 double _pixelsSpace(List<ResizableSize> sizes) {
   return [
     for (final size in sizes)
-      if (size case ResizableSizePixels(:final pixels)) _clamp(pixels, size),
+      if (size case ResizableSizePixels(:final pixels))
+        clampToSize(pixels, size),
   ].sum();
 }
 
@@ -84,10 +98,6 @@ double _requiredRatioSpace(List<ResizableSize> sizes, double availableSpace) {
   return [
     for (final size in sizes)
       if (size case ResizableSizeRatio(:final ratio))
-        _clamp(ratio * availableSpace, size),
+        clampToSize(ratio * availableSpace, size),
   ].sum();
-}
-
-double _clamp(double value, ResizableSize size) {
-  return value.clamp(size.min ?? 0, size.max ?? double.infinity);
 }

@@ -1467,6 +1467,50 @@ void main() {
       expect(dragEnd, isTrue);
     });
 
+    testWidgets('fires drag events and resizes in a vertical container',
+        (tester) async {
+      var dragStart = false;
+      var dragEnd = false;
+
+      await tester.binding.setSurfaceSize(const Size(1000, 1000));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResizableContainer(
+              direction: Axis.vertical,
+              children: [
+                ResizableChild(
+                  divider: ResizableDivider(
+                    onDragStart: () => dragStart = true,
+                    onDragEnd: () => dragEnd = true,
+                  ),
+                  size: ResizableSize.pixels(200),
+                  child: SizedBox.expand(key: Key('BoxA')),
+                ),
+                ResizableChild(
+                  size: ResizableSize.expand(),
+                  child: SizedBox.expand(key: Key('BoxB')),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final heightBefore = tester.getSize(find.byKey(Key('BoxA'))).height;
+
+      final divider = find.byType(ResizableContainerDivider);
+      await tester.drag(divider, Offset(0, 50 + kDragSlopDefault));
+      await tester.pumpAndSettle();
+
+      final heightAfter = tester.getSize(find.byKey(Key('BoxA'))).height;
+
+      expect(heightAfter, greaterThan(heightBefore));
+      expect(dragStart, isTrue);
+      expect(dragEnd, isTrue);
+    });
+
     group('when changing direction', () {
       testWidgets('children are resized correctly', (tester) async {
         final controller = ResizableController();

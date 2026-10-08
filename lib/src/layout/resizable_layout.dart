@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:flutter_resizable_container/src/extensions/resizable_children_ext.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_allocation.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_layout_direction.dart';
 
@@ -201,10 +202,7 @@ class ResizableLayoutRenderObject extends RenderBox
     return allocateSizes(
       extent: layoutDirection.getMaxConstraint(constraints),
       sizes: sizes,
-      dividers: [
-        for (var i = 0; i < resizableChildren.length - 1; i++)
-          resizableChildren[i].divider,
-      ],
+      dividers: resizableChildren.dividers,
       hiddenIndices: hiddenIndices,
       measureShrink: (index, cap) => _measureShrink(children[index * 2], cap),
     );
