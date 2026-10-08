@@ -23,6 +23,16 @@ void main() {
 
     tearDown(() => coordinator.dispose());
 
+    group('beginCapture', () {
+      test('keeps the pending from-snapshot when called while capturing', () {
+        coordinator
+          ..beginCapture([10, 1, 20])
+          ..beginCapture([99, 99, 99]);
+
+        expect(coordinator.currentSizes, [10, 1, 20]);
+      });
+    });
+
     group('claimTargetSlot', () {
       test('returns false when idle', () {
         expect(coordinator.phase, HideAnimationPhase.idle);
