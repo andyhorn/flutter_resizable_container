@@ -11,11 +11,8 @@ const ResizableSize _hiddenSize = ResizableSize.pixels(0, min: 0, max: 0);
 
 /// The slack allowed when validating [ResizableController.setSizes] totals.
 ///
-/// Splitting space evenly (e.g. `998 / 6` six times) accumulates
-/// floating-point error that can push a mathematically exact total a few ulps
-/// past its limit. The same value covers both pixel totals and ratio totals:
-/// one millionth is far below a visible pixel, and as a ratio it is still
-/// sub-pixel for any container narrower than a million pixels.
+/// Absorbs floating-point error from even splits (e.g. `998 / 6` six times);
+/// it is sub-pixel for both pixel and ratio totals.
 const double _sizeTotalTolerance = 1e-6;
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].

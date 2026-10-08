@@ -1,5 +1,5 @@
-import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
 import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
+import 'package:flutter_resizable_container/src/layout/expand_sizes.dart';
 import 'package:flutter_resizable_container/src/resizable_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_size.dart';
 
@@ -53,7 +53,7 @@ List<double> allocateSizes({
   final requiredRatioSpace = _requiredRatioSpace(sizes, availableRatioSpace);
   final takenSpace =
       pixelSpace + shrinkSpace + requiredRatioSpace + dividerSpace;
-  final expandSizes = _expandSizes(sizes, extent - takenSpace);
+  final expandSizes = getExpandSizes(sizes, extent - takenSpace);
 
   final result = <double>[];
   for (var i = 0; i < sizes.length; i++) {
@@ -86,58 +86,6 @@ double _requiredRatioSpace(List<ResizableSize> sizes, double availableSpace) {
       if (size case ResizableSizeRatio(:final ratio))
         _clamp(ratio * availableSpace, size),
   ].sum();
-}
-
-Map<int, double> _expandSizes(
-    List<ResizableSize> sizes, double availableSpace) {
-  int flexAt(int index) => (sizes[index] as ResizableSizeExpand).flex;
-
-  final unfrozen =
-      sizes.indicesWhere((size) => size is ResizableSizeExpand).toList();
-  final passLimit = unfrozen.length;
-  final expandSizes = <int, double>{};
-  var remainingSpace = availableSpace;
-  var remainingFlex = unfrozen.map(flexAt).sum();
-
-  for (var pass = 0; pass < passLimit; pass++) {
-    final passSpace = remainingSpace;
-    final passFlex = remainingFlex;
-    // flex 0 is only asserted against, so release builds can still get
-    // here with passFlex == 0; return 0 instead of the NaN from 0/0.
-    double targetAt(int index) =>
-        passFlex == 0 ? 0 : passSpace * flexAt(index) / passFlex;
-
-    var totalViolation = 0.0;
-    for (final index in unfrozen) {
-      final target = targetAt(index);
-      totalViolation += _clamp(target, sizes[index]) - target;
-    }
-
-    // A NaN violation (unbounded space) matches no violator, so clamp the
-    // targets as-is rather than leave them unassigned.
-    if (totalViolation == 0 || totalViolation.isNaN) {
-      for (final index in unfrozen) {
-        expandSizes[index] = _clamp(targetAt(index), sizes[index]);
-      }
-      return expandSizes;
-    }
-
-    for (final index in unfrozen) {
-      final target = targetAt(index);
-      final clamped = _clamp(target, sizes[index]);
-      final isViolator =
-          totalViolation > 0 ? clamped > target : clamped < target;
-
-      if (isViolator) {
-        expandSizes[index] = clamped;
-        remainingSpace -= clamped;
-        remainingFlex -= flexAt(index);
-      }
-    }
-    unfrozen.removeWhere(expandSizes.containsKey);
-  }
-
-  return expandSizes;
 }
 
 double _clamp(double value, ResizableSize size) {

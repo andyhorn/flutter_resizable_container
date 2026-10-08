@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
+import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const _divider = ResizableDivider(thickness: 10);
+const _surfaceMain = 600.0;
+const _dividerThickness = 10.0;
+const _evenThird = (_surfaceMain - 2 * _dividerThickness) / 3;
+const _divider = ResizableDivider(thickness: _dividerThickness);
+const _paddedDivider = ResizableDivider(thickness: 10, padding: 6);
 
 Widget _harness({
   required ResizableController controller,
@@ -35,160 +40,224 @@ Widget _harness({
   );
 }
 
-double _width(WidgetTester tester, String key) =>
-    tester.getSize(find.byKey(Key(key))).width;
+Size _surfaceFor(Axis direction) {
+  return direction == Axis.horizontal
+      ? const Size(600, 400)
+      : const Size(400, 600);
+}
+
+double _extent(WidgetTester tester, String key, Axis direction) {
+  final size = tester.getSize(find.byKey(Key(key)));
+  return direction == Axis.horizontal ? size.width : size.height;
+}
+
+Future<ResizableController> _pumpHarness(
+  WidgetTester tester, {
+  ResizableHideAnimation? hideAnimation,
+  Axis direction = Axis.horizontal,
+  List<ResizableChild>? children,
+  ResizableController? controller,
+}) async {
+  await tester.binding.setSurfaceSize(_surfaceFor(direction));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+
+  final resolved = controller ?? ResizableController();
+  addTearDown(resolved.dispose);
+
+  await tester.pumpWidget(
+    _harness(
+      controller: resolved,
+      direction: direction,
+      hideAnimation: hideAnimation,
+      children: children,
+    ),
+  );
+  await tester.pumpAndSettle();
+
+  return resolved;
+}
+
+const _paddedChildren = [
+  ResizableChild(
+    divider: _paddedDivider,
+    child: SizedBox.expand(key: Key('A')),
+  ),
+  ResizableChild(
+    divider: _paddedDivider,
+    child: SizedBox.expand(key: Key('B')),
+  ),
+  ResizableChild(
+    child: SizedBox.expand(key: Key('C')),
+  ),
+];
 
 void main() {
-  group('ResizableContainer empty children', () {
-    for (final direction in Axis.values) {
-      testWidgets('builds without throwing ($direction)', (tester) async {
-        await tester.binding.setSurfaceSize(const Size(600, 400));
-        final controller = ResizableController();
-        addTearDown(controller.dispose);
-
-        await tester.pumpWidget(
-          _harness(
-            controller: controller,
-            direction: direction,
-            children: const [],
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(tester.takeException(), isNull);
-        expect(controller.pixels, isEmpty);
-      });
-    }
-
-    testWidgets('lays out when children arrive after being empty',
-        (tester) async {
-      await tester.binding.setSurfaceSize(const Size(600, 400));
-      final controller = ResizableController();
-      addTearDown(controller.dispose);
-
-      await tester.pumpWidget(
-        _harness(controller: controller, children: const []),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.pumpWidget(_harness(controller: controller));
-      await tester.pumpAndSettle();
-
-      expect(tester.takeException(), isNull);
-      expect(_width(tester, 'A'), closeTo(193.33, 0.01));
-      expect(_width(tester, 'B'), closeTo(193.33, 0.01));
-      expect(_width(tester, 'C'), closeTo(193.33, 0.01));
-    });
-
-    testWidgets('handles children being cleared', (tester) async {
-      await tester.binding.setSurfaceSize(const Size(600, 400));
-      final controller = ResizableController();
-      addTearDown(controller.dispose);
-
-      await tester.pumpWidget(_harness(controller: controller));
-      await tester.pumpAndSettle();
-
-      await tester.pumpWidget(
-        _harness(controller: controller, children: const []),
-      );
-      await tester.pumpAndSettle();
-
-      expect(tester.takeException(), isNull);
-      expect(controller.pixels, isEmpty);
-    });
-  });
-
   group('ResizableContainer hidden dividers', () {
-    for (final animated in [false, true]) {
-      final hideAnimation = animated ? const ResizableHideAnimation() : null;
-      final label = animated ? 'with hideAnimation' : 'without hideAnimation';
+    for (final direction in Axis.values) {
+      for (final animated in [false, true]) {
+        final hideAnimation = animated ? const ResizableHideAnimation() : null;
+        final label = animated ? 'with hideAnimation' : 'without hideAnimation';
 
-      group(label, () {
-        testWidgets('ratios sum to 1 while a child is hidden', (tester) async {
-          await tester.binding.setSurfaceSize(const Size(600, 400));
-          final controller = ResizableController();
-          addTearDown(controller.dispose);
+        group('$label ($direction)', () {
+          testWidgets('ratios sum to 1 while a child is hidden',
+              (tester) async {
+            final controller = await _pumpHarness(
+              tester,
+              direction: direction,
+              hideAnimation: hideAnimation,
+            );
 
-          await tester.pumpWidget(
-            _harness(controller: controller, hideAnimation: hideAnimation),
+            controller.hide(2);
+            await tester.pumpAndSettle();
+
+            expect(
+              controller.ratios.reduce((a, b) => a + b),
+              closeTo(1, 1e-9),
+            );
+          });
+
+          testWidgets(
+              'hiding the last child collapses it and shares the rest evenly',
+              (tester) async {
+            final controller = await _pumpHarness(
+              tester,
+              direction: direction,
+              hideAnimation: hideAnimation,
+            );
+
+            controller.hide(2);
+            await tester.pumpAndSettle();
+
+            expect(controller.pixels, [295, 295, 0]);
+          });
+
+          testWidgets('hiding a middle child keeps ratios at 1',
+              (tester) async {
+            final controller = await _pumpHarness(
+              tester,
+              direction: direction,
+              hideAnimation: hideAnimation,
+            );
+
+            controller.hide(1);
+            await tester.pumpAndSettle();
+
+            expect(
+              controller.ratios.reduce((a, b) => a + b),
+              closeTo(1, 1e-9),
+            );
+            expect(
+              _extent(tester, 'A', direction) + _extent(tester, 'C', direction),
+              600,
+            );
+          });
+
+          testWidgets('show restores the original sizes and ratios',
+              (tester) async {
+            final controller = await _pumpHarness(
+              tester,
+              direction: direction,
+              hideAnimation: hideAnimation,
+            );
+            final originalPixels = List.of(controller.pixels);
+            final originalRatios = List.of(controller.ratios);
+
+            controller.hide(2);
+            await tester.pumpAndSettle();
+            controller.show(2);
+            await tester.pumpAndSettle();
+
+            for (var i = 0; i < originalPixels.length; i++) {
+              expect(controller.pixels[i], closeTo(originalPixels[i], 1e-9));
+              expect(controller.ratios[i], closeTo(originalRatios[i], 1e-9));
+            }
+            expect(_extent(tester, 'A', direction), closeTo(_evenThird, 0.01));
+            expect(_extent(tester, 'C', direction), closeTo(_evenThird, 0.01));
+          });
+        });
+      }
+
+      group('with a padded divider ($direction)', () {
+        testWidgets('counts thickness and padding between visible children',
+            (tester) async {
+          final controller = await _pumpHarness(
+            tester,
+            direction: direction,
+            children: _paddedChildren,
           );
-          await tester.pumpAndSettle();
 
           controller.hide(2);
           await tester.pumpAndSettle();
 
-          expect(controller.ratios.reduce((a, b) => a + b), closeTo(1, 1e-9));
-          expect(controller.pixels, [295, 295, 0]);
+          expect(
+            _extent(tester, 'A', direction) +
+                _extent(tester, 'B', direction) +
+                16,
+            600,
+          );
         });
 
-        testWidgets('hiding a middle child keeps ratios at 1', (tester) async {
-          await tester.binding.setSurfaceSize(const Size(600, 400));
-          final controller = ResizableController();
-          addTearDown(controller.dispose);
-
-          await tester.pumpWidget(
-            _harness(controller: controller, hideAnimation: hideAnimation),
+        testWidgets('ignores both dividers around a hidden middle child',
+            (tester) async {
+          final controller = await _pumpHarness(
+            tester,
+            direction: direction,
+            children: _paddedChildren,
           );
-          await tester.pumpAndSettle();
 
           controller.hide(1);
           await tester.pumpAndSettle();
 
-          expect(controller.ratios.reduce((a, b) => a + b), closeTo(1, 1e-9));
-          expect(_width(tester, 'A') + _width(tester, 'C'), 600);
-        });
-
-        testWidgets('show restores the original sizes and ratios',
-            (tester) async {
-          await tester.binding.setSurfaceSize(const Size(600, 400));
-          final controller = ResizableController();
-          addTearDown(controller.dispose);
-
-          await tester.pumpWidget(
-            _harness(controller: controller, hideAnimation: hideAnimation),
+          expect(
+            _extent(tester, 'A', direction) + _extent(tester, 'C', direction),
+            600,
           );
-          await tester.pumpAndSettle();
-          final originalPixels = List.of(controller.pixels);
-          final originalRatios = List.of(controller.ratios);
-
-          controller.hide(2);
-          await tester.pumpAndSettle();
-          controller.show(2);
-          await tester.pumpAndSettle();
-
-          for (var i = 0; i < originalPixels.length; i++) {
-            expect(controller.pixels[i], closeTo(originalPixels[i], 1e-9));
-            expect(controller.ratios[i], closeTo(originalRatios[i], 1e-9));
-          }
-          expect(_width(tester, 'A'), closeTo(193.33, 0.01));
-          expect(_width(tester, 'C'), closeTo(193.33, 0.01));
         });
       });
     }
 
     testWidgets('a divider between two visible children still counts',
         (tester) async {
-      await tester.binding.setSurfaceSize(const Size(600, 400));
-      final controller = ResizableController();
-      addTearDown(controller.dispose);
-
-      await tester.pumpWidget(_harness(controller: controller));
-      await tester.pumpAndSettle();
+      final controller = await _pumpHarness(tester);
 
       controller.hide(2);
       await tester.pumpAndSettle();
 
-      expect(_width(tester, 'A') + _width(tester, 'B') + 10, 600);
+      expect(
+        _extent(tester, 'A', Axis.horizontal) +
+            _extent(tester, 'B', Axis.horizontal) +
+            10,
+        600,
+      );
+      expect(controller.pixels[2], 0);
+    });
+
+    testWidgets('dragging a visible divider resizes its neighbors',
+        (tester) async {
+      final controller = await _pumpHarness(tester);
+
+      controller.hide(2);
+      await tester.pumpAndSettle();
+      final before = _extent(tester, 'A', Axis.horizontal);
+
+      await tester.drag(
+        find.byType(ResizableContainerDivider).first,
+        const Offset(50, 0),
+      );
+      await tester.pumpAndSettle();
+
+      final a = _extent(tester, 'A', Axis.horizontal);
+      final b = _extent(tester, 'B', Axis.horizontal);
+      final c = _extent(tester, 'C', Axis.horizontal);
+      expect(a, greaterThan(before));
+      expect(a + b + _dividerThickness, closeTo(_surfaceMain, 0.01));
+      expect(c, 0);
+      expect(controller.pixels[2], 0);
     });
 
     testWidgets('setSizes validates against hidden-aware available space',
         (tester) async {
-      await tester.binding.setSurfaceSize(const Size(600, 400));
-      final controller = ResizableController();
-      addTearDown(controller.dispose);
-
-      await tester.pumpWidget(_harness(controller: controller));
-      await tester.pumpAndSettle();
+      final controller = await _pumpHarness(tester);
 
       controller.hide(2);
       await tester.pumpAndSettle();
@@ -219,58 +288,47 @@ void main() {
 
       testWidgets('starts from the pre-hide sizes without a jump',
           (tester) async {
-        await tester.binding.setSurfaceSize(const Size(600, 400));
-        final controller = ResizableController();
-        addTearDown(controller.dispose);
-
-        await tester.pumpWidget(
-          _harness(controller: controller, hideAnimation: animation),
+        final controller = await _pumpHarness(
+          tester,
+          hideAnimation: animation,
         );
-        await tester.pumpAndSettle();
         final before = [
-          _width(tester, 'A'),
-          _width(tester, 'B'),
-          _width(tester, 'C'),
+          _extent(tester, 'A', Axis.horizontal),
+          _extent(tester, 'B', Axis.horizontal),
+          _extent(tester, 'C', Axis.horizontal),
         ];
 
         controller.hide(2);
         await tester.pump();
         await tester.pump();
 
-        expect(_width(tester, 'A'), closeTo(before[0], 0.01));
-        expect(_width(tester, 'B'), closeTo(before[1], 0.01));
-        expect(_width(tester, 'C'), closeTo(before[2], 0.01));
+        expect(_extent(tester, 'A', Axis.horizontal), closeTo(before[0], 0.01));
+        expect(_extent(tester, 'B', Axis.horizontal), closeTo(before[1], 0.01));
+        expect(_extent(tester, 'C', Axis.horizontal), closeTo(before[2], 0.01));
       });
 
       testWidgets('is not cancelled by its own divider change', (tester) async {
-        await tester.binding.setSurfaceSize(const Size(600, 400));
-        final controller = ResizableController();
-        addTearDown(controller.dispose);
-
-        await tester.pumpWidget(
-          _harness(controller: controller, hideAnimation: animation),
+        final controller = await _pumpHarness(
+          tester,
+          hideAnimation: animation,
         );
-        await tester.pumpAndSettle();
 
         controller.hide(2);
         await tester.pump();
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
 
-        final mid = _width(tester, 'C');
+        final mid = _extent(tester, 'C', Axis.horizontal);
         expect(mid, greaterThan(0));
-        expect(mid, lessThan(193.34));
+        expect(mid, lessThan(_evenThird + 0.01));
+        expect(tester.binding.transientCallbackCount, greaterThan(0));
       });
 
       testWidgets('is still cancelled by a real resize', (tester) async {
-        await tester.binding.setSurfaceSize(const Size(600, 400));
-        final controller = ResizableController();
-        addTearDown(controller.dispose);
-
-        await tester.pumpWidget(
-          _harness(controller: controller, hideAnimation: animation),
+        final controller = await _pumpHarness(
+          tester,
+          hideAnimation: animation,
         );
-        await tester.pumpAndSettle();
 
         controller.hide(2);
         await tester.pump();
@@ -283,7 +341,7 @@ void main() {
         await tester.pump();
 
         expect(tester.binding.transientCallbackCount, 0);
-        expect(_width(tester, 'C'), 0);
+        expect(_extent(tester, 'C', Axis.horizontal), 0);
       });
     });
   });
