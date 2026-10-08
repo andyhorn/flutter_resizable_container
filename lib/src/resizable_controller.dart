@@ -23,8 +23,21 @@ class ResizableController with ChangeNotifier {
   final Set<int> _hiddenIndices = <int>{};
   final Map<int, ResizableSize> _savedSizes = <int, ResizableSize>{};
   final Map<int, double> _savedPixels = <int, double>{};
-  bool _needsLayout = false;
+  bool _needsLayoutFlag = false;
+  int _invalidations = 0;
   bool _cascadeNegativeDelta = false;
+
+  bool get _needsLayout => _needsLayoutFlag;
+
+  // Each invalidation is counted so a rendered-size report measured against an
+  // older layout can be told apart from the current one: the flag alone cannot,
+  // because it is already set whenever a measurement is taken.
+  set _needsLayout(bool value) {
+    _needsLayoutFlag = value;
+    if (value) {
+      _invalidations++;
+    }
+  }
 
   /// Whether or not the container needs to (re)layout its children.
   bool get needsLayout => _needsLayout;
@@ -549,6 +562,9 @@ final class ResizableControllerManager {
   void setNeedsLayout() {
     _controller._needsLayout = true;
   }
+
+  /// A count that changes whenever the controller invalidates its layout.
+  int get invalidations => _controller._invalidations;
 
   /// The rendered size of the child at [index] from just before it was last
   /// hidden, or `null` when it is unknown (never rendered, or its size was

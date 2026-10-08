@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
@@ -80,10 +82,11 @@ class _ResizableContainerState extends State<ResizableContainer>
 
   late final _animation = HideAnimationCoordinator(
     vsync: this,
-    onChanged: _rebuild,
+    onChanged: _onAnimationChanged,
   );
 
   Set<int> _prevHiddenIndices = const <int>{};
+  bool _remeasureShrinkOnIdle = false;
   double? _lastContainerExtent;
 
   /// Pre-hide widths of `shrink` children being shown, for the animation
@@ -162,9 +165,9 @@ class _ResizableContainerState extends State<ResizableContainer>
   }
 
   /// Whether [oldChildren] and [newChildren] differ in ways that invalidate
-  /// the controller's layout state — the number of children or any of their
-  /// declared sizes. Differences confined to divider config or child widget
-  /// instances are not structural.
+  /// the controller's layout state — the number of children, any of their
+  /// declared sizes, or their keys. Differences confined to divider config or
+  /// child widget instances are not structural.
   bool _isStructuralChange(
     List<ResizableChild> oldChildren,
     List<ResizableChild> newChildren,
@@ -173,7 +176,8 @@ class _ResizableContainerState extends State<ResizableContainer>
       return true;
     }
     for (var i = 0; i < oldChildren.length; i++) {
-      if (oldChildren[i].size != newChildren[i].size) {
+      if (oldChildren[i].size != newChildren[i].size ||
+          oldChildren[i].key != newChildren[i].key) {
         return true;
       }
     }
@@ -194,6 +198,16 @@ class _ResizableContainerState extends State<ResizableContainer>
   void _rebuild() {
     if (!mounted) return;
     setState(() {});
+  }
+
+  void _onAnimationChanged() {
+    if (_remeasureShrinkOnIdle && _animation.phase == HideAnimationPhase.idle) {
+      // The animation targeted a width saved before the child was hidden, which
+      // is stale if its content changed in the meantime.
+      _remeasureShrinkOnIdle = false;
+      manager.setNeedsLayout();
+    }
+    _rebuild();
   }
 
   void _onControllerChanged() {
@@ -341,9 +355,11 @@ class _ResizableContainerState extends State<ResizableContainer>
   void _scheduleSetRenderedSizes(List<double> sizes) {
     final scheduledManager = manager;
     final childSizes = sizes.evenIndices().toList();
+    final scheduledInvalidations = scheduledManager.invalidations;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || scheduledManager != manager) return;
       if (_animation.phase != HideAnimationPhase.idle) return;
+      if (scheduledManager.invalidations != scheduledInvalidations) return;
       scheduledManager.setRenderedSizes(childSizes);
     });
   }
@@ -352,14 +368,18 @@ class _ResizableContainerState extends State<ResizableContainer>
     if (!mounted || capturingManager != manager) return;
     if (_animation.phase != HideAnimationPhase.capturing) return;
 
+    final pixels = controller.pixels;
     final fullTarget = allocateSizes(
       extent: _lastContainerExtent ?? 0,
       sizes: controller.sizes,
       dividers: widget.children.dividers,
       hiddenIndices: controller.hiddenIndices,
-      measureShrink: (index, _) =>
-          _revealedShrinkPixels[index] ?? controller.pixels[index],
+      measureShrink: (index, cap) => math.min(
+        _revealedShrinkPixels[index] ?? pixels[index],
+        cap,
+      ),
     );
+    _remeasureShrinkOnIdle = _revealedShrinkPixels.isNotEmpty;
     _revealedShrinkPixels.clear();
 
     manager.setRenderedSizes(fullTarget.evenIndices().toList());
@@ -374,11 +394,13 @@ class _ResizableContainerState extends State<ResizableContainer>
 
   List<double> _deriveFullSizesFromController({Set<int>? hiddenIndices}) {
     final hidden = hiddenIndices ?? controller.hiddenIndices;
+    final pixels = controller.pixels;
+    final dividerSizes = dividerExtents(widget.children.dividers, hidden);
     final result = <double>[];
     for (var i = 0; i < widget.children.length; i++) {
-      result.add(controller.pixels[i]);
-      if (i < widget.children.length - 1) {
-        result.add(dividerExtent(widget.children[i].divider, hidden, i));
+      result.add(pixels[i]);
+      if (i < dividerSizes.length) {
+        result.add(dividerSizes[i]);
       }
     }
     return result;
