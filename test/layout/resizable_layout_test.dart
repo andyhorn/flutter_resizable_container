@@ -106,6 +106,52 @@ void main() {
       expect(reported.last, [200, 2, 398]);
     });
 
+    testWidgets('measures when fixed sizes do not match the child count',
+        (tester) async {
+      final reported = <List<double>>[];
+
+      await tester.pumpWidget(
+        buildLayout(
+          fixedSizes: const [100, 2],
+          onComplete: reported.add,
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(reported, [
+        [100, 2, 498],
+      ]);
+    });
+
+    testWidgets('omits zero-extent children from semantics', (tester) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        buildLayout(
+          fixedSizes: const [100, 0, 500],
+          divider: Semantics(
+            label: 'collapsed divider',
+            child: SizedBox(key: dividerKey),
+          ),
+        ),
+      );
+
+      expect(find.bySemanticsLabel('collapsed divider'), findsNothing);
+
+      await tester.pumpWidget(
+        buildLayout(
+          fixedSizes: const [100, 2, 498],
+          divider: Semantics(
+            label: 'collapsed divider',
+            child: SizedBox(key: dividerKey),
+          ),
+        ),
+      );
+
+      expect(find.bySemanticsLabel('collapsed divider'), findsOneWidget);
+      handle.dispose();
+    });
+
     testWidgets('mirrors child offsets in right-to-left', (tester) async {
       await tester.pumpWidget(
         buildLayout(

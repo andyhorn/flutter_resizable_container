@@ -204,4 +204,20 @@ void main() {
       expect(result, [100, 2, 225, 2, 50, 2, 225]);
     });
   });
+
+  group('dividerExtent', () {
+    const divider = ResizableDivider(thickness: 2, padding: 3);
+
+    test('is thickness plus padding when neither neighbour is hidden', () {
+      expect(dividerExtent(divider, const {}, 0), 5);
+    });
+
+    test('is zero when the preceding child is hidden', () {
+      expect(dividerExtent(divider, const {1}, 1), 0);
+    });
+
+    test('is zero when the following child is hidden', () {
+      expect(dividerExtent(divider, const {2}, 1), 0);
+    });
+  });
 }

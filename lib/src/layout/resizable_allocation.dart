@@ -8,6 +8,17 @@ import 'package:flutter_resizable_container/src/resizable_size.dart';
 bool isDividerHidden(Set<int> hiddenIndices, int index) =>
     hiddenIndices.contains(index) || hiddenIndices.contains(index + 1);
 
+/// The main-axis extent of the divider after child [index]: zero when
+/// collapsed by a hidden neighbour, otherwise its thickness plus padding.
+double dividerExtent(
+  ResizableDivider divider,
+  Set<int> hiddenIndices,
+  int index,
+) =>
+    isDividerHidden(hiddenIndices, index)
+        ? 0.0
+        : divider.thickness + divider.padding;
+
 /// Returns alternating child/divider main-axis sizes for a container with
 /// [extent] pixels of main-axis space.
 ///
@@ -25,9 +36,7 @@ List<double> allocateSizes({
 }) {
   final dividerSizes = [
     for (var i = 0; i < dividers.length; i++)
-      isDividerHidden(hiddenIndices, i)
-          ? 0.0
-          : dividers[i].thickness + dividers[i].padding,
+      dividerExtent(dividers[i], hiddenIndices, i),
   ];
   final dividerSpace = dividerSizes.sum();
   final pixelSpace = _pixelsSpace(sizes);

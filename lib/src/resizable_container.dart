@@ -203,6 +203,12 @@ class _ResizableContainerState extends State<ResizableContainer>
       _animation.beginCapture(
         _deriveFullSizesFromController(hiddenIndices: _prevHiddenIndices),
       );
+      if (_animation.claimTargetSlot()) {
+        final capturingManager = manager;
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _startAnimationFromCapture(capturingManager),
+        );
+      }
     }
 
     _prevHiddenIndices = Set.of(newHidden);
@@ -233,40 +239,20 @@ class _ResizableContainerState extends State<ResizableContainer>
 
   Widget _buildLayout(BoxConstraints constraints) {
     _lastExtent = constraints.maxForDirection(widget.direction);
-    final hidden = controller.hiddenIndices;
 
-    return ResizableLayout(
+    return _ContainerLayout(
       direction: widget.direction,
-      onComplete: _scheduleSetRenderedSizes,
-      sizes: controller.sizes,
+      resizable: widget.resizable,
       resizableChildren: widget.children,
-      hiddenIndices: hidden,
+      sizes: controller.sizes,
+      hiddenIndices: controller.hiddenIndices,
       fixedSizes: _fixedSizesForPhase(),
-      children: [
-        for (var i = 0; i < widget.children.length; i++) ...[
-          _PaneSlot(
-              key: widget.children[i].key, child: widget.children[i].child),
-          if (i < widget.children.length - 1)
-            ResizableContainerDivider(
-              key: _dividerKey(i),
-              config: widget.children[i].divider,
-              direction: widget.direction,
-              enabled: widget.resizable &&
-                  widget.children[i].divider.enabled &&
-                  !isDividerHidden(hidden, i),
-              onResizeUpdate: (delta) => manager.adjustChildSize(
-                index: i,
-                delta: delta,
-              ),
-            ),
-        ],
-      ],
+      onComplete: _scheduleSetRenderedSizes,
+      onResizeUpdate: (index, delta) => manager.adjustChildSize(
+        index: index,
+        delta: delta,
+      ),
     );
-  }
-
-  Key? _dividerKey(int index) {
-    final paneKey = widget.children[index].key;
-    return paneKey == null ? null : ValueKey(('divider', paneKey));
   }
 
   /// The full child/divider sizes to lay out at, or `null` to have
@@ -277,12 +263,6 @@ class _ResizableContainerState extends State<ResizableContainer>
         return _animation.currentSizes;
 
       case HideAnimationPhase.capturing:
-        if (_animation.claimTargetSlot()) {
-          final capturingManager = manager;
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) => _startAnimationFromCapture(capturingManager),
-          );
-        }
         return _animation.currentSizes;
 
       case HideAnimationPhase.idle:
@@ -298,6 +278,7 @@ class _ResizableContainerState extends State<ResizableContainer>
     final childSizes = sizes.evenIndices().toList();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || scheduledManager != manager) return;
+      if (_animation.phase != HideAnimationPhase.idle) return;
       scheduledManager.setRenderedSizes(childSizes);
     });
   }
@@ -336,9 +317,7 @@ class _ResizableContainerState extends State<ResizableContainer>
     for (var i = 0; i < widget.children.length; i++) {
       result.add(controller.pixels[i]);
       if (i < widget.children.length - 1) {
-        final dividerHidden = isDividerHidden(hidden, i);
-        final config = widget.children[i].divider;
-        result.add(dividerHidden ? 0.0 : config.thickness + config.padding);
+        result.add(dividerExtent(widget.children[i].divider, hidden, i));
       }
     }
     return result;
@@ -366,5 +345,68 @@ class _PaneSlot extends StatelessWidget {
     // Keeps panes whose size didn't change from repainting during a drag. Must
     // not size `child`: the shrink dry-layout measures it directly.
     return RepaintBoundary(child: child);
+  }
+}
+
+class _ContainerLayout extends StatelessWidget {
+  const _ContainerLayout({
+    required this.direction,
+    required this.resizable,
+    required this.resizableChildren,
+    required this.sizes,
+    required this.hiddenIndices,
+    required this.fixedSizes,
+    required this.onComplete,
+    required this.onResizeUpdate,
+  });
+
+  final Axis direction;
+  final bool resizable;
+  final List<ResizableChild> resizableChildren;
+  final List<ResizableSize> sizes;
+  final Set<int> hiddenIndices;
+  final List<double>? fixedSizes;
+  final ValueChanged<List<double>> onComplete;
+  final void Function(int index, double delta) onResizeUpdate;
+
+  Key? _dividerKey(int index) {
+    final paneKey = resizableChildren[index].key;
+    return paneKey == null ? null : ValueKey(('divider', paneKey));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lastIndex = resizableChildren.length - 1;
+    final children = <Widget>[];
+
+    for (var i = 0; i <= lastIndex; i++) {
+      final child = resizableChildren[i];
+      children.add(_PaneSlot(key: child.key, child: child.child));
+
+      if (i == lastIndex) continue;
+
+      final dividerEnabled = resizable &&
+          child.divider.enabled &&
+          !isDividerHidden(hiddenIndices, i);
+      children.add(
+        ResizableContainerDivider(
+          key: _dividerKey(i),
+          config: child.divider,
+          direction: direction,
+          enabled: dividerEnabled,
+          onResizeUpdate: (delta) => onResizeUpdate(i, delta),
+        ),
+      );
+    }
+
+    return ResizableLayout(
+      direction: direction,
+      onComplete: onComplete,
+      sizes: sizes,
+      resizableChildren: resizableChildren,
+      hiddenIndices: hiddenIndices,
+      fixedSizes: fixedSizes,
+      children: children,
+    );
   }
 }

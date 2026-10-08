@@ -437,5 +437,60 @@ void main() {
         expect(tappedUp, isFalse);
       });
     });
+
+    group('when disabled mid-hover', () {
+      testWidgets('fires onHoverExit on the config that saw the hover',
+          (tester) async {
+        var oldExits = 0;
+        var newExits = 0;
+
+        Widget build(
+            {required bool enabled, required ResizableDivider config}) {
+          return MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 40,
+                  height: 200,
+                  child: ResizableContainerDivider(
+                    direction: Axis.horizontal,
+                    config: config,
+                    enabled: enabled,
+                    onResizeUpdate: (_) {},
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final oldConfig = ResizableDivider(
+          thickness: 10,
+          onHoverExit: () => oldExits++,
+        );
+        final newConfig = ResizableDivider(
+          thickness: 10,
+          onHoverExit: () => newExits++,
+        );
+
+        await tester.pumpWidget(build(enabled: true, config: oldConfig));
+
+        final gesture =
+            await tester.createGesture(kind: PointerDeviceKind.mouse);
+        await gesture.addPointer(location: Offset.zero);
+        addTearDown(gesture.removePointer);
+        await tester.pump();
+        await gesture.moveTo(
+          tester.getCenter(find.byType(ResizableContainerDivider)),
+        );
+        await tester.pump();
+
+        await tester.pumpWidget(build(enabled: false, config: newConfig));
+        await tester.pump();
+
+        expect(oldExits, 1);
+        expect(newExits, 0);
+      });
+    });
   });
 }

@@ -2100,6 +2100,39 @@ void main() {
           await tester.pumpAndSettle();
         },
       );
+
+      testWidgets(
+        'finishes the capture phase when a hide is reversed in the same frame',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller
+            ..hide(1)
+            ..show(1);
+          await tester.pumpAndSettle();
+
+          expect(tester.getSize(find.byKey(const Key('B'))).width, 200);
+
+          controller.hide(1);
+          await tester.pump();
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 100));
+
+          final midWidth = tester.getSize(find.byKey(const Key('B'))).width;
+          expect(midWidth, lessThan(200));
+          expect(midWidth, greaterThan(0));
+        },
+      );
     });
 
     group('controller swap', () {

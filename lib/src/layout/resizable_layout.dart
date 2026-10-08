@@ -168,8 +168,10 @@ class ResizableLayoutRenderObject extends RenderBox
   @override
   void performLayout() {
     final children = getChildrenAsList();
-    final measuring = _fixedSizes == null;
-    final fullSizes = _fixedSizes ?? _allocate(children);
+    final fixedSizes = _fixedSizes;
+    final usable = fixedSizes != null && fixedSizes.length == children.length;
+    final measuring = !usable;
+    final fullSizes = usable ? fixedSizes : _allocate(children);
 
     size = constraints.biggest;
 
@@ -230,16 +232,23 @@ class ResizableLayoutRenderObject extends RenderBox
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    for (final child in getChildrenAsList()) {
-      if (!_hasExtent(child)) continue;
-      final parentData = child.parentData as _ResizableLayoutParentData;
-      context.paintChild(child, parentData.offset + offset);
+    var child = firstChild;
+    while (child != null) {
+      final parentData = child.parentData! as _ResizableLayoutParentData;
+      if (_hasExtent(child)) {
+        context.paintChild(child, parentData.offset + offset);
+      }
+      child = parentData.nextSibling;
     }
   }
 
   @override
   void visitChildrenForSemantics(RenderObjectVisitor visitor) {
-    getChildrenAsList().where(_hasExtent).forEach(visitor);
+    var child = firstChild;
+    while (child != null) {
+      if (_hasExtent(child)) visitor(child);
+      child = (child.parentData! as _ResizableLayoutParentData).nextSibling;
+    }
   }
 
   @override

@@ -49,7 +49,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
 
     // Deferred because this runs during layout, and consumers commonly call
     // `setState` from these callbacks.
-    final config = widget.config;
+    final config = oldWidget.config;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (wasDragging) config.onDragEnd?.call();
