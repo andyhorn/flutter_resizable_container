@@ -7,6 +7,7 @@ import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
 import 'package:flutter_resizable_container/src/extensions/resizable_children_ext.dart';
 import 'package:flutter_resizable_container/src/layout/expand_sizes.dart';
+import 'package:flutter_resizable_container/src/layout/resizable_allocation.dart';
 
 /// The effective [ResizableSize] applied to a hidden child.
 const ResizableSize _hiddenSize = ResizableSize.pixels(0, min: 0, max: 0);
@@ -26,6 +27,7 @@ class ResizableController with ChangeNotifier {
   final Set<int> _hiddenIndices = <int>{};
   final Map<int, ResizableSize> _savedSizes = <int, ResizableSize>{};
   final Map<int, double> _savedPixels = <int, double>{};
+  List<double>? _pixelsBeforeHiddenChange;
   bool _needsLayoutFlag = false;
   int _invalidations = 0;
   bool _cascadeNegativeDelta = false;
@@ -67,19 +69,25 @@ class ResizableController with ChangeNotifier {
 
   /// Hide the child at [index] and its associated divider.
   ///
-  /// The previous size at [index] is remembered and restored by [show].
+  /// The child's size is remembered and restored by [show]. The space it
+  /// frees goes to the `expand` children first, then evenly to the others.
   void hide(int index) => setHidden(index, true);
 
   /// Show the previously-hidden child at [index] and its associated divider.
   ///
-  /// If the child is not hidden, this is a no-op.
+  /// The child gets back the size it was dragged to, clamped to its declared
+  /// minimum and maximum. It takes space from its siblings only as far as
+  /// they can give it up, so it can end up smaller than that. If the child is
+  /// not hidden, this is a no-op.
   void show(int index) => setHidden(index, false);
 
   /// Sets whether the child at [index] is hidden.
   ///
-  /// When hiding, the child's current [ResizableSize] is saved and replaced
-  /// with a zero-sized entry so the child collapses and its divider is
-  /// omitted. When showing, the saved size is restored.
+  /// When hiding, the child's current size is saved and the child collapses
+  /// to zero, its divider is omitted, and the other children keep their
+  /// current sizes while absorbing the freed space. When showing, the saved
+  /// size is restored unless [setSizes] replaced it while the child was
+  /// hidden, in which case the container lays the children out again.
   void setHidden(int index, bool hidden) {
     _validateIndex(index);
 
@@ -87,13 +95,23 @@ class ResizableController with ChangeNotifier {
       return;
     }
 
+    final needsLegacyPath =
+        _needsLayout || (!hidden && _savedPixels[index] == null);
+
+    if (needsLegacyPath) {
+      _setHiddenAndRelayout(index, hidden);
+    } else if (hidden) {
+      _hideWithDelta(index);
+    } else {
+      _showWithDelta(index);
+    }
+
+    notifyListeners();
+  }
+
+  void _setHiddenAndRelayout(int index, bool hidden) {
     if (hidden) {
-      _savedSizes[index] = _sizes[index];
-      // A zero here can mean "shown but not yet re-rendered", so it must not
-      // overwrite the width remembered from the last time it was visible.
-      if (_pixels[index] > 0) {
-        _savedPixels[index] = _pixels[index];
-      }
+      _rememberSize(index);
       _sizes = [..._sizes]..[index] = _hiddenSize;
       _hiddenIndices.add(index);
     } else {
@@ -103,7 +121,88 @@ class ResizableController with ChangeNotifier {
     }
 
     _needsLayout = true;
-    notifyListeners();
+  }
+
+  void _rememberSize(int index) {
+    _savedSizes[index] = _sizes[index];
+    // A zero here can mean "shown but not yet re-rendered", so it must not
+    // overwrite the width remembered from the last time it was visible.
+    if (_pixels[index] > 0) {
+      _savedPixels[index] = _pixels[index];
+    }
+  }
+
+  void _hideWithDelta(int index) {
+    _pixelsBeforeHiddenChange = List.of(_pixels);
+    _rememberSize(index);
+    _sizes = [..._sizes]..[index] = _hiddenSize;
+    _pixels[index] = 0;
+    _updateHiddenIndex(index, hidden: true);
+
+    _reconcile();
+  }
+
+  void _showWithDelta(int index) {
+    _pixelsBeforeHiddenChange = List.of(_pixels);
+    final savedSize = _savedSizes.remove(index) ?? _children[index].size;
+    final savedPixels = _savedPixels[index]!;
+    _updateHiddenIndex(index, hidden: false);
+
+    // `_sizes[index]` stays the hidden entry and `_pixels[index]` stays 0
+    // while distributing so the shown child is never a donor.
+    final lowerBound = savedSize.min ?? 0.0;
+    final upperBound = savedSize.max ?? double.infinity;
+    final wanted = savedPixels.clamp(lowerBound, upperBound).toDouble();
+    // Negative when the shown child's divider reappears and takes space.
+    final gap = _availableSpace - _pixels.sum();
+    final shortfall = wanted - gap;
+
+    if (shortfall <= 0) {
+      _pixels[index] = wanted;
+      _reconcile();
+    } else {
+      final distributed = _distributeAvailableSpaceDelta(
+        delta: -shortfall,
+        sizes: _pixels,
+      );
+      _applyDistribution(distributed);
+      _pixels[index] = max(0.0, gap - distributed.sum());
+    }
+
+    _sizes = [..._sizes]..[index] = savedSize;
+  }
+
+  void _reconcile() {
+    final delta = _availableSpace - _pixels.sum();
+
+    if (delta == 0.0) {
+      return;
+    }
+
+    _applyDistribution(
+      _distributeAvailableSpaceDelta(delta: delta, sizes: _pixels),
+    );
+  }
+
+  void _applyDistribution(List<double> distributed) {
+    for (var i = 0; i < _pixels.length; i++) {
+      _pixels[i] += distributed[i];
+    }
+  }
+
+  void _updateHiddenIndex(int index, {required bool hidden}) {
+    final dividerSpaceBefore = getDividerSpace(_children, _hiddenIndices);
+    if (hidden) {
+      _hiddenIndices.add(index);
+    } else {
+      _hiddenIndices.remove(index);
+    }
+    final dividerSpaceAfter = getDividerSpace(_children, _hiddenIndices);
+
+    // The container only reserves space for visible dividers, so it reports
+    // this change on its next build; applying it now makes that report a
+    // no-op instead of a second redistribution.
+    _availableSpace = _availableSpace + dividerSpaceBefore - dividerSpaceAfter;
   }
 
   /// Update the [ResizableSize] used to control each child.
@@ -115,8 +214,8 @@ class ResizableController with ChangeNotifier {
   /// The total ratio must be less than or equal to 1.0.
   ///
   /// Sizes provided for currently-hidden indices are remembered and applied
-  /// when the child is shown again; the child remains hidden until [show] is
-  /// called.
+  /// when the child is shown again, replacing the size it was dragged to; the
+  /// child remains hidden until [show] is called.
   void setSizes(List<ResizableSize> sizes) {
     if (sizes.length != _children.length) {
       throw ArgumentError('Must contain a value for every child');
@@ -604,6 +703,10 @@ final class ResizableControllerManager {
   void updateChildrenInPlace(List<ResizableChild> children) {
     _controller._updateChildrenInPlace(children);
   }
+
+  /// The children's pixels as they were just before the last hide or show.
+  List<double>? get pixelsBeforeHiddenChange =>
+      _controller._pixelsBeforeHiddenChange;
 
   void setCascadeNegativeDelta(bool cascadeNegativeDelta) {
     _controller._cascadeNegativeDelta = cascadeNegativeDelta;

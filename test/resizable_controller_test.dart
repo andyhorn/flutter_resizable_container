@@ -966,6 +966,24 @@ void main() {
           controller.sizes[1],
           equals(const ResizableSize.pixels(0, min: 0, max: 0)),
         );
+        expect(controller.needsLayout, isFalse);
+      });
+
+      test('needsLayout stays true when hide is called before the first layout',
+          () {
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+        ]);
+
+        controller.hide(0);
+
         expect(controller.needsLayout, isTrue);
       });
 
@@ -1150,6 +1168,305 @@ void main() {
 
         controller.setHidden(0, false);
         expect(controller.isHidden(0), isFalse);
+      });
+
+      group('with dragged sizes', () {
+        // Every divider is 1px thick. The available space given here reserves
+        // every divider, so the space shared by the visible children is that
+        // plus the hidden dividers; a container reports the latter as its
+        // available space.
+        void setUpChildren(
+          List<ResizableSize> sizes,
+          List<double> pixels, {
+          double? available,
+        }) {
+          controller.setChildren([
+            for (final size in sizes)
+              ResizableChild(size: size, child: const SizedBox.shrink()),
+          ]);
+          manager
+              .setAvailableSpace(available ?? pixels.reduce((a, b) => a + b));
+          manager.setRenderedSizes(pixels);
+        }
+
+        void setUpExpandChildren() {
+          setUpChildren(
+            const [
+              ResizableSize.expand(),
+              ResizableSize.expand(),
+              ResizableSize.expand(),
+            ],
+            [100, 100, 100],
+          );
+        }
+
+        double sum() => controller.pixels.reduce((a, b) => a + b);
+
+        double hiddenDividers() {
+          var count = 0;
+          for (var k = 0; k < controller.pixels.length - 1; k++) {
+            if (controller.isHidden(k) || controller.isHidden(k + 1)) {
+              count++;
+            }
+          }
+          return count.toDouble();
+        }
+
+        test('siblings keep their drags across hide and show', () {
+          setUpExpandChildren();
+          manager.adjustChildSize(index: 0, delta: 30);
+          final dragged = List.of(controller.pixels);
+          expect(dragged[0], 130);
+
+          controller.hide(2);
+          controller.show(2);
+
+          expect(controller.pixels[0], closeTo(dragged[0], 1e-9));
+          expect(controller.pixels[1], closeTo(dragged[1], 1e-9));
+          expect(controller.pixels[2], closeTo(dragged[2], 1e-9));
+        });
+
+        test('show restores the dragged size', () {
+          setUpChildren(
+            const [
+              ResizableSize.pixels(100),
+              ResizableSize.pixels(100),
+              ResizableSize.pixels(100),
+            ],
+            [100, 100, 100],
+          );
+          manager.adjustChildSize(index: 1, delta: 40);
+          expect(controller.pixels[1], 140);
+
+          controller.hide(1);
+          controller.show(1);
+
+          expect(controller.pixels[1], closeTo(140, 1e-9));
+          expect(controller.pixels[0], closeTo(100, 1e-9));
+          expect(controller.pixels[2], closeTo(60, 1e-9));
+          expect(controller.sizes[1], equals(const ResizableSize.pixels(100)));
+        });
+
+        test('keeps a drag made while a sibling is hidden', () {
+          setUpExpandChildren();
+
+          controller.hide(2);
+          manager.adjustChildSize(index: 0, delta: 20);
+          controller.show(2);
+
+          expect(controller.pixels[0], closeTo(120, 1e-9));
+          expect(controller.pixels[1], closeTo(80, 1e-9));
+          expect(controller.pixels[2], closeTo(100, 1e-9));
+        });
+
+        group(
+            'keeps sizes within the available space after every hide '
+            'and show', () {
+          const rows = <(String, List<String>)>[
+            ('hide then show', ['hide:1', 'show:1']),
+            ('hide the first and last', ['hide:0', 'hide:3', 'show:0']),
+            ('adjacent hides then show one', ['hide:1', 'hide:2', 'show:1']),
+            (
+              'adjacent hides then show the other',
+              ['hide:1', 'hide:2', 'show:2']
+            ),
+            (
+              'window resize while hidden',
+              ['hide:1', 'resize:500', 'show:1', 'resize:420'],
+            ),
+            (
+              'everything hidden and restored',
+              ['hide:0', 'hide:1', 'hide:2', 'show:2', 'show:1', 'show:0'],
+            ),
+          ];
+
+          for (final (name, steps) in rows) {
+            test(name, () {
+              setUpChildren(
+                const [
+                  ResizableSize.pixels(100),
+                  ResizableSize.expand(),
+                  ResizableSize.pixels(100),
+                  ResizableSize.expand(),
+                ],
+                [100, 100, 100, 100],
+                available: 400,
+              );
+              var available = 400.0;
+
+              for (final step in steps) {
+                final [action, arg] = step.split(':');
+                final value = int.parse(arg);
+                switch (action) {
+                  case 'hide':
+                    controller.hide(value);
+                  case 'show':
+                    controller.show(value);
+                  case 'resize':
+                    available = value.toDouble();
+                    manager.setAvailableSpace(available + hiddenDividers());
+                }
+
+                expect(
+                  sum(),
+                  closeTo(available + hiddenDividers(), 1e-9),
+                  reason: 'after $step',
+                );
+              }
+            });
+          }
+        });
+
+        test('leaves a gap when no sibling can absorb the freed space', () {
+          setUpChildren(
+            const [
+              ResizableSize.pixels(100, max: 100),
+              ResizableSize.pixels(100, max: 100),
+              ResizableSize.pixels(100, max: 100),
+            ],
+            [100, 100, 100],
+          );
+
+          controller.hide(1);
+
+          expect(controller.pixels, equals([100, 0, 100]));
+        });
+
+        test('clamps the shown child to its declared min and max', () {
+          setUpChildren(
+            const [
+              ResizableSize.expand(),
+              ResizableSize.pixels(100, min: 50, max: 120),
+              ResizableSize.expand(),
+            ],
+            [100, 150, 50],
+          );
+
+          controller.hide(1);
+          controller.show(1);
+          expect(controller.pixels[1], closeTo(120, 1e-9));
+
+          manager.setRenderedSizes([100, 20, 180]);
+          controller.hide(1);
+          controller.show(1);
+          expect(controller.pixels[1], closeTo(50, 1e-9));
+        });
+
+        test('gives the shown child only what the other children can give up',
+            () {
+          setUpChildren(
+            const [
+              ResizableSize.pixels(100, min: 60),
+              ResizableSize.pixels(100),
+              ResizableSize.pixels(100, min: 60),
+            ],
+            [100, 100, 100],
+          );
+
+          controller.hide(1);
+          // 200 plus the two 1px dividers collapsed around the hidden child.
+          manager.setAvailableSpace(202);
+          controller.show(1);
+
+          expect(controller.pixels[0], closeTo(60, 1e-9));
+          expect(controller.pixels[1], closeTo(80, 1e-9));
+          expect(controller.pixels[2], closeTo(60, 1e-9));
+          expect(sum(), closeTo(200, 1e-9));
+        });
+
+        test('ratio siblings do not grow when a neighbour hides', () {
+          setUpChildren(
+            const [
+              ResizableSize.expand(),
+              ResizableSize.ratio(0.25),
+              ResizableSize.ratio(0.25),
+            ],
+            [200, 100, 100],
+            available: 400,
+          );
+
+          controller.hide(1);
+
+          expect(controller.pixels[2], 100);
+          expect(controller.pixels[0], closeTo(302, 1e-9));
+        });
+
+        test('pixel-only siblings share the freed space evenly', () {
+          setUpChildren(
+            const [
+              ResizableSize.pixels(100),
+              ResizableSize.pixels(100),
+              ResizableSize.pixels(100),
+            ],
+            [100, 100, 100],
+          );
+
+          controller.hide(1);
+
+          expect(controller.pixels[0], closeTo(151, 1e-9));
+          expect(controller.pixels[1], 0);
+          expect(controller.pixels[2], closeTo(151, 1e-9));
+        });
+
+        test('show after setSizes while hidden uses the new size', () {
+          setUpExpandChildren();
+          controller.hide(1);
+
+          controller.setSizes(const [
+            ResizableSize.expand(),
+            ResizableSize.pixels(120),
+            ResizableSize.expand(),
+          ]);
+          manager.setRenderedSizes([150, 0, 150]);
+          controller.show(1);
+
+          expect(controller.sizes[1], equals(const ResizableSize.pixels(120)));
+          expect(controller.needsLayout, isTrue);
+        });
+
+        test('shrink sibling absorbs freed space', () {
+          setUpChildren(
+            const [
+              ResizableSize.shrink(),
+              ResizableSize.pixels(100),
+            ],
+            [50, 100],
+          );
+
+          controller.hide(1);
+
+          expect(controller.pixels[0], closeTo(151, 1e-9));
+          expect(controller.pixels[1], 0);
+        });
+
+        test('show restores a shrink child\'s saved pixels', () {
+          setUpChildren(
+            const [
+              ResizableSize.shrink(),
+              ResizableSize.expand(),
+              ResizableSize.expand(),
+            ],
+            [50, 125, 125],
+          );
+
+          controller.hide(0);
+          controller.show(0);
+
+          expect(controller.pixels[0], closeTo(50, 1e-9));
+          expect(controller.sizes[0], equals(const ResizableSize.shrink()));
+        });
+
+        test('hide and show notify listeners once', () {
+          setUpExpandChildren();
+          var notifies = 0;
+          controller.addListener(() => notifies++);
+
+          controller.hide(1);
+          expect(notifies, 1);
+
+          controller.show(1);
+          expect(notifies, 2);
+        });
       });
     });
   });

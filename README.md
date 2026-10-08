@@ -137,19 +137,22 @@ onTap: () => controller.setSizes(const [
 #### Hiding and showing children
 
 Use `hide`, `show`, or `setHidden` on the controller to collapse a child and
-its adjacent divider without removing it from the widget tree. The previous
-`ResizableSize` is remembered and restored when the child is shown again.
+its adjacent divider without removing it from the widget tree. The other
+children keep the sizes you dragged them to; the freed space goes to `expand`
+children first, then evenly to the rest (within their min and max). When the
+child is shown again it gets back the size it was dragged to, clamped to its
+min and max, taking space only from siblings that can give it up.
 
 ```dart
 controller.hide(1);            // collapses child 1 and its divider
 controller.isHidden(1);        // => true
-controller.show(1);            // restores the previous size
+controller.show(1);            // restores the dragged size
 controller.setHidden(1, true); // equivalent to hide(1)
 ```
 
 Calls to `setSizes` while a child is hidden store the new size and apply it
-the next time the child is shown; the child stays hidden until you call
-`show`.
+the next time the child is shown, overriding the dragged size; the child stays
+hidden until you call `show`.
 
 An external controller keeps its hidden indices and dragged sizes when its
 container is unmounted and mounted again (for example, switching tabs) with
