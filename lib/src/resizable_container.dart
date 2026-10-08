@@ -223,6 +223,8 @@ class _ResizableContainerState extends State<ResizableContainer>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        _checkBounded(constraints);
+
         final availableSpace = _getAvailableSpace(constraints);
         final containerExtent = constraints.maxForDirection(widget.direction);
 
@@ -241,6 +243,33 @@ class _ResizableContainerState extends State<ResizableContainer>
         );
       },
     );
+  }
+
+  void _checkBounded(BoxConstraints constraints) {
+    final unboundedAxes = [
+      if (!constraints.hasBoundedWidth) 'width',
+      if (!constraints.hasBoundedHeight) 'height',
+    ];
+    if (unboundedAxes.isEmpty) return;
+
+    throw FlutterError.fromParts([
+      ErrorSummary(
+        'ResizableContainer was given unbounded '
+        '${unboundedAxes.join(' and ')}.',
+      ),
+      ErrorDescription(
+        'A ResizableContainer divides the space its parent gives it, so it '
+        'needs a bounded width and height. It was laid out with constraints '
+        '$constraints.',
+      ),
+      ErrorHint(
+        'This usually happens when a ResizableContainer is placed inside a '
+        'Row, Column, ListView, or other widget that gives its children '
+        'unlimited space along one axis. Wrap the ResizableContainer in an '
+        'Expanded, Flexible, SizedBox, or ConstrainedBox, or give its '
+        'parent a bounded size.',
+      ),
+    ]);
   }
 
   Widget _buildLayout(BoxConstraints constraints) {
