@@ -1022,7 +1022,7 @@ void main() {
           ],
         );
 
-        expect(tester.takeException(), isFlutterError);
+        expect(tester.takeException(), isNull);
         expect(widths, equals([80, 60]));
       });
 
@@ -1052,7 +1052,7 @@ void main() {
 
         expect(
           errors.first.exceptionAsString(),
-          contains('BoxConstraints forces an infinite width'),
+          contains('was given an infinite size during layout'),
         );
       });
     });
