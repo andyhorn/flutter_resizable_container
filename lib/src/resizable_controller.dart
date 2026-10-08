@@ -9,6 +9,13 @@ import 'package:flutter_resizable_container/src/resizable_size.dart';
 /// The effective [ResizableSize] applied to a hidden child.
 const ResizableSize _hiddenSize = ResizableSize.pixels(0, min: 0, max: 0);
 
+/// The slack allowed when validating [ResizableController.setSizes] totals.
+///
+/// Splitting space evenly (e.g. `998 / 6` six times) accumulates
+/// floating-point error that can push a mathematically exact total a few ulps
+/// past its limit. One millionth is far below a visible pixel.
+const double _sizeTotalTolerance = 1e-6;
+
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
   double _availableSpace = -1;
@@ -104,7 +111,7 @@ class ResizableController with ChangeNotifier {
         .map((size) => size.pixels)
         .sum();
 
-    if (totalPixels > _availableSpace) {
+    if (totalPixels > _availableSpace + _sizeTotalTolerance) {
       throw ArgumentError(
         'Total pixels must be less than or equal to available space',
       );
@@ -115,7 +122,7 @@ class ResizableController with ChangeNotifier {
         .map((size) => size.ratio)
         .sum();
 
-    if (totalRatio > 1.0) {
+    if (totalRatio > 1.0 + _sizeTotalTolerance) {
       throw ArgumentError('Total ratio must be less than or equal to 1.0');
     }
 

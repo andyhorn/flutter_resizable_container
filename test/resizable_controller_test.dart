@@ -521,6 +521,82 @@ void main() {
       });
     });
 
+    group('#setSizes float tolerance', () {
+      void setUpChildren(int count, double availableSpace) {
+        controller.setChildren([
+          for (var i = 0; i < count; i++)
+            const ResizableChild(child: SizedBox.shrink()),
+        ]);
+        manager.setAvailableSpace(availableSpace);
+      }
+
+      test('accepts 6 even splits of 998 pixels', () {
+        setUpChildren(6, 998);
+        final pixels = ResizableSize.pixels(998 / 6);
+
+        expect(
+          [for (var i = 0; i < 6; i++) 998 / 6]
+              .fold<double>(0, (a, b) => a + b),
+          greaterThan(998),
+        );
+        expect(() => controller.setSizes([for (var i = 0; i < 6; i++) pixels]),
+            returnsNormally);
+      });
+
+      test('accepts 7 even splits of 1000 pixels', () {
+        setUpChildren(7, 1000);
+        final pixels = ResizableSize.pixels(1000 / 7);
+
+        expect(
+          [for (var i = 0; i < 7; i++) 1000 / 7]
+              .fold<double>(0, (a, b) => a + b),
+          greaterThan(1000),
+        );
+        expect(() => controller.setSizes([for (var i = 0; i < 7; i++) pixels]),
+            returnsNormally);
+      });
+
+      test('accepts 9 even ratio splits', () {
+        setUpChildren(9, 900);
+        final ratio = ResizableSize.ratio(1 / 9);
+
+        expect(
+          [for (var i = 0; i < 9; i++) 1 / 9].fold<double>(0, (a, b) => a + b),
+          greaterThan(1.0),
+        );
+        expect(() => controller.setSizes([for (var i = 0; i < 9; i++) ratio]),
+            returnsNormally);
+      });
+
+      test('still rejects pixels that are genuinely over the limit', () {
+        setUpChildren(2, 100);
+
+        for (final excess in [1.0, 0.001]) {
+          expect(
+            () => controller.setSizes([
+              ResizableSize.pixels(50 + excess),
+              const ResizableSize.pixels(50),
+            ]),
+            throwsArgumentError,
+          );
+        }
+      });
+
+      test('still rejects a ratio that is genuinely over 1.0', () {
+        setUpChildren(2, 100);
+
+        for (final excess in [0.01, 0.001]) {
+          expect(
+            () => controller.setSizes([
+              ResizableSize.ratio(0.5 + excess),
+              const ResizableSize.ratio(0.5),
+            ]),
+            throwsArgumentError,
+          );
+        }
+      });
+    });
+
     group('#hide / #show', () {
       setUp(() {
         controller.setChildren(const [
