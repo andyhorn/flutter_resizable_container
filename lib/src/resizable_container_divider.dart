@@ -12,19 +12,12 @@ class ResizableContainerDivider extends StatefulWidget {
     super.key,
     required this.direction,
     required this.config,
-    required void Function(double) this.onResizeUpdate,
+    required this.onResizeUpdate,
     this.enabled = true,
   });
 
-  const ResizableContainerDivider.placeholder({
-    super.key,
-    required this.config,
-    required this.direction,
-  })  : onResizeUpdate = null,
-        enabled = true;
-
   final Axis direction;
-  final void Function(double)? onResizeUpdate;
+  final void Function(double) onResizeUpdate;
   final ResizableDivider config;
 
   /// Whether this divider responds to drag, tap, and hover input. When
@@ -40,6 +33,29 @@ class ResizableContainerDivider extends StatefulWidget {
 class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   bool isDragging = false;
   bool isHovered = false;
+
+  @override
+  void didUpdateWidget(covariant ResizableContainerDivider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (!(oldWidget.enabled && !widget.enabled)) return;
+
+    final wasDragging = isDragging;
+    final wasHovered = isHovered;
+    if (!wasDragging && !wasHovered) return;
+
+    isDragging = false;
+    isHovered = false;
+
+    // Deferred because this runs during layout, and consumers commonly call
+    // `setState` from these callbacks.
+    final config = widget.config;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (wasDragging) config.onDragEnd?.call();
+      config.onHoverExit?.call();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +169,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   void _onVerticalDragUpdate(DragUpdateDetails details) {
     if (!widget.enabled) return;
     if (widget.direction == Axis.vertical) {
-      widget.onResizeUpdate?.call(details.delta.dy);
+      widget.onResizeUpdate(details.delta.dy);
     }
   }
 
@@ -185,7 +201,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
       if (widget.direction == Axis.horizontal) {
         final delta = details.delta.dx;
 
-        widget.onResizeUpdate?.call(switch (textDirection) {
+        widget.onResizeUpdate(switch (textDirection) {
           TextDirection.ltr => delta,
           TextDirection.rtl => -delta,
         });

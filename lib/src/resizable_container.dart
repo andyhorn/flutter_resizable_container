@@ -5,10 +5,10 @@ import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.d
 import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
 import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
 import 'package:flutter_resizable_container/src/hide_animation_coordinator.dart';
+import 'package:flutter_resizable_container/src/layout/resizable_allocation.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_layout.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
-import 'package:flutter_resizable_container/src/resizable_size.dart';
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///
@@ -80,6 +80,7 @@ class _ResizableContainerState extends State<ResizableContainer>
 
   Set<int> _prevHiddenIndices = const <int>{};
   double? _lastAvailableSpace;
+  double _lastExtent = 0;
 
   @override
   void initState() {
@@ -124,10 +125,16 @@ class _ResizableContainerState extends State<ResizableContainer>
       controller.addListener(_onControllerChanged);
     } else if (structuralChange) {
       _animation.cancel();
+      // `setChildren` clears the hidden set and notifies synchronously, so the
+      // listener must already expect the empty set.
+      _prevHiddenIndices = const <int>{};
       controller.setChildren(widget.children);
-      _prevHiddenIndices = Set.of(controller.hiddenIndices);
     } else if (configChange) {
       manager.updateChildrenInPlace(widget.children);
+    }
+
+    if (directionChanged) {
+      _animation.cancel();
     }
 
     if (!controllerChanged && cascadeChanged) {
@@ -218,123 +225,109 @@ class _ResizableContainerState extends State<ResizableContainer>
 
         return AnimatedBuilder(
           animation: controller,
-          builder: (context, _) => _buildForPhase(constraints),
+          builder: (context, _) => _buildLayout(constraints),
         );
       },
     );
   }
 
-  Widget _buildForPhase(BoxConstraints constraints) {
+  Widget _buildLayout(BoxConstraints constraints) {
+    _lastExtent = constraints.maxForDirection(widget.direction);
+    final hidden = controller.hiddenIndices;
+
+    return ResizableLayout(
+      direction: widget.direction,
+      onComplete: _scheduleSetRenderedSizes,
+      sizes: controller.sizes,
+      resizableChildren: widget.children,
+      hiddenIndices: hidden,
+      fixedSizes: _fixedSizesForPhase(),
+      children: [
+        for (var i = 0; i < widget.children.length; i++) ...[
+          _PaneSlot(
+              key: widget.children[i].key, child: widget.children[i].child),
+          if (i < widget.children.length - 1)
+            ResizableContainerDivider(
+              key: _dividerKey(i),
+              config: widget.children[i].divider,
+              direction: widget.direction,
+              enabled: widget.resizable &&
+                  widget.children[i].divider.enabled &&
+                  !isDividerHidden(hidden, i),
+              onResizeUpdate: (delta) => manager.adjustChildSize(
+                index: i,
+                delta: delta,
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+
+  Key? _dividerKey(int index) {
+    final paneKey = widget.children[index].key;
+    return paneKey == null ? null : ValueKey(('divider', paneKey));
+  }
+
+  /// The full child/divider sizes to lay out at, or `null` to have
+  /// [ResizableLayout] resolve and report them.
+  List<double>? _fixedSizesForPhase() {
     switch (_animation.phase) {
       case HideAnimationPhase.animating:
-        return _flexFromFullSizes(
-          constraints: constraints,
-          sizes: _animation.currentSizes!,
-        );
+        return _animation.currentSizes;
 
       case HideAnimationPhase.capturing:
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            _buildOffstageMeasureLayout(),
-            _flexFromFullSizes(
-              constraints: constraints,
-              sizes: _animation.currentSizes!,
-            ),
-          ],
-        );
+        if (_animation.claimTargetSlot()) {
+          final capturingManager = manager;
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _startAnimationFromCapture(capturingManager),
+          );
+        }
+        return _animation.currentSizes;
 
       case HideAnimationPhase.idle:
         if (controller.needsLayout) {
-          return _buildLayout(_scheduleSetRenderedSizes);
+          return null;
         }
-        return _flexFromFullSizes(
-          constraints: constraints,
-          sizes: _deriveFullSizesFromController(),
-        );
+        return _deriveFullSizesFromController();
     }
   }
 
-  Widget _buildLayout(ValueChanged<List<double>> onComplete) {
-    return ResizableLayout(
-      direction: widget.direction,
-      onComplete: onComplete,
-      sizes: controller.sizes,
-      resizableChildren: widget.children,
-      hiddenIndices: controller.hiddenIndices,
-      children: _buildLayoutChildren((i) => widget.children[i].child),
-    );
-  }
-
-  Widget _buildOffstageMeasureLayout() {
-    // Run the layout offstage with placeholder children so the real widgets
-    // aren't inflated twice. Any [ResizableSizeShrink] entry is replaced with
-    // a fixed-pixel size based on the controller's last-rendered value — the
-    // shrink dry-layout produced that value already, so it is the size the
-    // offstage pass would otherwise measure.
-    final overrideSizes = <ResizableSize>[
-      for (var i = 0; i < controller.sizes.length; i++)
-        controller.sizes[i] is ResizableSizeShrink
-            ? ResizableSize.pixels(controller.pixels[i])
-            : controller.sizes[i],
-    ];
-
-    return Offstage(
-      offstage: true,
-      child: ResizableLayout(
-        direction: widget.direction,
-        onComplete: _captureTarget,
-        sizes: overrideSizes,
-        resizableChildren: widget.children,
-        hiddenIndices: controller.hiddenIndices,
-        children: _buildLayoutChildren((_) => const SizedBox.shrink()),
-      ),
-    );
-  }
-
-  /// Builds the alternating child/divider list that [ResizableLayout]
-  /// expects. [childBuilder] supplies the widget rendered for each child
-  /// slot — the real child for the live layout, a placeholder for the
-  /// offstage measurement.
-  List<Widget> _buildLayoutChildren(Widget Function(int index) childBuilder) {
-    return [
-      for (var i = 0; i < widget.children.length; i++) ...[
-        childBuilder(i),
-        if (i < widget.children.length - 1)
-          ResizableContainerDivider.placeholder(
-            config: widget.children[i].divider,
-            direction: widget.direction,
-          ),
-      ],
-    ];
-  }
-
   void _scheduleSetRenderedSizes(List<double> sizes) {
+    final scheduledManager = manager;
     final childSizes = sizes.evenIndices().toList();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      manager.setRenderedSizes(childSizes);
+      if (!mounted || scheduledManager != manager) return;
+      scheduledManager.setRenderedSizes(childSizes);
     });
   }
 
-  void _captureTarget(List<double> sizes) {
-    final fullTarget = List.of(sizes);
-    final childSizes = sizes.evenIndices().toList();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+  void _startAnimationFromCapture(ResizableControllerManager capturingManager) {
+    if (!mounted || capturingManager != manager) return;
+    if (_animation.phase != HideAnimationPhase.capturing) return;
 
-      manager.setRenderedSizes(childSizes);
+    final fullTarget = allocateSizes(
+      extent: _lastExtent,
+      sizes: controller.sizes,
+      dividers: [
+        for (var i = 0; i < widget.children.length - 1; i++)
+          widget.children[i].divider,
+      ],
+      hiddenIndices: controller.hiddenIndices,
+      measureShrink: (index, _) => controller.pixels[index],
+    );
 
-      // If hideAnimation was cleared between the capture-target frame and
-      // this callback, fall back to the instant-snap path.
-      final animation = widget.hideAnimation;
-      if (animation == null) {
-        _animation.cancel();
-        return;
-      }
+    manager.setRenderedSizes(fullTarget.evenIndices().toList());
 
-      _animation.startAnimation(target: fullTarget, animation: animation);
-    });
+    // If hideAnimation was cleared between the capture frame and this
+    // callback, fall back to the instant-snap path.
+    final animation = widget.hideAnimation;
+    if (animation == null) {
+      _animation.cancel();
+      return;
+    }
+
+    _animation.startAnimation(target: fullTarget, animation: animation);
   }
 
   List<double> _deriveFullSizesFromController({Set<int>? hiddenIndices}) {
@@ -343,78 +336,12 @@ class _ResizableContainerState extends State<ResizableContainer>
     for (var i = 0; i < widget.children.length; i++) {
       result.add(controller.pixels[i]);
       if (i < widget.children.length - 1) {
-        final dividerHidden = hidden.contains(i) || hidden.contains(i + 1);
+        final dividerHidden = isDividerHidden(hidden, i);
         final config = widget.children[i].divider;
         result.add(dividerHidden ? 0.0 : config.thickness + config.padding);
       }
     }
     return result;
-  }
-
-  Widget _flexFromFullSizes({
-    required BoxConstraints constraints,
-    required List<double> sizes,
-  }) {
-    return Flex(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      direction: widget.direction,
-      children: [
-        for (var i = 0; i < widget.children.length; i++) ...[
-          Builder(
-            key: widget.children[i].key,
-            builder: (context) {
-              final mainSize = sizes[i * 2];
-              return SizedBox(
-                width: widget.direction == Axis.horizontal
-                    ? mainSize
-                    : constraints.maxForDirection(Axis.horizontal),
-                height: widget.direction == Axis.vertical
-                    ? mainSize
-                    : constraints.maxForDirection(Axis.vertical),
-                // Keeps panes whose size didn't change from repainting
-                // during a drag.
-                child: RepaintBoundary(child: widget.children[i].child),
-              );
-            },
-          ),
-          if (i < widget.children.length - 1)
-            _buildDividerSlot(
-              dividerIndex: i,
-              size: sizes[i * 2 + 1],
-              constraints: constraints,
-            ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildDividerSlot({
-    required int dividerIndex,
-    required double size,
-    required BoxConstraints constraints,
-  }) {
-    if (size == 0) {
-      return const SizedBox.shrink();
-    }
-    final config = widget.children[dividerIndex].divider;
-    final divider = ResizableContainerDivider(
-      config: config,
-      direction: widget.direction,
-      enabled: widget.resizable && config.enabled,
-      onResizeUpdate: (delta) => manager.adjustChildSize(
-        index: dividerIndex,
-        delta: delta,
-      ),
-    );
-    return SizedBox(
-      width: widget.direction == Axis.horizontal
-          ? size
-          : constraints.maxForDirection(Axis.horizontal),
-      height: widget.direction == Axis.vertical
-          ? size
-          : constraints.maxForDirection(Axis.vertical),
-      child: divider,
-    );
   }
 
   double _getAvailableSpace(BoxConstraints constraints) {
@@ -426,5 +353,18 @@ class _ResizableContainerState extends State<ResizableContainer>
         .sum();
 
     return totalSpace - dividerSpace;
+  }
+}
+
+class _PaneSlot extends StatelessWidget {
+  const _PaneSlot({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    // Keeps panes whose size didn't change from repainting during a drag. Must
+    // not size `child`: the shrink dry-layout measures it directly.
+    return RepaintBoundary(child: child);
   }
 }

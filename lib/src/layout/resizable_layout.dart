@@ -2,10 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
-import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
+import 'package:flutter_resizable_container/src/layout/resizable_allocation.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_layout_direction.dart';
-import 'package:flutter_resizable_container/src/resizable_size.dart';
 
 typedef _ContainerMixin
     = ContainerRenderObjectMixin<RenderBox, _ResizableLayoutParentData>;
@@ -21,7 +19,14 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
     required this.sizes,
     required this.resizableChildren,
     this.hiddenIndices = const <int>{},
+    this.fixedSizes,
   });
+
+  /// Full alternating child/divider main-axis sizes. When `null` the layout
+  /// resolves [sizes] itself and reports the result through [onComplete];
+  /// otherwise children are laid out at exactly these sizes and [onComplete]
+  /// is never called.
+  final List<double>? fixedSizes;
 
   final Axis direction;
   final ValueChanged<List<double>> onComplete;
@@ -37,6 +42,8 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
       onComplete: onComplete,
       resizableChildren: resizableChildren,
       hiddenIndices: hiddenIndices,
+      fixedSizes: fixedSizes,
+      textDirection: Directionality.maybeOf(context) ?? TextDirection.ltr,
     );
   }
 
@@ -50,7 +57,9 @@ class ResizableLayout extends MultiChildRenderObjectWidget {
       ..sizes = sizes
       ..onComplete = onComplete
       ..resizableChildren = resizableChildren
-      ..hiddenIndices = hiddenIndices;
+      ..hiddenIndices = hiddenIndices
+      ..fixedSizes = fixedSizes
+      ..textDirection = Directionality.maybeOf(context) ?? TextDirection.ltr;
   }
 }
 
@@ -62,7 +71,11 @@ class ResizableLayoutRenderObject extends RenderBox
     required ValueChanged<List<double>> onComplete,
     required List<ResizableChild> resizableChildren,
     Set<int> hiddenIndices = const <int>{},
-  })  : _layoutDirection = layoutDirection,
+    List<double>? fixedSizes,
+    TextDirection textDirection = TextDirection.ltr,
+  })  : _fixedSizes = fixedSizes,
+        _textDirection = textDirection,
+        _layoutDirection = layoutDirection,
         _sizes = sizes,
         _onComplete = onComplete,
         _resizableChildren = resizableChildren,
@@ -73,14 +86,34 @@ class ResizableLayoutRenderObject extends RenderBox
   ValueChanged<List<double>> _onComplete;
   List<ResizableChild> _resizableChildren;
   Set<int> _hiddenIndices;
-  double _currentPosition = 0.0;
-  final Map<int, double> _shrinkSizes = {};
+  List<double>? _fixedSizes;
+  TextDirection _textDirection;
 
   ResizableLayoutDirection get layoutDirection => _layoutDirection;
   List<ResizableSize> get sizes => _sizes;
   ValueChanged<List<double>> get onComplete => _onComplete;
   List<ResizableChild> get resizableChildren => _resizableChildren;
   Set<int> get hiddenIndices => _hiddenIndices;
+  List<double>? get fixedSizes => _fixedSizes;
+  TextDirection get textDirection => _textDirection;
+
+  set fixedSizes(List<double>? fixedSizes) {
+    if (listEquals(_fixedSizes, fixedSizes)) {
+      return;
+    }
+
+    _fixedSizes = fixedSizes;
+    markNeedsLayout();
+  }
+
+  set textDirection(TextDirection textDirection) {
+    if (_textDirection == textDirection) {
+      return;
+    }
+
+    _textDirection = textDirection;
+    markNeedsLayout();
+  }
 
   set hiddenIndices(Set<int> hiddenIndices) {
     if (setEquals(_hiddenIndices, hiddenIndices)) {
@@ -89,11 +122,6 @@ class ResizableLayoutRenderObject extends RenderBox
 
     _hiddenIndices = hiddenIndices;
     markNeedsLayout();
-  }
-
-  bool _isDividerHidden(int dividerIndex) {
-    return _hiddenIndices.contains(dividerIndex) ||
-        _hiddenIndices.contains(dividerIndex + 1);
   }
 
   set layoutDirection(ResizableLayoutDirection layoutDirection) {
@@ -139,151 +167,51 @@ class ResizableLayoutRenderObject extends RenderBox
 
   @override
   void performLayout() {
-    _currentPosition = 0.0;
-    _shrinkSizes.clear();
-
     final children = getChildrenAsList();
-    final dividerSpace = _getDividerSpace();
-    final pixelSpace = _getPixelsSpace();
-    final shrinkCap = layoutDirection.getMaxConstraint(constraints) -
-        pixelSpace -
-        dividerSpace;
-    final shrinkSpace = _getShrinkSpace(children, shrinkCap);
-    final availableRatioSpace = _getAvailableRatioSpace(
-      pixelSpace: pixelSpace,
-      shrinkSpace: shrinkSpace,
-      dividerSpace: dividerSpace,
-    );
-    final requiredRatioSpace = _getRequiredRatioSpace(availableRatioSpace);
-    final takenSpace = [
-      pixelSpace,
-      shrinkSpace,
-      requiredRatioSpace,
-      dividerSpace,
-    ].sum();
-    final expandDimension = layoutDirection.getMaxConstraint(constraints);
-    final expandSpace = expandDimension - takenSpace;
-    final expandSizes = _getExpandSizes(expandSpace);
-
-    final List<double> finalSizes = [];
-    for (var i = 0; i < childCount; i += 2) {
-      final child = children[i];
-      final size = sizes[i ~/ 2];
-      final constraints = switch (size) {
-        ResizableSizeExpand() => layoutDirection.copyConstraintsWith(
-            this.constraints,
-            expandSizes[i ~/ 2]!,
-          ),
-        _ => _getChildConstraints(
-            size: size,
-            index: i ~/ 2,
-            availableRatioSpace: availableRatioSpace,
-          ),
-      };
-
-      final childSize = _layoutChild(child, constraints);
-      finalSizes.add(childSize);
-
-      if (i < childCount - 1) {
-        final divider = children[i + 1];
-        final dividerIndex = i ~/ 2;
-        final dividerConstraints = _isDividerHidden(dividerIndex)
-            ? BoxConstraints.tight(layoutDirection.getSize(0, constraints))
-            : _getDividerConstraints(resizableChildren[dividerIndex].divider);
-        final dividerSize = _layoutChild(divider, dividerConstraints);
-        finalSizes.add(dividerSize);
-      }
-    }
+    final measuring = _fixedSizes == null;
+    final fullSizes = _fixedSizes ?? _allocate(children);
 
     size = constraints.biggest;
-    onComplete(finalSizes);
-  }
 
-  Map<int, double> _getExpandSizes(double availableSpace) {
-    bool isExpand(ResizableSize size) => size is ResizableSizeExpand;
-
-    final unfrozen = _sizes.indicesWhere(isExpand).toList();
-    final passLimit = unfrozen.length;
-    final sizes = <int, double>{};
-    var remainingSpace = availableSpace;
-    var remainingFlex = unfrozen.map(_flexAt).sum();
-
-    for (var pass = 0; pass < passLimit; pass++) {
-      final passSpace = remainingSpace;
-      final passFlex = remainingFlex;
-      // flex 0 is only asserted against, so release builds can still get
-      // here with passFlex == 0; return 0 instead of the NaN from 0/0.
-      double targetAt(int index) =>
-          passFlex == 0 ? 0 : passSpace * _flexAt(index) / passFlex;
-
-      var totalViolation = 0.0;
-      for (final index in unfrozen) {
-        final target = targetAt(index);
-        totalViolation += _clamp(target, _sizes[index]) - target;
-      }
-
-      // A NaN violation (unbounded space) matches no violator, so clamp the
-      // targets as-is rather than leave them unassigned.
-      if (totalViolation == 0 || totalViolation.isNaN) {
-        for (final index in unfrozen) {
-          sizes[index] = _clamp(targetAt(index), _sizes[index]);
-        }
-        return sizes;
-      }
-
-      for (final index in unfrozen) {
-        final target = targetAt(index);
-        final clamped = _clamp(target, _sizes[index]);
-        final isViolator =
-            totalViolation > 0 ? clamped > target : clamped < target;
-
-        if (isViolator) {
-          sizes[index] = clamped;
-          remainingSpace -= clamped;
-          remainingFlex -= _flexAt(index);
-        }
-      }
-      unfrozen.removeWhere(sizes.containsKey);
+    var position = 0.0;
+    final laidOutSizes = <double>[];
+    for (var i = 0; i < children.length; i++) {
+      final child = children[i];
+      child.layout(
+        BoxConstraints.tight(
+            layoutDirection.getSize(fullSizes[i], constraints)),
+        parentUsesSize: true,
+      );
+      final extent = layoutDirection.getSizeDimension(child.size);
+      final parentData = child.parentData as _ResizableLayoutParentData;
+      parentData.offset = _getChildOffset(position, extent);
+      position += extent;
+      laidOutSizes.add(extent);
     }
 
-    return sizes;
+    if (measuring) {
+      onComplete(laidOutSizes);
+    }
   }
 
-  int _flexAt(int index) => (_sizes[index] as ResizableSizeExpand).flex;
-
-  @override
-  void paint(PaintingContext context, Offset offset) {
-    defaultPaint(context, offset);
-  }
-
-  @override
-  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
-    return defaultHitTestChildren(result, position: position);
-  }
-
-  double _getPixelsSpace() {
-    final pixels = [
-      for (var i = 0; i < sizes.length; i++) ...[
-        if (sizes[i] case ResizableSizePixels(:final pixels)) ...[
-          _clamp(pixels, sizes[i]),
-        ],
+  List<double> _allocate(List<RenderBox> children) {
+    return allocateSizes(
+      extent: layoutDirection.getMaxConstraint(constraints),
+      sizes: sizes,
+      dividers: [
+        for (var i = 0; i < resizableChildren.length - 1; i++)
+          resizableChildren[i].divider,
       ],
-    ];
-
-    return pixels.sum();
+      hiddenIndices: hiddenIndices,
+      measureShrink: (index, cap) => _measureShrink(children[index * 2], cap),
+    );
   }
 
-  double _getShrinkSpace(List<RenderBox> children, double cap) {
-    var total = 0.0;
-    for (var i = 0; i < sizes.length; i++) {
-      if (sizes[i] is ResizableSizeShrink) {
-        final measured = _measureShrink(children[i * 2], cap);
-        final clamped = _clamp(measured, sizes[i]);
-        _shrinkSizes[i] = clamped;
-        total += clamped;
-      }
-    }
-    return total;
+  Offset _getChildOffset(double position, double extent) {
+    return switch (textDirection) {
+      TextDirection.ltr => layoutDirection.getOffset(position),
+      TextDirection.rtl => layoutDirection.getRtlOffset(position, extent, size),
+    };
   }
 
   double _measureShrink(RenderBox child, double cap) {
@@ -293,84 +221,30 @@ class ResizableLayoutRenderObject extends RenderBox
     return layoutDirection.getSizeDimension(size);
   }
 
-  double _getDividerSpace() {
-    var total = 0.0;
-    for (var i = 0; i < resizableChildren.length - 1; i++) {
-      if (_isDividerHidden(i)) {
-        continue;
-      }
-      final divider = resizableChildren[i].divider;
-      total += divider.thickness + divider.padding;
+  bool _hasExtent(RenderBox child) {
+    return layoutDirection.getSizeDimension(child.size) > 0;
+  }
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) => constraints.biggest;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    for (final child in getChildrenAsList()) {
+      if (!_hasExtent(child)) continue;
+      final parentData = child.parentData as _ResizableLayoutParentData;
+      context.paintChild(child, parentData.offset + offset);
     }
-    return total;
   }
 
-  BoxConstraints _getDividerConstraints(ResizableDivider divider) {
-    return BoxConstraints.tight(
-      layoutDirection.getSize(divider.thickness + divider.padding, constraints),
-    );
+  @override
+  void visitChildrenForSemantics(RenderObjectVisitor visitor) {
+    getChildrenAsList().where(_hasExtent).forEach(visitor);
   }
 
-  double _getAvailableRatioSpace({
-    required double pixelSpace,
-    required double shrinkSpace,
-    required double dividerSpace,
-  }) {
-    return layoutDirection.getMaxConstraint(constraints) -
-        pixelSpace -
-        shrinkSpace -
-        dividerSpace;
-  }
-
-  double _getRequiredRatioSpace(double availableSpace) {
-    final sizes = [
-      for (var i = 0; i < this.sizes.length; i++) ...[
-        if (this.sizes[i] case ResizableSizeRatio(:final ratio)) ...[
-          _clamp(ratio * availableSpace, this.sizes[i]),
-        ],
-      ],
-    ];
-
-    return sizes.sum();
-  }
-
-  BoxConstraints _getChildConstraints({
-    required ResizableSize size,
-    required int index,
-    required double availableRatioSpace,
-  }) {
-    final value = switch (size) {
-      ResizableSizePixels(:final pixels) => pixels,
-      ResizableSizeRatio(:final ratio) => ratio * availableRatioSpace,
-      ResizableSizeShrink() => _shrinkSizes[index] ?? 0,
-      ResizableSizeExpand() => throw Exception('Invalid size (expand)'),
-    };
-
-    final clampedValue = _clamp(value, size);
-    final childSize = layoutDirection.getSize(clampedValue, constraints);
-    final childConstraints = BoxConstraints.tight(childSize);
-
-    return childConstraints;
-  }
-
-  double _clamp(double value, ResizableSize size) {
-    return value.clamp(
-      size.min ?? 0,
-      size.max ?? double.infinity,
-    );
-  }
-
-  double _layoutChild(RenderBox child, BoxConstraints constraints) {
-    child.layout(constraints, parentUsesSize: true);
-    _setChildOffset(child);
-    final size = layoutDirection.getSizeDimension(child.size);
-    _currentPosition += size;
-    return size;
-  }
-
-  void _setChildOffset(RenderBox child) {
-    final parentData = child.parentData as _ResizableLayoutParentData;
-    parentData.offset = layoutDirection.getOffset(_currentPosition);
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    return defaultHitTestChildren(result, position: position);
   }
 }
 
