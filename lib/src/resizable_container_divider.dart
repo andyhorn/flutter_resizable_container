@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/divider_painter.dart';
-import 'package:flutter_resizable_container/src/resizable_divider.dart';
-import 'package:flutter_resizable_container/src/resizable_size.dart';
 
 class ResizableContainerDivider extends StatefulWidget {
   const ResizableContainerDivider({
@@ -38,7 +36,8 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   void didUpdateWidget(covariant ResizableContainerDivider oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (!(oldWidget.enabled && !widget.enabled)) return;
+    final becameDisabled = oldWidget.enabled && !widget.enabled;
+    if (!becameDisabled) return;
 
     final wasDragging = isDragging;
     final wasHovered = isHovered;

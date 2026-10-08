@@ -165,6 +165,22 @@ void main() {
       expect(tester.getTopLeft(find.byKey(childB)).dx, 0);
     });
 
+    testWidgets('re-lays out when the text direction changes', (tester) async {
+      await tester.pumpWidget(buildLayout(fixedSizes: const [100, 2, 498]));
+      expect(tester.getTopLeft(find.byKey(childA)).dx, 0);
+
+      await tester.pumpWidget(
+        buildLayout(
+          fixedSizes: const [100, 2, 498],
+          textDirection: TextDirection.rtl,
+        ),
+      );
+
+      expect(tester.getTopLeft(find.byKey(childA)).dx, 500);
+      expect(tester.getTopLeft(find.byKey(dividerKey)).dx, 498);
+      expect(tester.getTopLeft(find.byKey(childB)).dx, 0);
+    });
+
     testWidgets('lays out left-to-right by default', (tester) async {
       await tester.pumpWidget(buildLayout(fixedSizes: const [100, 2, 498]));
 
@@ -197,6 +213,21 @@ void main() {
         ),
       );
       expect(paints.value, 1);
+    });
+
+    testWidgets('dry layout reports the biggest size the constraints allow',
+        (tester) async {
+      await tester.pumpWidget(buildLayout());
+
+      final renderBox = tester.renderObject<RenderBox>(find.byKey(layoutKey));
+      const constraints = BoxConstraints(
+        minWidth: 10,
+        maxWidth: 300,
+        minHeight: 20,
+        maxHeight: 80,
+      );
+
+      expect(renderBox.getDryLayout(constraints), constraints.biggest);
     });
   });
 }

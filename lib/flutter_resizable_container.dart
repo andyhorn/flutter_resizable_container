@@ -5,4 +5,10 @@ export 'src/resizable_controller.dart' show ResizableController;
 export 'src/resizable_child.dart';
 export 'src/resizable_divider.dart';
 export 'src/resizable_hide_animation.dart';
-export 'src/resizable_size.dart' show ResizableSize;
+export 'src/resizable_size.dart'
+    show
+        ResizableSize,
+        ResizableSizeExpand,
+        ResizableSizePixels,
+        ResizableSizeRatio,
+        ResizableSizeShrink;

@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/box_constraints_ext.dart';
 import 'package:flutter_resizable_container/src/extensions/iterable_ext.dart';
+import 'package:flutter_resizable_container/src/extensions/resizable_children_ext.dart';
+import 'package:flutter_resizable_container/src/hidden_child_scope.dart';
 import 'package:flutter_resizable_container/src/hide_animation_coordinator.dart';
-import 'package:flutter_resizable_container/src/layout/divider_space.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_allocation.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_layout.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
@@ -14,6 +15,10 @@ import 'package:flutter_resizable_container/src/resizable_controller.dart';
 ///
 /// Dividing lines will be added between each child. Dragging the dividers
 /// will resize the children along the [direction] axis.
+///
+/// The container divides the space its parent gives it, so it needs a bounded
+/// width and height. Wrap it in an [Expanded] or a [SizedBox] when placing it
+/// inside a [Row], [Column], or scrollable.
 class ResizableContainer extends StatefulWidget {
   /// Creates a new [ResizableContainer] with the given [direction] and list
   /// of [children] Widgets.
@@ -80,7 +85,6 @@ class _ResizableContainerState extends State<ResizableContainer>
 
   Set<int> _prevHiddenIndices = const <int>{};
   double? _lastContainerExtent;
-  double _lastExtent = 0;
 
   @override
   void initState() {
@@ -222,6 +226,8 @@ class _ResizableContainerState extends State<ResizableContainer>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        _checkBounded(constraints);
+
         final availableSpace = _getAvailableSpace(constraints);
         final containerExtent = constraints.maxForDirection(widget.direction);
 
@@ -236,28 +242,52 @@ class _ResizableContainerState extends State<ResizableContainer>
 
         return AnimatedBuilder(
           animation: controller,
-          builder: (context, _) => _buildLayout(constraints),
+          builder: (context, _) {
+            return _ContainerLayout(
+              direction: widget.direction,
+              resizable: widget.resizable,
+              resizableChildren: widget.children,
+              sizes: controller.sizes,
+              hiddenIndices: controller.hiddenIndices,
+              fixedSizes: _fixedSizesForPhase(),
+              collapsing: _animation.phase != HideAnimationPhase.idle,
+              onComplete: _scheduleSetRenderedSizes,
+              onResizeUpdate: (index, delta) => manager.adjustChildSize(
+                index: index,
+                delta: delta,
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildLayout(BoxConstraints constraints) {
-    _lastExtent = constraints.maxForDirection(widget.direction);
+  void _checkBounded(BoxConstraints constraints) {
+    final unboundedAxes = [
+      if (!constraints.hasBoundedWidth) 'width',
+      if (!constraints.hasBoundedHeight) 'height',
+    ];
+    if (unboundedAxes.isEmpty) return;
 
-    return _ContainerLayout(
-      direction: widget.direction,
-      resizable: widget.resizable,
-      resizableChildren: widget.children,
-      sizes: controller.sizes,
-      hiddenIndices: controller.hiddenIndices,
-      fixedSizes: _fixedSizesForPhase(),
-      onComplete: _scheduleSetRenderedSizes,
-      onResizeUpdate: (index, delta) => manager.adjustChildSize(
-        index: index,
-        delta: delta,
+    throw FlutterError.fromParts([
+      ErrorSummary(
+        'ResizableContainer was given unbounded '
+        '${unboundedAxes.join(' and ')}.',
       ),
-    );
+      ErrorDescription(
+        'A ResizableContainer divides the space its parent gives it, so it '
+        'needs a bounded width and height. It was laid out with constraints '
+        '$constraints.',
+      ),
+      ErrorHint(
+        'This usually happens when a ResizableContainer is placed inside a '
+        'Row, Column, ListView, or other widget that gives its children '
+        'unlimited space along one axis. Wrap the ResizableContainer in an '
+        'Expanded, Flexible, SizedBox, or ConstrainedBox, or give its '
+        'parent a bounded size.',
+      ),
+    ]);
   }
 
   /// The full child/divider sizes to lay out at, or `null` to have
@@ -265,8 +295,6 @@ class _ResizableContainerState extends State<ResizableContainer>
   List<double>? _fixedSizesForPhase() {
     switch (_animation.phase) {
       case HideAnimationPhase.animating:
-        return _animation.currentSizes;
-
       case HideAnimationPhase.capturing:
         return _animation.currentSizes;
 
@@ -293,27 +321,21 @@ class _ResizableContainerState extends State<ResizableContainer>
     if (_animation.phase != HideAnimationPhase.capturing) return;
 
     final fullTarget = allocateSizes(
-      extent: _lastExtent,
+      extent: _lastContainerExtent ?? 0,
       sizes: controller.sizes,
-      dividers: [
-        for (var i = 0; i < widget.children.length - 1; i++)
-          widget.children[i].divider,
-      ],
+      dividers: widget.children.dividers,
       hiddenIndices: controller.hiddenIndices,
       measureShrink: (index, _) => controller.pixels[index],
     );
 
     manager.setRenderedSizes(fullTarget.evenIndices().toList());
 
-    // If hideAnimation was cleared between the capture frame and this
-    // callback, fall back to the instant-snap path.
-    final animation = widget.hideAnimation;
-    if (animation == null) {
-      _animation.cancel();
-      return;
-    }
-
-    _animation.startAnimation(target: fullTarget, animation: animation);
+    // didUpdateWidget resets the coordinator when hideAnimation is cleared, so
+    // the capturing phase guarantees it is non-null here.
+    _animation.startAnimation(
+      target: fullTarget,
+      animation: widget.hideAnimation!,
+    );
   }
 
   List<double> _deriveFullSizesFromController({Set<int>? hiddenIndices}) {
@@ -360,6 +382,7 @@ class _ContainerLayout extends StatelessWidget {
     required this.sizes,
     required this.hiddenIndices,
     required this.fixedSizes,
+    required this.collapsing,
     required this.onComplete,
     required this.onResizeUpdate,
   });
@@ -370,6 +393,7 @@ class _ContainerLayout extends StatelessWidget {
   final List<ResizableSize> sizes;
   final Set<int> hiddenIndices;
   final List<double>? fixedSizes;
+  final bool collapsing;
   final ValueChanged<List<double>> onComplete;
   final void Function(int index, double delta) onResizeUpdate;
 
@@ -385,7 +409,13 @@ class _ContainerLayout extends StatelessWidget {
 
     for (var i = 0; i <= lastIndex; i++) {
       final child = resizableChildren[i];
-      children.add(_PaneSlot(key: child.key, child: child.child));
+      final hidden = hiddenIndices.contains(i);
+      final scopedChild = HiddenChildScope(
+        hidden: hidden,
+        tickersEnabled: !hidden || collapsing,
+        child: child.child,
+      );
+      children.add(_PaneSlot(key: child.key, child: scopedChild));
 
       if (i == lastIndex) continue;
 

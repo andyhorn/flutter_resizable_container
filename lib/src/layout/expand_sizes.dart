@@ -25,7 +25,8 @@ Map<int, double> getExpandSizes(
       flex: remainingFlex,
     );
     final clamped = {
-      for (final index in pending) index: _clamp(targets[index]!, sizes[index]),
+      for (final index in pending)
+        index: clampToSize(targets[index]!, sizes[index]),
     };
     final totalViolation = _getTotalViolation(targets, clamped);
 
@@ -90,6 +91,7 @@ int _flexAt(List<ResizableSize> sizes, int index) {
   return (sizes[index] as ResizableSizeExpand).flex;
 }
 
-double _clamp(double value, ResizableSize size) {
+/// Clamps [value] to the min/max bounds of [size].
+double clampToSize(double value, ResizableSize size) {
   return value.clamp(size.min ?? 0, size.max ?? double.infinity);
 }
