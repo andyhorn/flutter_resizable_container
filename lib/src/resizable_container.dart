@@ -152,7 +152,7 @@ class _ResizableContainerState extends State<ResizableContainer>
       manager.setCascadeNegativeDelta(widget.cascadeNegativeDelta);
     }
 
-    if (!controllerChanged && (structuralChange || directionChanged)) {
+    if ((!controllerChanged && structuralChange) || directionChanged) {
       manager.setNeedsLayout();
     }
 
@@ -172,16 +172,7 @@ class _ResizableContainerState extends State<ResizableContainer>
     List<ResizableChild> oldChildren,
     List<ResizableChild> newChildren,
   ) {
-    if (oldChildren.length != newChildren.length) {
-      return true;
-    }
-    for (var i = 0; i < oldChildren.length; i++) {
-      if (oldChildren[i].size != newChildren[i].size ||
-          oldChildren[i].key != newChildren[i].key) {
-        return true;
-      }
-    }
-    return false;
+    return !oldChildren.hasSameStructureAs(newChildren);
   }
 
   @override

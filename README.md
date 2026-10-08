@@ -151,6 +151,12 @@ Calls to `setSizes` while a child is hidden store the new size and apply it
 the next time the child is shown; the child stays hidden until you call
 `show`.
 
+An external controller keeps its hidden indices and dragged sizes when its
+container is unmounted and mounted again (for example, switching tabs) with
+unchanged children (same count and declared sizes). If the children differ, the
+controller resets. Two containers that share a controller with identically
+shaped children share its state.
+
 ##### Animating hide/show
 
 By default, `hide`/`show` snap the affected child to its new size in a

@@ -2484,6 +2484,81 @@ void main() {
         );
       }
 
+      testWidgets('keeps matching state when a used controller is swapped in',
+          (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1000, 1000));
+        final first = ResizableController();
+        addTearDown(first.dispose);
+        final used = ResizableController();
+        addTearDown(used.dispose);
+
+        await tester.pumpWidget(buildApp(used));
+        await tester.pumpAndSettle();
+        used.hide(1);
+        await tester.pumpAndSettle();
+        final widthBefore = tester.getSize(find.byKey(const Key('A'))).width;
+
+        await tester.pumpWidget(buildApp(first));
+        await tester.pumpAndSettle();
+        await tester.pumpWidget(buildApp(used));
+        await tester.pumpAndSettle();
+
+        expect(used.hiddenIndices, {1});
+        expect(
+          tester.getSize(find.byKey(const Key('A'))).width,
+          closeTo(widthBefore, 0.01),
+        );
+      });
+
+      testWidgets('lays out again when the direction changes with a swap',
+          (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1000, 1000));
+        final first = ResizableController();
+        addTearDown(first.dispose);
+        final second = ResizableController();
+        addTearDown(second.dispose);
+
+        Widget build(ResizableController controller, Axis direction) {
+          return MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: controller,
+                direction: direction,
+                children: const [
+                  ResizableChild(
+                    size: ResizableSize.ratio(0.5),
+                    child: SizedBox.expand(key: Key('A')),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.ratio(0.5),
+                    child: SizedBox.expand(key: Key('B')),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        await tester.pumpWidget(build(first, Axis.horizontal));
+        await tester.pumpAndSettle();
+        await tester.drag(
+          find.byType(ResizableContainerDivider),
+          const Offset(200, 0),
+        );
+        await tester.pumpAndSettle();
+        expect(first.pixels[0], greaterThan(600));
+
+        await tester.pumpWidget(build(second, Axis.horizontal));
+        await tester.pumpAndSettle();
+
+        await tester.pumpWidget(build(first, Axis.vertical));
+        await tester.pumpAndSettle();
+
+        final size = tester.getSize(find.byKey(const Key('A')));
+        expect(size.width, closeTo(1000, 0.01));
+        expect(size.height, closeTo(499.5, 0.01));
+      });
+
       testWidgets('rebinds when a new controller is supplied', (tester) async {
         await tester.binding.setSurfaceSize(const Size(1000, 1000));
         final first = ResizableController();

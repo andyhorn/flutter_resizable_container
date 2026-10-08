@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show precisionErrorTolerance;
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/extensions/num_ext.dart';
+import 'package:flutter_resizable_container/src/extensions/resizable_children_ext.dart';
 import 'package:flutter_resizable_container/src/layout/expand_sizes.dart';
 
 /// The effective [ResizableSize] applied to a hidden child.
@@ -234,6 +235,10 @@ class ResizableController with ChangeNotifier {
   }
 
   void _initChildren(List<ResizableChild> children) {
+    if (_children.isNotEmpty && _children.hasSameStructureAs(children)) {
+      _updateChildrenInPlace(children);
+      return;
+    }
     _setChildren(children, notify: false);
   }
 
