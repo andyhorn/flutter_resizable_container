@@ -916,6 +916,117 @@ void main() {
       expect(controller.pixels.last, moreOrLessEquals(200, epsilon: 2));
     });
 
+    group('expand sizing with constraints', () {
+      Future<List<double>> pumpExpands(
+        WidgetTester tester, {
+        required double expandSpace,
+        required List<ResizableSize> sizes,
+      }) async {
+        final dividerSpace = (sizes.length - 1).toDouble();
+        await tester.binding.setSurfaceSize(
+          Size(expandSpace + dividerSpace, 1000),
+        );
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                direction: Axis.horizontal,
+                children: [
+                  for (var i = 0; i < sizes.length; i++)
+                    ResizableChild(
+                      size: sizes[i],
+                      child: SizedBox.expand(key: Key('Box$i')),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        return [
+          for (var i = 0; i < sizes.length; i++)
+            tester.getSize(find.byKey(Key('Box$i'))).width,
+        ];
+      }
+
+      testWidgets('splits by flex when nothing is constrained', (tester) async {
+        final widths = await pumpExpands(
+          tester,
+          expandSpace: 400,
+          sizes: const [
+            ResizableSize.expand(flex: 1),
+            ResizableSize.expand(flex: 3),
+          ],
+        );
+
+        expect(widths, equals([100, 300]));
+      });
+
+      testWidgets('recomputes shares after a max violation', (tester) async {
+        final widths = await pumpExpands(
+          tester,
+          expandSpace: 400,
+          sizes: const [
+            ResizableSize.expand(flex: 1, max: 50),
+            ResizableSize.expand(flex: 1),
+            ResizableSize.expand(flex: 2),
+          ],
+        );
+
+        expect(widths[0], equals(50));
+        expect(widths[1], moreOrLessEquals(350 / 3));
+        expect(widths[2], moreOrLessEquals(700 / 3));
+      });
+
+      testWidgets('recomputes shares after a min violation', (tester) async {
+        final widths = await pumpExpands(
+          tester,
+          expandSpace: 400,
+          sizes: const [
+            ResizableSize.expand(flex: 1, min: 200),
+            ResizableSize.expand(flex: 1),
+            ResizableSize.expand(flex: 2),
+          ],
+        );
+
+        expect(widths[0], equals(200));
+        expect(widths[1], moreOrLessEquals(200 / 3));
+        expect(widths[2], moreOrLessEquals(400 / 3));
+      });
+
+      testWidgets('freezes only the net violation direction', (tester) async {
+        final widths = await pumpExpands(
+          tester,
+          expandSpace: 488,
+          sizes: const [
+            ResizableSize.expand(flex: 3, max: 145),
+            ResizableSize.expand(flex: 3, min: 283),
+            ResizableSize.expand(flex: 2, max: 196),
+          ],
+        );
+
+        expect(widths, equals([123, 283, 82]));
+      });
+
+      testWidgets('ends at the minimums when space is too small',
+          (tester) async {
+        final widths = await pumpExpands(
+          tester,
+          expandSpace: 100,
+          sizes: const [
+            ResizableSize.expand(flex: 1, min: 80),
+            ResizableSize.expand(flex: 1, min: 60),
+          ],
+        );
+
+        expect(tester.takeException(), isFlutterError);
+        expect(widths, equals([80, 60]));
+      });
+    });
+
     group('when changing the screen size', () {
       group('with a shrink and expand child', () {
         testWidgets(

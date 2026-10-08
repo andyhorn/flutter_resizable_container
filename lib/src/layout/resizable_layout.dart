@@ -203,52 +203,45 @@ class ResizableLayoutRenderObject extends RenderBox
     bool isExpand(ResizableSize size) => size is ResizableSizeExpand;
 
     final expandIndices = _sizes.indicesWhere(isExpand).toList();
+    final frozen = <int, double>{};
+    var unfrozen = expandIndices;
 
-    if (expandIndices.isEmpty) {
-      return {};
-    }
+    while (unfrozen.isNotEmpty) {
+      final remainingSpace = availableSpace - frozen.values.sum();
+      final remainingFlex = unfrozen.map(_flexAt).sum();
 
-    final allocatedSpace = <int, double>{
-      for (final index in expandIndices) index: 0.0,
-    };
+      final targets = {
+        for (final index in unfrozen)
+          index: remainingSpace * _flexAt(index) / remainingFlex,
+      };
+      final clamped = {
+        for (final index in unfrozen)
+          index: _clamp(targets[index]!, _sizes[index]),
+      };
+      final totalViolation = [
+        for (final index in unfrozen) clamped[index]! - targets[index]!,
+      ].sum();
 
-    var remainingFlex = _getFlexCount();
-    var remainingSpace = availableSpace;
-
-    // Bounded to defend against floating-point residue that could otherwise
-    // keep `didChange` true forever. Each pass either removes at least one
-    // clamped item or makes a final redistribution; the natural termination
-    // pass adds one more iteration.
-    final maxIterations = expandIndices.length + 2;
-
-    for (var iter = 0; iter < maxIterations && remainingFlex > 0; iter++) {
-      var didChange = false;
-      final toRemove = <int>[];
-      final perFlex = remainingSpace / remainingFlex;
-
-      for (final index in expandIndices) {
-        final size = _sizes[index] as ResizableSizeExpand;
-        final currentValue = allocatedSpace[index]!;
-        final targetSize = currentValue + perFlex * size.flex;
-        final clampedValue = _clamp(targetSize, size);
-
-        if (clampedValue != currentValue) {
-          remainingSpace -= clampedValue - currentValue;
-          allocatedSpace[index] = clampedValue;
-          didChange = true;
-        } else {
-          remainingFlex -= size.flex;
-          toRemove.add(index);
-        }
+      if (totalViolation == 0) {
+        return {...frozen, ...clamped};
       }
 
-      expandIndices.removeWhere(toRemove.contains);
+      final violators = unfrozen.where((index) {
+        return totalViolation > 0
+            ? clamped[index]! > targets[index]!
+            : clamped[index]! < targets[index]!;
+      }).toList();
 
-      if (!didChange) break;
+      for (final index in violators) {
+        frozen[index] = clamped[index]!;
+      }
+      unfrozen = unfrozen.where((i) => !frozen.containsKey(i)).toList();
     }
 
-    return allocatedSpace;
+    return frozen;
   }
+
+  int _flexAt(int index) => (_sizes[index] as ResizableSizeExpand).flex;
 
   @override
   void paint(PaintingContext context, Offset offset) {
@@ -331,10 +324,6 @@ class ResizableLayoutRenderObject extends RenderBox
     ];
 
     return sizes.sum();
-  }
-
-  int _getFlexCount() {
-    return sizes.whereType<ResizableSizeExpand>().map((s) => s.flex).sum();
   }
 
   BoxConstraints _getChildConstraints({
