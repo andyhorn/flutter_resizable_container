@@ -11,7 +11,8 @@ import 'package:flutter_resizable_container/src/resizable_container_divider.dart
 /// [sizes] alternates child and divider extents, as the layout receives them.
 /// [dividerKeys] holds the key for the divider that follows each child, or
 /// `null` to match it by position. A divider whose neighbour is in
-/// [hiddenIndices] stays mounted at zero extent and is disabled.
+/// [hiddenIndices] stays mounted at zero extent, ignoring its
+/// [ResizableDivider.hitSlop], and is disabled.
 class ResizableDividerOverlay extends StatelessWidget {
   const ResizableDividerOverlay({
     super.key,
@@ -36,6 +37,10 @@ class ResizableDividerOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final extents = [for (final size in sizes) math.max(0.0, size)];
     final offsets = _dividerOffsets(extents);
+    final slops = [
+      for (var i = 0; i < dividers.length; i++)
+        isDividerHidden(hiddenIndices, i) ? 0.0 : dividers[i].hitSlop,
+    ];
 
     return Stack(
       clipBehavior: Clip.none,
@@ -44,8 +49,8 @@ class ResizableDividerOverlay extends StatelessWidget {
           _DividerPosition(
             key: dividerKeys[i],
             direction: direction,
-            offset: offsets[i],
-            extent: extents[i * 2 + 1],
+            offset: offsets[i] - slops[i],
+            extent: extents[i * 2 + 1] + 2 * slops[i],
             child: ResizableContainerDivider(
               config: dividers[i],
               direction: direction,
