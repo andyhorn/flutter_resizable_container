@@ -457,6 +457,7 @@ void main() {
                     config: config,
                     enabled: enabled,
                     onResizeUpdate: (_) {},
+                    positionAfter: (_) => 0,
                   ),
                 ),
               ),

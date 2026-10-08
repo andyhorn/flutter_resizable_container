@@ -40,7 +40,7 @@ Rect _rect(WidgetTester tester, Finder finder) {
 // The divider targets are translucent, so hitTestable() is unreliable for them.
 bool _isHit(WidgetTester tester, Finder divider) {
   final region = tester.renderObject(
-    find.descendant(of: divider, matching: find.byType(MouseRegion)),
+    find.descendant(of: divider, matching: find.byType(MouseRegion)).first,
   );
   final result = tester.hitTestOnBinding(tester.getCenter(divider));
   return result.path.any((entry) => identical(entry.target, region));

@@ -63,8 +63,9 @@ class ResizableContainer extends StatefulWidget {
   /// Whether dividers in this container respond to user input.
   ///
   /// When `false`, every divider is locked — drag, tap, and hover callbacks
-  /// will not fire and the resize cursor is not shown. Individual dividers
-  /// can also be locked via [ResizableDivider.enabled]; a divider is
+  /// will not fire, the resize cursor is not shown, and the dividers cannot be
+  /// focused or resized through the keyboard or semantic actions. Individual
+  /// dividers can also be locked via [ResizableDivider.enabled]; a divider is
   /// interactive only when both this flag and its own `enabled` flag are
   /// `true`. Programmatic resizing via [ResizableController] is unaffected.
   ///
@@ -342,6 +343,7 @@ class _ResizableContainerState extends State<ResizableContainer>
                       hiddenIndices: hiddenIndices,
                       resizable: widget.resizable,
                       onResizeUpdate: _onDividerDrag,
+                      positionAfter: _dividerPositionAfter,
                     ),
                   ),
                 ),
@@ -474,6 +476,10 @@ class _ResizableContainerState extends State<ResizableContainer>
     _remeasureShrinkOnIdle = false;
     _animation.cancel();
     manager.adjustChildSize(index: dividerIndex, delta: delta);
+  }
+
+  double _dividerPositionAfter(int dividerIndex, double delta) {
+    return manager.dividerPositionAfter(index: dividerIndex, delta: delta);
   }
 
   double _getAvailableSpace(BoxConstraints constraints) {
