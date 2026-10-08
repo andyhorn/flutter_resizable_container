@@ -205,8 +205,14 @@ class _ResizableContainerState extends State<ResizableContainer>
       return;
     }
 
-    if (widget.hideAnimation != null) {
-      _beginHideAnimation(revealed: _prevHiddenIndices.difference(newHidden));
+    final hideAnimation = widget.hideAnimation;
+    if (hideAnimation != null) {
+      final revealed = _prevHiddenIndices.difference(newHidden);
+      if (controller.needsLayout) {
+        _beginHideAnimation(revealed: revealed);
+      } else {
+        _animateHiddenChange(revealed: revealed, animation: hideAnimation);
+      }
     }
 
     _prevHiddenIndices = Set.of(newHidden);
@@ -255,6 +261,28 @@ class _ResizableContainerState extends State<ResizableContainer>
     }
   }
 
+  void _animateHiddenChange({
+    required Set<int> revealed,
+    required ResizableHideAnimation animation,
+  }) {
+    final from = _deriveFullSizesFromController(
+      pixels: manager.pixelsBeforeHiddenChange,
+      hiddenIndices: _prevHiddenIndices,
+    );
+    final to = _deriveFullSizesFromController();
+    _animation
+      ..beginCapture(from)
+      ..startAnimation(target: to, animation: animation);
+
+    final sizes = controller.sizes;
+    final revealedShrink = revealed.any(
+      (index) => index < sizes.length && sizes[index] is ResizableSizeShrink,
+    );
+    if (revealedShrink) {
+      _remeasureShrinkOnIdle = true;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -285,10 +313,7 @@ class _ResizableContainerState extends State<ResizableContainer>
               fixedSizes: _fixedSizesForPhase(),
               collapsing: _animation.phase != HideAnimationPhase.idle,
               onComplete: _scheduleSetRenderedSizes,
-              onResizeUpdate: (index, delta) => manager.adjustChildSize(
-                index: index,
-                delta: delta,
-              ),
+              onResizeUpdate: _onDividerDrag,
             );
           },
         );
@@ -379,18 +404,31 @@ class _ResizableContainerState extends State<ResizableContainer>
     );
   }
 
-  List<double> _deriveFullSizesFromController({Set<int>? hiddenIndices}) {
+  List<double> _deriveFullSizesFromController({
+    List<double>? pixels,
+    Set<int>? hiddenIndices,
+  }) {
+    final childPixels = pixels ?? controller.pixels;
     final hidden = hiddenIndices ?? controller.hiddenIndices;
-    final pixels = controller.pixels;
     final dividerSizes = dividerExtents(widget.children.dividers, hidden);
     final result = <double>[];
     for (var i = 0; i < widget.children.length; i++) {
-      result.add(pixels[i]);
+      result.add(childPixels[i]);
       if (i < dividerSizes.length) {
         result.add(dividerSizes[i]);
       }
     }
     return result;
+  }
+
+  void _onDividerDrag(int dividerIndex, double delta) {
+    // The pending capture callback would overwrite a drag made now.
+    if (_animation.phase == HideAnimationPhase.capturing) return;
+
+    // A re-measure would overwrite the drag once a later animation settles.
+    _remeasureShrinkOnIdle = false;
+    _animation.cancel();
+    manager.adjustChildSize(index: dividerIndex, delta: delta);
   }
 
   double _getAvailableSpace(BoxConstraints constraints) {

@@ -1709,6 +1709,39 @@ void main() {
       );
 
       testWidgets(
+        'keeps a dragged sibling size across hide and show',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          addTearDown(() async => await tester.binding.setSurfaceSize(null));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(buildHarness(controller: controller));
+          await tester.pumpAndSettle();
+
+          await tester.drag(
+            find.byType(ResizableContainerDivider).last,
+            const Offset(kDragSlopDefault + 30, 0),
+          );
+          await tester.pumpAndSettle();
+
+          double widthOf(String key) =>
+              tester.getSize(find.byKey(Key(key))).width;
+
+          expect(widthOf('B'), 230);
+
+          controller.hide(0);
+          await tester.pumpAndSettle();
+          controller.show(0);
+          await tester.pumpAndSettle();
+
+          expect(widthOf('A'), 200);
+          expect(widthOf('B'), 230);
+          expect(widthOf('C'), 166);
+        },
+      );
+
+      testWidgets(
         'interpolates the hidden child width between start and target',
         (tester) async {
           await tester.binding.setSurfaceSize(const Size(600, 400));
@@ -1727,8 +1760,8 @@ void main() {
           expect(initialWidth, 200);
 
           controller.hide(1);
-          // pump #1: capture-target frame, schedules animation start in
-          // its post-frame callback.
+          // pump #1: the animation already started in the hide notification;
+          // this frame renders it at t = 0 and schedules the first tick.
           await tester.pump();
           // pump #2: first ticker tick — Ticker captures its start time on
           // the first tick, so elapsed is 0 here.
@@ -2140,9 +2173,8 @@ void main() {
           controller.hide(0);
           await tester.pump();
 
-          // The container has captured the target via the offstage layout
-          // and pushed it into the controller — so pixels[0] is 0 well
-          // before the visible transition finishes.
+          // The controller redistributes its pixels as soon as it hides, so
+          // pixels[0] is 0 well before the visible transition finishes.
           expect(controller.pixels[0], 0);
 
           await tester.pumpAndSettle();
@@ -2179,6 +2211,196 @@ void main() {
           final midWidth = tester.getSize(find.byKey(const Key('B'))).width;
           expect(midWidth, lessThan(200));
           expect(midWidth, greaterThan(0));
+        },
+      );
+
+      testWidgets(
+        'animates from the pre-change pixels after a window resize',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          addTearDown(() async => await tester.binding.setSurfaceSize(null));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          await tester.binding.setSurfaceSize(const Size(800, 400));
+          await tester.pumpAndSettle();
+          expect(tester.getSize(find.byKey(const Key('C'))).width, 396);
+
+          controller.hide(1);
+          await tester.pump();
+
+          expect(tester.getSize(find.byKey(const Key('A'))).width, 200);
+          expect(tester.getSize(find.byKey(const Key('B'))).width, 200);
+          expect(tester.getSize(find.byKey(const Key('C'))).width, 396);
+        },
+      );
+
+      testWidgets(
+        'a divider drag cancels the running animation',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          addTearDown(() async => await tester.binding.setSurfaceSize(null));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(0);
+          await tester.pump();
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 50));
+
+          await tester.drag(
+            find.byType(ResizableContainerDivider).last,
+            const Offset(kDragSlopDefault + 20, 0),
+          );
+          await tester.pump();
+
+          double widthOf(String key) =>
+              tester.getSize(find.byKey(Key(key))).width;
+
+          expect(widthOf('A'), 0);
+          expect(widthOf('B'), controller.pixels[1]);
+          expect(widthOf('C'), controller.pixels[2]);
+          final widthB = widthOf('B');
+
+          await tester.pumpAndSettle();
+
+          expect(widthOf('B'), widthB);
+          expect(widthOf('B'), 220);
+        },
+      );
+
+      testWidgets(
+        'ignores a divider drag during the capture frame',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          addTearDown(() async => await tester.binding.setSurfaceSize(null));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          // setSizes forces a layout pass, so hide takes the capture flow.
+          controller.setSizes(const [
+            ResizableSize.pixels(200),
+            ResizableSize.pixels(200),
+            ResizableSize.expand(),
+          ]);
+          controller.hide(1);
+          final before = List.of(controller.pixels);
+
+          final gesture = await tester.startGesture(
+            tester.getCenter(find.byType(ResizableContainerDivider).first),
+          );
+          await gesture.moveBy(const Offset(40, 0));
+          await gesture.moveBy(const Offset(10, 0));
+          await gesture.up();
+
+          expect(controller.pixels, equals(before));
+
+          await tester.pumpAndSettle();
+
+          expect(tester.getSize(find.byKey(const Key('B'))).width, 0);
+          expect(tester.getSize(find.byKey(const Key('C'))).width, 400);
+        },
+      );
+
+      testWidgets(
+        'a hide during a running animation continues from the current sizes',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          addTearDown(() async => await tester.binding.setSurfaceSize(null));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(1);
+          await tester.pump();
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 100));
+
+          final midWidthC = tester.getSize(find.byKey(const Key('C'))).width;
+          expect(midWidthC, greaterThan(196));
+          expect(midWidthC, lessThan(400));
+
+          controller.hide(0);
+          await tester.pump();
+
+          expect(
+            tester.getSize(find.byKey(const Key('C'))).width,
+            closeTo(midWidthC, 1e-6),
+          );
+
+          await tester.pumpAndSettle();
+
+          expect(tester.getSize(find.byKey(const Key('C'))).width, 600);
+        },
+      );
+
+      testWidgets(
+        'show after setSizes while hidden still animates',
+        (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          addTearDown(() async => await tester.binding.setSurfaceSize(null));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            buildHarness(
+              controller: controller,
+              hideAnimation: const ResizableHideAnimation(),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          controller.hide(1);
+          await tester.pumpAndSettle();
+
+          controller.setSizes(const [
+            ResizableSize.pixels(200),
+            ResizableSize.pixels(150),
+            ResizableSize.expand(),
+          ]);
+          controller.show(1);
+          await tester.pump();
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 100));
+
+          final midWidth = tester.getSize(find.byKey(const Key('B'))).width;
+          expect(midWidth, greaterThan(0));
+          expect(midWidth, lessThan(150));
+
+          await tester.pumpAndSettle();
+
+          expect(tester.getSize(find.byKey(const Key('B'))).width, 150);
         },
       );
 
@@ -2684,7 +2906,7 @@ void main() {
         expect(notifies, 1);
       });
 
-      testWidgets('hide produces exactly two notifies', (tester) async {
+      testWidgets('hide produces exactly one notify', (tester) async {
         await tester.binding.setSurfaceSize(const Size(600, 400));
         final controller = ResizableController();
         addTearDown(controller.dispose);
@@ -2721,10 +2943,9 @@ void main() {
         controller.hide(1);
         await tester.pumpAndSettle();
 
-        // Two notifies: one from setHidden (sizes/hiddenIndices changed)
-        // and one from the post-frame setRenderedSizes (rendered pixels
-        // changed and the build path switches back to the flex layout).
-        expect(notifies, 2);
+        // Pixels are already valid, so hiding redistributes them in place
+        // and no layout pass follows.
+        expect(notifies, 1);
       });
     });
 
