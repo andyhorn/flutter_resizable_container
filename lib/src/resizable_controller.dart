@@ -22,6 +22,7 @@ class ResizableController with ChangeNotifier {
   List<ResizableChild> _children = const [];
   final Set<int> _hiddenIndices = <int>{};
   final Map<int, ResizableSize> _savedSizes = <int, ResizableSize>{};
+  final Map<int, double> _savedPixels = <int, double>{};
   bool _needsLayout = false;
   bool _cascadeNegativeDelta = false;
 
@@ -71,6 +72,11 @@ class ResizableController with ChangeNotifier {
 
     if (hidden) {
       _savedSizes[index] = _sizes[index];
+      // A zero here can mean "shown but not yet re-rendered", so it must not
+      // overwrite the width remembered from the last time it was visible.
+      if (_pixels[index] > 0) {
+        _savedPixels[index] = _pixels[index];
+      }
       _sizes = [..._sizes]..[index] = _hiddenSize;
       _hiddenIndices.add(index);
     } else {
@@ -126,6 +132,7 @@ class ResizableController with ChangeNotifier {
 
     for (final index in _hiddenIndices) {
       _savedSizes[index] = sizes[index];
+      _savedPixels.remove(index);
     }
 
     _sizes = effective;
@@ -221,6 +228,7 @@ class ResizableController with ChangeNotifier {
     _pixels = List.filled(children.length, 0);
     _hiddenIndices.clear();
     _savedSizes.clear();
+    _savedPixels.clear();
     _needsLayout = true;
 
     if (notify) {
@@ -541,6 +549,11 @@ final class ResizableControllerManager {
   void setNeedsLayout() {
     _controller._needsLayout = true;
   }
+
+  /// The rendered size of the child at [index] from just before it was last
+  /// hidden, or `null` when it is unknown (never rendered, or its size was
+  /// replaced while hidden).
+  double? savedPixels(int index) => _controller._savedPixels[index];
 
   void initChildren(List<ResizableChild> children) {
     _controller._initChildren(children);

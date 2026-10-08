@@ -86,6 +86,10 @@ class _ResizableContainerState extends State<ResizableContainer>
   Set<int> _prevHiddenIndices = const <int>{};
   double? _lastContainerExtent;
 
+  /// Pre-hide widths of `shrink` children being shown, for the animation
+  /// target because their last rendered width is 0 while hidden.
+  final Map<int, double> _revealedShrinkPixels = <int, double>{};
+
   @override
   void initState() {
     super.initState();
@@ -201,18 +205,7 @@ class _ResizableContainerState extends State<ResizableContainer>
     }
 
     if (widget.hideAnimation != null) {
-      // The controller has already flipped its hidden state, but pixels and
-      // dividers are still rendered at the pre-transition values, so the
-      // from-snapshot must be derived against the previous hidden set.
-      _animation.beginCapture(
-        _deriveFullSizesFromController(hiddenIndices: _prevHiddenIndices),
-      );
-      if (_animation.claimTargetSlot()) {
-        final capturingManager = manager;
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) => _startAnimationFromCapture(capturingManager),
-        );
-      }
+      _beginHideAnimation(revealed: _prevHiddenIndices.difference(newHidden));
     }
 
     _prevHiddenIndices = Set.of(newHidden);
@@ -220,6 +213,45 @@ class _ResizableContainerState extends State<ResizableContainer>
     // Hiding or showing a child changes the visible divider space, which is
     // only recomputed when the LayoutBuilder re-runs.
     _rebuild();
+  }
+
+  void _beginHideAnimation({required Set<int> revealed}) {
+    // An unfinished capture still needs the entries recorded for it.
+    if (_animation.phase != HideAnimationPhase.capturing) {
+      _revealedShrinkPixels.clear();
+    }
+
+    for (final index in revealed) {
+      // A structural change resets the controller, so a hidden index can
+      // point past the end of the new list.
+      if (index >= controller.sizes.length ||
+          controller.sizes[index] is! ResizableSizeShrink) {
+        continue;
+      }
+
+      final pixels = manager.savedPixels(index);
+      if (pixels == null) {
+        // Without a known width the animation target can't be computed, so
+        // let the real layout measure it and show the child instantly.
+        _animation.cancel();
+        return;
+      }
+
+      _revealedShrinkPixels[index] = pixels;
+    }
+
+    // The controller has already flipped its hidden state, but pixels and
+    // dividers are still rendered at the pre-transition values, so the
+    // from-snapshot must be derived against the previous hidden set.
+    _animation.beginCapture(
+      _deriveFullSizesFromController(hiddenIndices: _prevHiddenIndices),
+    );
+    if (_animation.claimTargetSlot()) {
+      final capturingManager = manager;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _startAnimationFromCapture(capturingManager),
+      );
+    }
   }
 
   @override
@@ -325,8 +357,10 @@ class _ResizableContainerState extends State<ResizableContainer>
       sizes: controller.sizes,
       dividers: widget.children.dividers,
       hiddenIndices: controller.hiddenIndices,
-      measureShrink: (index, _) => controller.pixels[index],
+      measureShrink: (index, _) =>
+          _revealedShrinkPixels[index] ?? controller.pixels[index],
     );
+    _revealedShrinkPixels.clear();
 
     manager.setRenderedSizes(fullTarget.evenIndices().toList());
 

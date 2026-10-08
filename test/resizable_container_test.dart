@@ -2181,6 +2181,284 @@ void main() {
           expect(midWidth, greaterThan(0));
         },
       );
+
+      group('showing a shrink child', () {
+        Widget buildShrinkHarness(ResizableController controller) {
+          return MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: controller,
+                direction: Axis.horizontal,
+                hideAnimation: const ResizableHideAnimation(),
+                children: const [
+                  ResizableChild(
+                    size: ResizableSize.shrink(),
+                    child: SizedBox(key: Key('S'), width: 150),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.expand(),
+                    child: SizedBox.expand(key: Key('E')),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        double widthOf(WidgetTester tester, String key) =>
+            tester.getSize(find.byKey(Key(key))).width;
+
+        testWidgets(
+          'animates back to its natural width',
+          (tester) async {
+            await tester.binding.setSurfaceSize(const Size(600, 400));
+            final controller = ResizableController();
+            addTearDown(controller.dispose);
+
+            await tester.pumpWidget(buildShrinkHarness(controller));
+            await tester.pumpAndSettle();
+            expect(widthOf(tester, 'S'), 150);
+
+            controller.hide(0);
+            await tester.pumpAndSettle();
+            expect(widthOf(tester, 'S'), 0);
+
+            controller.show(0);
+            await tester.pump();
+            await tester.pump();
+            await tester.pump(const Duration(milliseconds: 100));
+
+            final midWidth = widthOf(tester, 'S');
+            expect(midWidth, greaterThan(0));
+            expect(midWidth, lessThan(150));
+
+            await tester.pumpAndSettle();
+
+            expect(widthOf(tester, 'S'), 150);
+            expect(controller.pixels[0], 150);
+            expect(controller.isHidden(0), isFalse);
+          },
+        );
+
+        testWidgets(
+          'restores the width when the show interrupts the hide animation',
+          (tester) async {
+            await tester.binding.setSurfaceSize(const Size(600, 400));
+            final controller = ResizableController();
+            addTearDown(controller.dispose);
+
+            await tester.pumpWidget(buildShrinkHarness(controller));
+            await tester.pumpAndSettle();
+
+            controller.hide(0);
+            await tester.pump();
+            await tester.pump();
+            await tester.pump(const Duration(milliseconds: 50));
+
+            controller.show(0);
+            await tester.pumpAndSettle();
+
+            expect(widthOf(tester, 'S'), 150);
+            expect(controller.pixels[0], 150);
+          },
+        );
+
+        testWidgets(
+          'stays between hidden and full width when the show interrupts the '
+          'hide animation',
+          (tester) async {
+            await tester.binding.setSurfaceSize(const Size(600, 400));
+            final controller = ResizableController();
+            addTearDown(controller.dispose);
+
+            await tester.pumpWidget(buildShrinkHarness(controller));
+            await tester.pumpAndSettle();
+
+            controller.hide(0);
+            await tester.pump();
+            await tester.pump();
+            await tester.pump(const Duration(milliseconds: 100));
+
+            controller.show(0);
+            await tester.pump();
+
+            final width = widthOf(tester, 'S');
+            expect(width, greaterThan(0));
+            expect(width, lessThan(150));
+
+            await tester.pumpAndSettle();
+          },
+        );
+
+        testWidgets(
+          'restores every shrink child shown before the capture completes',
+          (tester) async {
+            await tester.binding.setSurfaceSize(const Size(600, 400));
+            final controller = ResizableController();
+            addTearDown(controller.dispose);
+
+            await tester.pumpWidget(
+              MaterialApp(
+                home: Scaffold(
+                  body: ResizableContainer(
+                    controller: controller,
+                    direction: Axis.horizontal,
+                    hideAnimation: const ResizableHideAnimation(),
+                    children: const [
+                      ResizableChild(
+                        size: ResizableSize.shrink(),
+                        child: SizedBox(key: Key('S1'), width: 150),
+                      ),
+                      ResizableChild(
+                        size: ResizableSize.shrink(),
+                        child: SizedBox(key: Key('S2'), width: 90),
+                      ),
+                      ResizableChild(
+                        size: ResizableSize.expand(),
+                        child: SizedBox.expand(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+
+            controller
+              ..hide(0)
+              ..hide(1);
+            await tester.pumpAndSettle();
+
+            controller
+              ..show(0)
+              ..show(1);
+            await tester.pumpAndSettle();
+
+            expect(widthOf(tester, 'S1'), 150);
+            expect(widthOf(tester, 'S2'), 90);
+            expect(controller.pixels.take(2), [150, 90]);
+          },
+        );
+
+        testWidgets(
+          'restores the width without a hideAnimation',
+          (tester) async {
+            await tester.binding.setSurfaceSize(const Size(600, 400));
+            final controller = ResizableController();
+            addTearDown(controller.dispose);
+
+            await tester.pumpWidget(
+              MaterialApp(
+                home: Scaffold(
+                  body: ResizableContainer(
+                    controller: controller,
+                    direction: Axis.horizontal,
+                    children: const [
+                      ResizableChild(
+                        size: ResizableSize.shrink(),
+                        child: SizedBox(key: Key('S'), width: 150),
+                      ),
+                      ResizableChild(
+                        size: ResizableSize.expand(),
+                        child: SizedBox.expand(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+
+            controller.hide(0);
+            await tester.pumpAndSettle();
+            controller.show(0);
+            await tester.pumpAndSettle();
+
+            expect(widthOf(tester, 'S'), 150);
+          },
+        );
+
+        testWidgets(
+          'does not throw when children shrink while the last is hidden',
+          (tester) async {
+            await tester.binding.setSurfaceSize(const Size(600, 400));
+            final controller = ResizableController();
+            addTearDown(controller.dispose);
+
+            Widget build(List<ResizableChild> children) {
+              return MaterialApp(
+                home: Scaffold(
+                  body: ResizableContainer(
+                    controller: controller,
+                    direction: Axis.horizontal,
+                    hideAnimation: const ResizableHideAnimation(),
+                    children: children,
+                  ),
+                ),
+              );
+            }
+
+            await tester.pumpWidget(
+              build(const [
+                ResizableChild(
+                  size: ResizableSize.expand(),
+                  child: SizedBox.expand(),
+                ),
+                ResizableChild(
+                  size: ResizableSize.shrink(),
+                  child: SizedBox(width: 150),
+                ),
+              ]),
+            );
+            await tester.pumpAndSettle();
+
+            controller.hide(1);
+            await tester.pumpAndSettle();
+
+            await tester.pumpWidget(
+              build(const [
+                ResizableChild(
+                  size: ResizableSize.expand(),
+                  child: SizedBox.expand(),
+                ),
+              ]),
+            );
+            await tester.pumpAndSettle();
+
+            expect(tester.takeException(), isNull);
+            expect(controller.pixels, hasLength(1));
+          },
+        );
+
+        testWidgets(
+          'skips the animation when the size changed while hidden',
+          (tester) async {
+            await tester.binding.setSurfaceSize(const Size(600, 400));
+            final controller = ResizableController();
+            addTearDown(controller.dispose);
+
+            await tester.pumpWidget(buildShrinkHarness(controller));
+            await tester.pumpAndSettle();
+
+            controller.hide(0);
+            await tester.pumpAndSettle();
+
+            controller.setSizes(const [
+              ResizableSize.shrink(max: 100),
+              ResizableSize.expand(),
+            ]);
+            controller.show(0);
+            await tester.pump();
+
+            expect(widthOf(tester, 'S'), 100);
+
+            await tester.pumpAndSettle();
+
+            expect(widthOf(tester, 'S'), 100);
+            expect(controller.pixels[0], 100);
+          },
+        );
+      });
     });
 
     group('controller swap', () {
