@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/divider_painter.dart';
 import 'package:flutter_resizable_container/src/extensions/divider_layout_ext.dart';
 
 class ResizableContainerDivider extends StatefulWidget {
@@ -69,9 +68,11 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
         alignment: widget.config.alignmentFor(widget.direction),
         child: MouseRegion(
           cursor: _getCursor(),
+          opaque: false,
           onEnter: _onEnter,
           onExit: _onExit,
           child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
             onVerticalDragStart: isHorizontal ? null : onDragStart,
             onVerticalDragUpdate: isHorizontal ? null : onDragUpdate,
             onVerticalDragEnd: isHorizontal ? null : onDragEnd,
@@ -80,17 +81,8 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
             onHorizontalDragEnd: isHorizontal ? onDragEnd : null,
             onTapDown: widget.enabled ? _onTapDown : null,
             onTapUp: widget.enabled ? _onTapUp : null,
-            child: CustomPaint(
+            child: SizedBox.fromSize(
               size: widget.config.sizeFor(widget.direction, constraints),
-              painter: DividerPainter(
-                direction: widget.direction,
-                color: widget.config.color ?? Theme.of(context).dividerColor,
-                thickness: widget.config.thickness,
-                crossAxisAlignment: widget.config.crossAxisAlignment,
-                length: widget.config.length,
-                mainAxisAlignment: widget.config.mainAxisAlignment,
-                padding: widget.config.padding,
-              ),
             ),
           ),
         ),
