@@ -185,8 +185,9 @@ class ResizableLayoutRenderObject extends RenderBox
         parentUsesSize: true,
       );
       final extent = layoutDirection.getSizeDimension(child.size);
-      final parentData = child.parentData as _ResizableLayoutParentData;
-      parentData.offset = _getChildOffset(position, extent);
+      if (child.parentData case final _ResizableLayoutParentData parentData) {
+        parentData.offset = _getChildOffset(position, extent);
+      }
       position += extent;
       laidOutSizes.add(extent);
     }
@@ -234,11 +235,14 @@ class ResizableLayoutRenderObject extends RenderBox
   void paint(PaintingContext context, Offset offset) {
     var child = firstChild;
     while (child != null) {
-      final parentData = child.parentData! as _ResizableLayoutParentData;
-      if (_hasExtent(child)) {
-        context.paintChild(child, parentData.offset + offset);
+      if (child.parentData case final _ResizableLayoutParentData parentData) {
+        if (_hasExtent(child)) {
+          context.paintChild(child, parentData.offset + offset);
+        }
+        child = parentData.nextSibling;
+      } else {
+        break;
       }
-      child = parentData.nextSibling;
     }
   }
 
@@ -247,7 +251,11 @@ class ResizableLayoutRenderObject extends RenderBox
     var child = firstChild;
     while (child != null) {
       if (_hasExtent(child)) visitor(child);
-      child = (child.parentData! as _ResizableLayoutParentData).nextSibling;
+      if (child.parentData case final _ResizableLayoutParentData parentData) {
+        child = parentData.nextSibling;
+      } else {
+        break;
+      }
     }
   }
 

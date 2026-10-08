@@ -63,7 +63,7 @@ List<double> allocateSizes({
       ResizableSizeRatio(:final ratio) =>
         _clamp(ratio * availableRatioSpace, size),
       ResizableSizeShrink() => shrinkSizes[i] ?? 0.0,
-      ResizableSizeExpand() => expandSizes[i]!,
+      ResizableSizeExpand() => expandSizes[i] ?? 0.0,
     };
     result.add(value);
     if (i < dividerSizes.length) {
