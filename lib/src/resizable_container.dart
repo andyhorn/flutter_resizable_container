@@ -125,10 +125,10 @@ class _ResizableContainerState extends State<ResizableContainer>
       controller.addListener(_onControllerChanged);
     } else if (structuralChange) {
       _animation.cancel();
-      // `setChildren` clears the hidden set and notifies synchronously, so the
-      // listener must already expect the empty set.
+      // `manager.setChildren` clears the hidden set and notifies synchronously,
+      // so the listener must already expect the empty set.
       _prevHiddenIndices = const <int>{};
-      controller.setChildren(widget.children);
+      manager.setChildren(widget.children);
     } else if (configChange) {
       manager.updateChildrenInPlace(widget.children);
     }

@@ -202,6 +202,12 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Replaces the controller's children and resets its sizes.
+  @Deprecated(
+    'Calling this directly desyncs the controller from the '
+    'ResizableContainer, whose children are the source of truth. Update the '
+    "container's children instead. Will be removed in the next major release.",
+  )
   void setChildren(List<ResizableChild> children) {
     _setChildren(children, notify: true);
   }
@@ -539,6 +545,10 @@ final class ResizableControllerManager {
 
   void initChildren(List<ResizableChild> children) {
     _controller._initChildren(children);
+  }
+
+  void setChildren(List<ResizableChild> children) {
+    _controller._setChildren(children, notify: true);
   }
 
   /// Rebinds the controller's children list without resetting any layout
