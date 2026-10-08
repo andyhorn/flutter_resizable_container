@@ -202,43 +202,49 @@ class ResizableLayoutRenderObject extends RenderBox
   Map<int, double> _getExpandSizes(double availableSpace) {
     bool isExpand(ResizableSize size) => size is ResizableSizeExpand;
 
-    final expandIndices = _sizes.indicesWhere(isExpand).toList();
-    final frozen = <int, double>{};
-    var unfrozen = expandIndices;
+    final unfrozen = _sizes.indicesWhere(isExpand).toList();
+    final passLimit = unfrozen.length;
+    final sizes = <int, double>{};
+    var remainingSpace = availableSpace;
+    var remainingFlex = unfrozen.map(_flexAt).sum();
 
-    while (unfrozen.isNotEmpty) {
-      final remainingSpace = availableSpace - frozen.values.sum();
-      final remainingFlex = unfrozen.map(_flexAt).sum();
+    for (var pass = 0; pass < passLimit; pass++) {
+      final passSpace = remainingSpace;
+      final passFlex = remainingFlex;
+      double targetAt(int index) => passSpace * _flexAt(index) / passFlex;
 
-      final targets = {
-        for (final index in unfrozen)
-          index: remainingSpace * _flexAt(index) / remainingFlex,
-      };
-      final clamped = {
-        for (final index in unfrozen)
-          index: _clamp(targets[index]!, _sizes[index]),
-      };
-      final totalViolation = [
-        for (final index in unfrozen) clamped[index]! - targets[index]!,
-      ].sum();
-
-      if (totalViolation == 0) {
-        return {...frozen, ...clamped};
+      var totalViolation = 0.0;
+      for (final index in unfrozen) {
+        final target = targetAt(index);
+        totalViolation += _clamp(target, _sizes[index]) - target;
       }
 
-      final violators = unfrozen.where((index) {
-        return totalViolation > 0
-            ? clamped[index]! > targets[index]!
-            : clamped[index]! < targets[index]!;
-      }).toList();
-
-      for (final index in violators) {
-        frozen[index] = clamped[index]!;
+      // A NaN violation (unbounded space, or flex 0 once asserts are
+      // stripped) matches no violator and would otherwise never terminate.
+      final isLastPass = pass == passLimit - 1;
+      if (totalViolation == 0 || totalViolation.isNaN || isLastPass) {
+        for (final index in unfrozen) {
+          sizes[index] = _clamp(targetAt(index), _sizes[index]);
+        }
+        return sizes;
       }
-      unfrozen = unfrozen.where((i) => !frozen.containsKey(i)).toList();
+
+      for (final index in unfrozen) {
+        final target = targetAt(index);
+        final clamped = _clamp(target, _sizes[index]);
+        final isViolator =
+            totalViolation > 0 ? clamped > target : clamped < target;
+
+        if (isViolator) {
+          sizes[index] = clamped;
+          remainingSpace -= clamped;
+          remainingFlex -= _flexAt(index);
+        }
+      }
+      unfrozen.removeWhere(sizes.containsKey);
     }
 
-    return frozen;
+    return sizes;
   }
 
   int _flexAt(int index) => (_sizes[index] as ResizableSizeExpand).flex;

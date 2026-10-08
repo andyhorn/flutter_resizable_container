@@ -13,7 +13,9 @@ const ResizableSize _hiddenSize = ResizableSize.pixels(0, min: 0, max: 0);
 ///
 /// Splitting space evenly (e.g. `998 / 6` six times) accumulates
 /// floating-point error that can push a mathematically exact total a few ulps
-/// past its limit. One millionth is far below a visible pixel.
+/// past its limit. The same value covers both pixel totals and ratio totals:
+/// one millionth is far below a visible pixel, and as a ratio it is still
+/// sub-pixel for any container narrower than a million pixels.
 const double _sizeTotalTolerance = 1e-6;
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
@@ -157,20 +159,19 @@ class ResizableController with ChangeNotifier {
             (_sizes[index + 1].max ?? double.infinity) - _pixels[index + 1];
         final cascadeDelta = -min(delta.abs(), maxGrowth);
 
-        // distribute the delta amongst the leftward siblings
+        // The selected child is part of the cascade, not just its leftward
+        // siblings: it may still have room to shrink toward its min before
+        // any sibling has to give up space.
         final changes = _distributeDeltaLeft(
           index: index,
           delta: cascadeDelta,
         );
 
-        // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
           _pixels[index - i] += changes[i];
         }
 
-        // adjust the width of the first sibling to the right by the
-        // total amount removed from the leftward siblings
-        _pixels[index + 1] += changes.sum().abs();
+        _pixels[index + 1] -= changes.sum();
       } else {
         // and the divider is being dragged to the right
 
@@ -180,24 +181,16 @@ class ResizableController with ChangeNotifier {
             (_sizes[index].max ?? double.infinity) - _pixels[index];
         final cascadeDelta = min(delta, maxGrowth);
 
-        // distribute the delta amongst the rightward siblings
         final changes = _distributeDeltaRight(
           index: index,
           delta: cascadeDelta,
         );
 
-        // apply the distribution outward from the selected index
         for (var i = 0; i < changes.length; i++) {
-          if (index + i + 1 >= _pixels.length) {
-            continue;
-          }
-
           _pixels[index + i + 1] += changes[i];
         }
 
-        // adjust the width of the selected index by the total amount
-        // removed from the rightward siblings
-        _pixels[index] += changes.sum().abs();
+        _pixels[index] -= changes.sum();
       }
     } else {
       // otherwise, apply the adjusted delta to the selected index and its
@@ -312,10 +305,8 @@ class ResizableController with ChangeNotifier {
     required int index,
     required double delta,
   }) {
-    // get the indices of all rightward siblings
     final indices = [for (var i = index + 1; i < _children.length; i++) i];
 
-    // calculate the allowable change for each sibling
     final allowableChanges = [
       for (final index in indices) ...[
         _getAllowableChange(delta: -delta, index: index, sizes: _pixels),
@@ -324,8 +315,6 @@ class ResizableController with ChangeNotifier {
 
     var remainingDelta = -delta;
 
-    // for each rightward sibling, starting with the closest and moving out,
-    // calculate the "effective" change and subtract it from the remaining delta
     final changes = <double>[];
     for (var i = 0; i < indices.length && remainingDelta != 0.0; i++) {
       final allowableChange = allowableChanges[i];
@@ -342,10 +331,8 @@ class ResizableController with ChangeNotifier {
     required int index,
     required double delta,
   }) {
-    // get the indices of the selected child and all leftward siblings
     final indices = [for (var i = 0; i <= index; i++) i];
 
-    // calculate the allowable change for each sibling
     final allowableChanges = [
       for (final index in indices) ...[
         _getAllowableChange(delta: delta, index: index, sizes: _pixels),
@@ -354,9 +341,6 @@ class ResizableController with ChangeNotifier {
 
     var remainingDelta = delta;
 
-    // for the selected child and each leftward sibling, starting with the
-    // selected child and moving out, calculate the "effective" change and
-    // subtract it from the remaining delta
     final changes = <double>[];
     for (var i = indices.length - 1; i >= 0 && remainingDelta != 0.0; i--) {
       final allowableChange = allowableChanges[i];

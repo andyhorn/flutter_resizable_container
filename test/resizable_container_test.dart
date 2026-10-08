@@ -1025,6 +1025,27 @@ void main() {
         expect(tester.takeException(), isFlutterError);
         expect(widths, equals([80, 60]));
       });
+
+      testWidgets('terminates in an unbounded main axis', (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ResizableContainer(
+                  direction: Axis.horizontal,
+                  children: [
+                    ResizableChild(child: SizedBox.expand()),
+                    ResizableChild(child: SizedBox.expand()),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(tester.takeException(), isNotNull);
+      });
     });
 
     group('when changing the screen size', () {
