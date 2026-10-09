@@ -1,9 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/divider_painter.dart';
+import 'package:flutter_resizable_container/src/extensions/divider_layout_ext.dart';
 
 class ResizableContainerDivider extends StatefulWidget {
   const ResizableContainerDivider({
@@ -59,8 +57,6 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
-      final width = _getWidth(constraints.maxWidth);
-      final height = _getHeight(constraints.maxHeight);
       final canResize = widget.enabled;
       final isHorizontal = widget.direction == Axis.horizontal;
       final onDragStart = canResize ? _onDragStart : null;
@@ -69,22 +65,14 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
       final onDragEnd = canResize ? _onDragEnd : null;
 
       return Align(
-        alignment: switch (widget.config.crossAxisAlignment) {
-          CrossAxisAlignment.start => switch (widget.direction) {
-              Axis.horizontal => Alignment.topCenter,
-              Axis.vertical => Alignment.centerLeft,
-            },
-          CrossAxisAlignment.end => switch (widget.direction) {
-              Axis.horizontal => Alignment.bottomCenter,
-              Axis.vertical => Alignment.bottomRight,
-            },
-          _ => Alignment.center,
-        },
+        alignment: widget.config.alignmentFor(widget.direction),
         child: MouseRegion(
           cursor: _getCursor(),
+          opaque: false,
           onEnter: _onEnter,
           onExit: _onExit,
           child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
             onVerticalDragStart: isHorizontal ? null : onDragStart,
             onVerticalDragUpdate: isHorizontal ? null : onDragUpdate,
             onVerticalDragEnd: isHorizontal ? null : onDragEnd,
@@ -93,17 +81,8 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
             onHorizontalDragEnd: isHorizontal ? onDragEnd : null,
             onTapDown: widget.enabled ? _onTapDown : null,
             onTapUp: widget.enabled ? _onTapUp : null,
-            child: CustomPaint(
-              size: Size(width, height),
-              painter: DividerPainter(
-                direction: widget.direction,
-                color: widget.config.color ?? Theme.of(context).dividerColor,
-                thickness: widget.config.thickness,
-                crossAxisAlignment: widget.config.crossAxisAlignment,
-                length: widget.config.length,
-                mainAxisAlignment: widget.config.mainAxisAlignment,
-                padding: widget.config.padding,
-              ),
+            child: SizedBox.fromSize(
+              size: widget.config.sizeFor(widget.direction, constraints),
             ),
           ),
         ),
@@ -119,30 +98,6 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
       Axis.horizontal =>
         widget.config.cursor ?? SystemMouseCursors.resizeLeftRight,
       Axis.vertical => widget.config.cursor ?? SystemMouseCursors.resizeUpDown,
-    };
-  }
-
-  double _getHeight(double maxHeight) {
-    return switch (widget.direction) {
-      Axis.horizontal => switch (widget.config.length) {
-          ResizableSizePixels(:final pixels) => min(pixels, maxHeight),
-          ResizableSizeExpand() => maxHeight,
-          ResizableSizeRatio(:final ratio) => maxHeight * ratio,
-          ResizableSizeShrink() => 0.0,
-        },
-      Axis.vertical => widget.config.thickness + widget.config.padding,
-    };
-  }
-
-  double _getWidth(double maxWidth) {
-    return switch (widget.direction) {
-      Axis.horizontal => widget.config.thickness + widget.config.padding,
-      Axis.vertical => switch (widget.config.length) {
-          ResizableSizePixels(:final pixels) => min(pixels, maxWidth),
-          ResizableSizeExpand() => maxWidth,
-          ResizableSizeRatio(:final ratio) => maxWidth * ratio,
-          ResizableSizeShrink() => 0.0,
-        },
     };
   }
 

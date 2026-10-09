@@ -10,8 +10,9 @@ import 'package:flutter_resizable_container/src/hidden_child_scope.dart';
 import 'package:flutter_resizable_container/src/hide_animation_coordinator.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_allocation.dart';
 import 'package:flutter_resizable_container/src/layout/resizable_layout.dart';
-import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
 import 'package:flutter_resizable_container/src/resizable_controller.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_line.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_overlay.dart';
 
 /// A container that holds multiple child [Widget]s that can be resized.
 ///
@@ -305,16 +306,46 @@ class _ResizableContainerState extends State<ResizableContainer>
         return AnimatedBuilder(
           animation: controller,
           builder: (context, _) {
-            return _ContainerLayout(
-              direction: widget.direction,
-              resizable: widget.resizable,
-              resizableChildren: widget.children,
-              sizes: controller.sizes,
-              hiddenIndices: controller.hiddenIndices,
-              fixedSizes: _fixedSizesForPhase(),
-              collapsing: _animation.phase != HideAnimationPhase.idle,
-              onComplete: _scheduleSetRenderedSizes,
-              onResizeUpdate: _onDividerDrag,
+            final isIdle = _animation.phase == HideAnimationPhase.idle;
+            final layoutPending = isIdle && controller.needsLayout;
+            final hiddenIndices = controller.hiddenIndices;
+            final fixedSizes = _fixedSizesForPhase();
+            // Stale while a layout pass is pending, which is why the overlay
+            // ignores pointers until it completes.
+            final overlaySizes = fixedSizes ?? _deriveFullSizesFromController();
+            final dividerKeys = [
+              for (var i = 0; i < widget.children.length - 1; i++)
+                _dividerKey(widget.children, i),
+            ];
+
+            return Stack(
+              fit: StackFit.passthrough,
+              clipBehavior: Clip.none,
+              children: [
+                _ContainerLayout(
+                  direction: widget.direction,
+                  resizableChildren: widget.children,
+                  sizes: controller.sizes,
+                  hiddenIndices: hiddenIndices,
+                  fixedSizes: fixedSizes,
+                  collapsing: !isIdle,
+                  onComplete: _scheduleSetRenderedSizes,
+                ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    ignoring: layoutPending,
+                    child: ResizableDividerOverlay(
+                      direction: widget.direction,
+                      dividers: widget.children.dividers,
+                      dividerKeys: dividerKeys,
+                      sizes: overlaySizes,
+                      hiddenIndices: hiddenIndices,
+                      resizable: widget.resizable,
+                      onResizeUpdate: _onDividerDrag,
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         );
@@ -456,6 +487,11 @@ class _ResizableContainerState extends State<ResizableContainer>
   }
 }
 
+Key? _dividerKey(List<ResizableChild> children, int index) {
+  final paneKey = children[index].key;
+  return paneKey == null ? null : ValueKey(('divider', paneKey));
+}
+
 class _PaneSlot extends StatelessWidget {
   const _PaneSlot({super.key, required this.child});
 
@@ -472,30 +508,21 @@ class _PaneSlot extends StatelessWidget {
 class _ContainerLayout extends StatelessWidget {
   const _ContainerLayout({
     required this.direction,
-    required this.resizable,
     required this.resizableChildren,
     required this.sizes,
     required this.hiddenIndices,
     required this.fixedSizes,
     required this.collapsing,
     required this.onComplete,
-    required this.onResizeUpdate,
   });
 
   final Axis direction;
-  final bool resizable;
   final List<ResizableChild> resizableChildren;
   final List<ResizableSize> sizes;
   final Set<int> hiddenIndices;
   final List<double>? fixedSizes;
   final bool collapsing;
   final ValueChanged<List<double>> onComplete;
-  final void Function(int index, double delta) onResizeUpdate;
-
-  Key? _dividerKey(int index) {
-    final paneKey = resizableChildren[index].key;
-    return paneKey == null ? null : ValueKey(('divider', paneKey));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -514,16 +541,11 @@ class _ContainerLayout extends StatelessWidget {
 
       if (i == lastIndex) continue;
 
-      final dividerEnabled = resizable &&
-          child.divider.enabled &&
-          !isDividerHidden(hiddenIndices, i);
       children.add(
-        ResizableContainerDivider(
-          key: _dividerKey(i),
+        ResizableDividerLine(
+          key: _dividerKey(resizableChildren, i),
           config: child.divider,
           direction: direction,
-          enabled: dividerEnabled,
-          onResizeUpdate: (delta) => onResizeUpdate(i, delta),
         ),
       );
     }

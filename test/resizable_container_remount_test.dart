@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_line.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'remount_test_helpers.dart';
@@ -303,7 +304,7 @@ void main() {
         final box = tester.renderObject(
           find
               .descendant(
-                of: dividers().at(index),
+                of: find.byType(ResizableDividerLine).at(index),
                 matching: find.byType(CustomPaint),
               )
               .first,
