@@ -37,6 +37,15 @@ Rect _rect(WidgetTester tester, Finder finder) {
   return tester.getRect(finder);
 }
 
+// The divider targets are translucent, so hitTestable() is unreliable for them.
+bool _isHit(WidgetTester tester, Finder divider) {
+  final region = tester.renderObject(
+    find.descendant(of: divider, matching: find.byType(MouseRegion)),
+  );
+  final result = tester.hitTestOnBinding(tester.getCenter(divider));
+  return result.path.any((entry) => identical(entry.target, region));
+}
+
 void _expectDividersBetweenPanes(
   WidgetTester tester, {
   required Axis direction,
@@ -225,11 +234,14 @@ void main() {
 
         final dividers = find.byType(ResizableContainerDivider);
         expect(dividers, findsNWidgets(2));
-        expect(dividers.hitTestable(), findsOneWidget);
+        expect(_isHit(tester, dividers.at(0)), isFalse);
+        expect(_isHit(tester, dividers.at(1)), isTrue);
+
         controller.hide(2);
         await tester.pumpAndSettle();
         expect(dividers, findsNWidgets(2));
-        expect(dividers.hitTestable(), findsNothing);
+        expect(_isHit(tester, dividers.at(0)), isFalse);
+        expect(_isHit(tester, dividers.at(1)), isFalse);
       });
     });
 
