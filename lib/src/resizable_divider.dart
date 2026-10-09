@@ -18,7 +18,9 @@ class ResizableDivider extends Equatable {
     this.mainAxisAlignment = MainAxisAlignment.center,
     this.crossAxisAlignment = CrossAxisAlignment.center,
     this.enabled = true,
+    this.hitSlop = 0.0,
   })  : assert(thickness > 0, '[thickness] must be > 0.'),
+        assert(hitSlop >= 0, '[hitSlop] must be >= 0.'),
         assert(
           length is! ResizableSizeShrink,
           'length does not support the "shrink" size',
@@ -96,6 +98,22 @@ class ResizableDivider extends Equatable {
   /// disables every divider in the container at once.
   final bool enabled;
 
+  /// Extra, invisible grab area added to each side of the divider along the
+  /// main axis. It does not affect layout, may overlap neighboring children,
+  /// and is clipped to the container. Recommended: 12 or more for touch (a
+  /// 1px divider is below the 24px minimum target size, WCAG 2.5.8).
+  ///
+  /// Drags and scrolls pass through the slop zone, but taps do not:
+  ///  * a main-axis drag starting in the slop zone goes to the divider and can
+  ///    pre-empt a same-axis scroll in the pane;
+  ///  * an enabled divider claims taps that land in the slop zone, so the pane
+  ///    beneath does not receive them, whether or not [onTapDown] or [onTapUp]
+  ///    is set;
+  ///  * overlapping slop from adjacent dividers goes to the later divider.
+  ///
+  /// Defaults to 0.0.
+  final double hitSlop;
+
   @override
   List<Object?> get props => [
         thickness,
@@ -112,5 +130,6 @@ class ResizableDivider extends Equatable {
         mainAxisAlignment,
         crossAxisAlignment,
         enabled,
+        hitSlop,
       ];
 }

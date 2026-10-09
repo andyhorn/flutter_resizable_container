@@ -353,7 +353,9 @@ In this scenario, the first child would be given 2/3 of the total available spac
 
 Use the `ResizableDivider` class to customize the look and feel of the dividers between each of a container's children.
 
-You can customize the `thickness`, `length`, `crossAxisAlignment`, `mainAxisAlignment`, and `color` of the divider, as well as display a custom mouse cursor on hover and respond to `onDragStart`, `onDragEnd`, `onHoverEnter`, `onHoverExit`, `onTapDown`, and `onTapUp` events.
+You can customize the `thickness`, `length`, `crossAxisAlignment`, `mainAxisAlignment`, `hitSlop`, and `color` of the divider, as well as display a custom mouse cursor on hover and respond to `onDragStart`, `onDragEnd`, `onHoverEnter`, `onHoverExit`, `onTapDown`, and `onTapUp` events.
+
+Set `hitSlop` to add an invisible grab area to each side of the divider along the main axis (a 1px divider is far below the 24px minimum touch target; 12 or more is recommended for touch). It does not affect layout and is clipped to the container. Drags and scrolls pass through the slop zone, but a drag along the main axis that starts there goes to the divider and can pre-empt a same-axis scroll in the pane beneath. **Taps that land in the slop zone are claimed by the divider, whether or not `onTapDown`/`onTapUp` are set, so the pane beneath does not receive them.** Where slop from adjacent dividers overlaps, the later divider wins.
 
 Set `enabled: false` to lock a single divider so it cannot be dragged, tapped, or hovered. To lock every divider in a container at once, pass `resizable: false` to the `ResizableContainer`. A divider is interactive only when both flags are `true`; programmatic resizing through `ResizableController` is unaffected in either case.
 

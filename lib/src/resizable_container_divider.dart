@@ -82,7 +82,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
             onTapDown: widget.enabled ? _onTapDown : null,
             onTapUp: widget.enabled ? _onTapUp : null,
             child: SizedBox.fromSize(
-              size: widget.config.sizeFor(widget.direction, constraints),
+              size: widget.config.hitAreaFor(widget.direction, constraints),
             ),
           ),
         ),

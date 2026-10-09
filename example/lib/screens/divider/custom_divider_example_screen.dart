@@ -18,6 +18,7 @@ class _CustomDividerExampleScreenState
   var length = 0.5;
   var thickness = 2.0;
   var padding = 5.0;
+  var hitSlop = 0.0;
   var crossAxisAlignment = CrossAxisAlignment.center;
   var mainAxisAlignment = MainAxisAlignment.center;
 
@@ -101,6 +102,23 @@ class _CustomDividerExampleScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    const Text('Hit slop'),
+                    Slider(
+                      min: 0,
+                      max: 30,
+                      divisions: 30,
+                      value: hitSlop,
+                      onChanged: (value) => setState(() => hitSlop = value),
+                    ),
+                    Text('${hitSlop}px'),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 200,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
                     const Text('Cross-Axis Alignment'),
                     DropdownButton(
                       value: crossAxisAlignment,
@@ -168,6 +186,7 @@ class _CustomDividerExampleScreenState
                         : Theme.of(context).colorScheme.inversePrimary,
                     thickness: thickness,
                     padding: padding,
+                    hitSlop: hitSlop,
                     crossAxisAlignment: crossAxisAlignment,
                     mainAxisAlignment: mainAxisAlignment,
                     length: ResizableSize.ratio(length),

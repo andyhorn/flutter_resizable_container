@@ -31,6 +31,14 @@ extension DividerLayoutExt on ResizableDivider {
     };
   }
 
+  Size hitAreaFor(Axis direction, BoxConstraints constraints) {
+    final size = sizeFor(direction, constraints);
+    return switch (direction) {
+      Axis.horizontal => Size(size.width + 2 * hitSlop, size.height),
+      Axis.vertical => Size(size.width, size.height + 2 * hitSlop),
+    };
+  }
+
   double _crossAxisLength(double maxExtent) {
     return switch (length) {
       ResizableSizePixels(:final pixels) => min(pixels, maxExtent),
