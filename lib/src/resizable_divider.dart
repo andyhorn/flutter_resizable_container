@@ -19,8 +19,11 @@ class ResizableDivider extends Equatable {
     this.crossAxisAlignment = CrossAxisAlignment.center,
     this.enabled = true,
     this.hitSlop = 0.0,
+    this.keyboardStep = 10.0,
+    this.semanticLabel,
   })  : assert(thickness > 0, '[thickness] must be > 0.'),
         assert(hitSlop >= 0, '[hitSlop] must be >= 0.'),
+        assert(keyboardStep > 0, '[keyboardStep] must be > 0.'),
         assert(
           length is! ResizableSizeShrink,
           'length does not support the "shrink" size',
@@ -89,9 +92,10 @@ class ResizableDivider extends Equatable {
 
   /// Whether this divider is interactive.
   ///
-  /// When `false`, the divider is rendered but cannot be dragged, tapped, or
-  /// hovered — its drag, tap, and hover callbacks will not fire and the
-  /// resize cursor is not shown. Programmatic resizing via
+  /// When `false`, the divider is rendered but cannot be dragged, tapped,
+  /// hovered, or focused — its drag, tap, and hover callbacks will not fire,
+  /// the resize cursor is not shown, and it exposes no keyboard or semantic
+  /// resize actions. Programmatic resizing via
   /// [ResizableController] is unaffected.
   ///
   /// Defaults to `true`. See also [ResizableContainer.resizable], which
@@ -114,6 +118,23 @@ class ResizableDivider extends Equatable {
   /// Defaults to 0.0.
   final double hitSlop;
 
+  /// Logical pixels moved per arrow key press, and per screen-reader
+  /// increase or decrease action. Holding Shift multiplies it by 5 for key
+  /// presses.
+  ///
+  /// Keyboard and screen-reader resizes go through the same constraints as
+  /// dragging but do not trigger [onDragStart] or [onDragEnd].
+  ///
+  /// Defaults to 10.0 and must be greater than 0.
+  final double keyboardStep;
+
+  /// The label announced by screen readers for this divider.
+  ///
+  /// The divider is unlabeled by default; supply a localized string. Its value
+  /// is announced as the percentage of the container's total child size that
+  /// lies before the divider; that format is not locale-aware.
+  final String? semanticLabel;
+
   @override
   List<Object?> get props => [
         thickness,
@@ -131,5 +152,7 @@ class ResizableDivider extends Equatable {
         crossAxisAlignment,
         enabled,
         hitSlop,
+        keyboardStep,
+        semanticLabel,
       ];
 }

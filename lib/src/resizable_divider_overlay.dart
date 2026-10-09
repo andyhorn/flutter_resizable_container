@@ -12,7 +12,7 @@ import 'package:flutter_resizable_container/src/resizable_container_divider.dart
 /// [dividerKeys] holds the key for the divider that follows each child, or
 /// `null` to match it by position. A divider whose neighbour is in
 /// [hiddenIndices] stays mounted at zero extent, ignoring its
-/// [ResizableDivider.hitSlop], and is disabled.
+/// [ResizableDivider.hitSlop], and is disabled and excluded from semantics.
 class ResizableDividerOverlay extends StatelessWidget {
   const ResizableDividerOverlay({
     super.key,
@@ -23,6 +23,7 @@ class ResizableDividerOverlay extends StatelessWidget {
     required this.hiddenIndices,
     required this.resizable,
     required this.onResizeUpdate,
+    required this.positionAfter,
   });
 
   final Axis direction;
@@ -33,13 +34,21 @@ class ResizableDividerOverlay extends StatelessWidget {
   final bool resizable;
   final void Function(int dividerIndex, double delta) onResizeUpdate;
 
+  /// The fraction of the total child size before divider `dividerIndex` once
+  /// `delta` is applied.
+  final double Function(int dividerIndex, double delta) positionAfter;
+
   @override
   Widget build(BuildContext context) {
     final extents = [for (final size in sizes) math.max(0.0, size)];
     final offsets = _dividerOffsets(extents);
+    final hidden = [
+      for (var i = 0; i < dividers.length; i++)
+        isDividerHidden(hiddenIndices, i),
+    ];
     final slops = [
       for (var i = 0; i < dividers.length; i++)
-        isDividerHidden(hiddenIndices, i) ? 0.0 : dividers[i].hitSlop,
+        hidden[i] ? 0.0 : dividers[i].hitSlop,
     ];
 
     return Stack(
@@ -51,13 +60,15 @@ class ResizableDividerOverlay extends StatelessWidget {
             direction: direction,
             offset: offsets[i] - slops[i],
             extent: extents[i * 2 + 1] + 2 * slops[i],
-            child: ResizableContainerDivider(
-              config: dividers[i],
-              direction: direction,
-              enabled: resizable &&
-                  dividers[i].enabled &&
-                  !isDividerHidden(hiddenIndices, i),
-              onResizeUpdate: (delta) => onResizeUpdate(i, delta),
+            child: ExcludeSemantics(
+              excluding: hidden[i],
+              child: ResizableContainerDivider(
+                config: dividers[i],
+                direction: direction,
+                enabled: resizable && dividers[i].enabled && !hidden[i],
+                onResizeUpdate: (delta) => onResizeUpdate(i, delta),
+                positionAfter: (delta) => positionAfter(i, delta),
+              ),
             ),
           ),
       ],

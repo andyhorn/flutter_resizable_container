@@ -1469,5 +1469,64 @@ void main() {
         });
       });
     });
+
+    group('dividerPositionAfter', () {
+      setUp(() {
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(100, max: 130),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(200),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+        ]);
+
+        manager.setAvailableSpace(400);
+        manager.setRenderedSizes([100, 200, 100]);
+      });
+
+      test('returns the position with no delta', () {
+        expect(manager.dividerPositionAfter(index: 0, delta: 0), 0.25);
+        expect(manager.dividerPositionAfter(index: 1, delta: 0), 0.75);
+      });
+
+      test('applies the delta without changing the controller', () {
+        var notified = false;
+        controller.addListener(() => notified = true);
+
+        expect(manager.dividerPositionAfter(index: 0, delta: 20), 0.30);
+
+        expect(controller.pixels, equals([100, 200, 100]));
+        expect(notified, isFalse);
+      });
+
+      test('clamps to size constraints', () {
+        expect(manager.dividerPositionAfter(index: 0, delta: 50), 0.325);
+        expect(manager.dividerPositionAfter(index: 0, delta: -500), 0.0);
+      });
+
+      test('matches the position after an actual adjustment', () {
+        final predicted = manager.dividerPositionAfter(index: 1, delta: 60);
+
+        manager.adjustChildSize(index: 1, delta: 60);
+
+        expect(controller.pixels[0] + controller.pixels[1], 400 * predicted);
+      });
+
+      test('is zero before any child has been laid out', () {
+        controller.setChildren(const [
+          ResizableChild(child: SizedBox.shrink()),
+          ResizableChild(child: SizedBox.shrink()),
+        ]);
+
+        expect(manager.dividerPositionAfter(index: 0, delta: 10), 0.0);
+      });
+    });
   });
 }

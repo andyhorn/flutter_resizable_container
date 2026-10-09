@@ -263,6 +263,25 @@ class ResizableController with ChangeNotifier {
   }
 
   void _adjustChildSize({required int index, required double delta}) {
+    _applyAdjustment(index: index, delta: delta);
+    notifyListeners();
+  }
+
+  /// The pixel sizes that [_adjustChildSize] would produce, without applying
+  /// them or notifying listeners.
+  List<double> _pixelsAfterAdjusting({
+    required int index,
+    required double delta,
+  }) {
+    final original = _pixels;
+    _pixels = List.of(original);
+    _applyAdjustment(index: index, delta: delta);
+    final adjusted = _pixels;
+    _pixels = original;
+    return adjusted;
+  }
+
+  void _applyAdjustment({required int index, required double delta}) {
     final adjustedDelta = delta < 0
         ? _getAdjustedReducingDelta(index: index, delta: delta)
         : _getAdjustedIncreasingDelta(index: index, delta: delta);
@@ -320,8 +339,6 @@ class ResizableController with ChangeNotifier {
       _pixels[index] += adjustedDelta;
       _pixels[index + 1] -= adjustedDelta;
     }
-
-    notifyListeners();
   }
 
   /// Replaces the children managed by this controller, resetting every size
@@ -678,6 +695,20 @@ final class ResizableControllerManager {
 
   void adjustChildSize({required int index, required double delta}) {
     _controller._adjustChildSize(index: index, delta: delta);
+  }
+
+  /// The position of the divider after child [index], as a fraction of the
+  /// total child size, once [delta] is applied with all constraints.
+  double dividerPositionAfter({required int index, required double delta}) {
+    final adjusted = _controller._pixelsAfterAdjusting(
+      index: index,
+      delta: delta,
+    );
+    final total = adjusted.sum();
+    if (total <= 0) {
+      return 0;
+    }
+    return adjusted.take(index + 1).sum() / total;
   }
 
   void setRenderedSizes(List<double> sizes) {
