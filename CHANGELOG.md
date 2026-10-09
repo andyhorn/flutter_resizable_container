@@ -5,6 +5,54 @@
 - Added a `key` parameter to the `ResizableChild` to pass to the child Widget's wrapper.
 - Bump FVM Flutter and dependency versions.
 
+## [4.3.0](https://github.com/andyhorn/flutter_resizable_container/compare/v4.2.0...v4.3.0) (2026-10-09)
+
+
+### Features
+
+* add hide/show methods to ResizableController ([#99](https://github.com/andyhorn/flutter_resizable_container/issues/99)) ([6e466da](https://github.com/andyhorn/flutter_resizable_container/commit/6e466da4a33031cb711497808bd30418767e9dfc))
+* add ResizableDivider.hitSlop ([#156](https://github.com/andyhorn/flutter_resizable_container/issues/156)) ([3bd90ff](https://github.com/andyhorn/flutter_resizable_container/commit/3bd90ff29b65db08a21710efbb26e19df00c7e2c))
+* animate hide/show child transitions ([#123](https://github.com/andyhorn/flutter_resizable_container/issues/123)) ([7d49e47](https://github.com/andyhorn/flutter_resizable_container/commit/7d49e4713e44df9629ff132188a4a331491e1304))
+* deprecate ResizableController.setChildren ([#144](https://github.com/andyhorn/flutter_resizable_container/issues/144)) ([#153](https://github.com/andyhorn/flutter_resizable_container/issues/153)) ([36e8137](https://github.com/andyhorn/flutter_resizable_container/commit/36e8137f96256e6cd850bc1986f5bc7708347ebb))
+* hidden focus, unbounded error, export size subtypes ([#144](https://github.com/andyhorn/flutter_resizable_container/issues/144)) ([#159](https://github.com/andyhorn/flutter_resizable_container/issues/159)) ([3c3a984](https://github.com/andyhorn/flutter_resizable_container/commit/3c3a984e4501de2724e8d1f702e803a722724a89))
+* lock individual dividers or the whole container ([#73](https://github.com/andyhorn/flutter_resizable_container/issues/73)) ([#128](https://github.com/andyhorn/flutter_resizable_container/issues/128)) ([86ddefe](https://github.com/andyhorn/flutter_resizable_container/commit/86ddefe15937aab969815ff0ac71146128609d1b))
+
+
+### Bug Fixes
+
+* clamp cascaded delta by receiver max constraint ([#106](https://github.com/andyhorn/flutter_resizable_container/issues/106)) ([#125](https://github.com/andyhorn/flutter_resizable_container/issues/125)) ([9f06c32](https://github.com/andyhorn/flutter_resizable_container/commit/9f06c324304907c0feeb92af7b6d5fd7cadeec80))
+* direction comparison in resizable container ([#95](https://github.com/andyhorn/flutter_resizable_container/issues/95)) ([93f458f](https://github.com/andyhorn/flutter_resizable_container/commit/93f458f3e99ba481b29c64291d8b30bf1de4de9b))
+* distribute expand space by flex, include neighbor in left-drag cascade, add setSizes tolerance ([#144](https://github.com/andyhorn/flutter_resizable_container/issues/144)) ([#149](https://github.com/andyhorn/flutter_resizable_container/issues/149)) ([94e1344](https://github.com/andyhorn/flutter_resizable_container/commit/94e1344609ab6aea67f6da2c28c40d53afd8b9c7))
+* honor flex and current sizes when redistributing on resize ([#154](https://github.com/andyhorn/flutter_resizable_container/issues/154)) ([479339d](https://github.com/andyhorn/flutter_resizable_container/commit/479339d24229daf0e5010b53191925e39d7c6819))
+* ignore hidden dividers in available space, allow empty children ([#144](https://github.com/andyhorn/flutter_resizable_container/issues/144)) ([#161](https://github.com/andyhorn/flutter_resizable_container/issues/161)) ([6b96865](https://github.com/andyhorn/flutter_resizable_container/commit/6b96865bad2a9772d0a09d5f8ca3cef2dba28a67))
+* include min/max in ResizableSize equality ([#104](https://github.com/andyhorn/flutter_resizable_container/issues/104)) ([#127](https://github.com/andyhorn/flutter_resizable_container/issues/127)) ([72c28ae](https://github.com/andyhorn/flutter_resizable_container/commit/72c28ae5119186b8522f7f8f18844e00f1f7b453))
+* keep children mounted across relayouts and honor RTL ([#160](https://github.com/andyhorn/flutter_resizable_container/issues/160)) ([8286431](https://github.com/andyhorn/flutter_resizable_container/commit/828643114033bdde9527e10c179f0695100a026b))
+* keep external controller state across container remount ([#155](https://github.com/andyhorn/flutter_resizable_container/issues/155)) ([eca40b9](https://github.com/andyhorn/flutter_resizable_container/commit/eca40b9d58d37da1e43d7a5ba305c33287ce5a7a))
+* measure shrink children via dry layout ([#85](https://github.com/andyhorn/flutter_resizable_container/issues/85)) ([#98](https://github.com/andyhorn/flutter_resizable_container/issues/98)) ([c6fc50e](https://github.com/andyhorn/flutter_resizable_container/commit/c6fc50e595d5110327e2575c0921c3557a617334))
+* notify controller listeners outside the build phase ([#150](https://github.com/andyhorn/flutter_resizable_container/issues/150)) ([fbc1d55](https://github.com/andyhorn/flutter_resizable_container/commit/fbc1d5524ba886e2323f14eb250d459cfa82a7d0))
+* preserve dragged sizes across hide and show ([#158](https://github.com/andyhorn/flutter_resizable_container/issues/158)) ([ef4bc78](https://github.com/andyhorn/flutter_resizable_container/commit/ef4bc78387f87a5d3b51b5915174b9e96b64b354)), closes [#141](https://github.com/andyhorn/flutter_resizable_container/issues/141)
+* rebind controller when widget.controller changes ([#107](https://github.com/andyhorn/flutter_resizable_container/issues/107)) ([#124](https://github.com/andyhorn/flutter_resizable_container/issues/124)) ([8e7add0](https://github.com/andyhorn/flutter_resizable_container/commit/8e7add00598858e5234999966f656650be2e5f8d))
+* ResizableChild.props omits divider and discards child widget ([#126](https://github.com/andyhorn/flutter_resizable_container/issues/126)) ([059d437](https://github.com/andyhorn/flutter_resizable_container/commit/059d437b954b94ce5c2c38efe91eabe24e5eb1df))
+* restore shrink child width on animated show ([#144](https://github.com/andyhorn/flutter_resizable_container/issues/144)) ([#148](https://github.com/andyhorn/flutter_resizable_container/issues/148)) ([821a4cb](https://github.com/andyhorn/flutter_resizable_container/commit/821a4cbefcc8e1ae61bec3d32082d5054d159e21))
+* stop dividers claiming cross-axis and locked drags ([#151](https://github.com/andyhorn/flutter_resizable_container/issues/151)) ([b4c3977](https://github.com/andyhorn/flutter_resizable_container/commit/b4c39776be0e72fc07cb015b6c58edf6a9bbfd9e))
+
+
+### Performance Improvements
+
+* isolate unaffected panes from drag repaints ([#120](https://github.com/andyhorn/flutter_resizable_container/issues/120)) ([#146](https://github.com/andyhorn/flutter_resizable_container/issues/146)) ([64e06ae](https://github.com/andyhorn/flutter_resizable_container/commit/64e06aef58550cbbb214457d62ba9e8d3891d323))
+* replace Decimal arithmetic in expand layout with doubles ([#121](https://github.com/andyhorn/flutter_resizable_container/issues/121)) ([#132](https://github.com/andyhorn/flutter_resizable_container/issues/132)) ([0b8cce4](https://github.com/andyhorn/flutter_resizable_container/commit/0b8cce4f3ab9ef974a1dc7659a4c09589a07cae1))
+
+
+### Code Refactoring
+
+* move the interactive divider into an overlay layer ([#152](https://github.com/andyhorn/flutter_resizable_container/issues/152)) ([e569281](https://github.com/andyhorn/flutter_resizable_container/commit/e569281399cb8944bd7449d54898d58f397ca70b))
+
+
+### Build System
+
+* **deps:** bump equatable from 2.1.0 to 3.0.0 ([#135](https://github.com/andyhorn/flutter_resizable_container/issues/135)) ([0e75861](https://github.com/andyhorn/flutter_resizable_container/commit/0e75861f689dbe4f99ce60faa93508762fcd7425))
+* **deps:** bump flutter_lints from 5.0.0 to 6.0.0 ([#91](https://github.com/andyhorn/flutter_resizable_container/issues/91)) ([9a7a6a9](https://github.com/andyhorn/flutter_resizable_container/commit/9a7a6a958f1f011b653503e220932924fc64d6fe))
+
 ## 4.1.0
 
 - Improved change detection in the container to enable more accurate rebuilds when children change.
