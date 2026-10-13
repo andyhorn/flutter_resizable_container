@@ -263,7 +263,7 @@ class ResizableController with ChangeNotifier {
   }
 
   void _adjustChildSize({required int index, required double delta}) {
-    _applyAdjustment(index: index, delta: delta);
+    _applyAdjustment(pixels: _pixels, index: index, delta: delta);
     notifyListeners();
   }
 
@@ -273,18 +273,23 @@ class ResizableController with ChangeNotifier {
     required int index,
     required double delta,
   }) {
-    final original = _pixels;
-    _pixels = List.of(original);
-    _applyAdjustment(index: index, delta: delta);
-    final adjusted = _pixels;
-    _pixels = original;
+    final adjusted = List.of(_pixels);
+    _applyAdjustment(pixels: adjusted, index: index, delta: delta);
     return adjusted;
   }
 
-  void _applyAdjustment({required int index, required double delta}) {
+  void _applyAdjustment({
+    required List<double> pixels,
+    required int index,
+    required double delta,
+  }) {
     final adjustedDelta = delta < 0
-        ? _getAdjustedReducingDelta(index: index, delta: delta)
-        : _getAdjustedIncreasingDelta(index: index, delta: delta);
+        ? _getAdjustedReducingDelta(pixels: pixels, index: index, delta: delta)
+        : _getAdjustedIncreasingDelta(
+            pixels: pixels,
+            index: index,
+            delta: delta,
+          );
 
     if (adjustedDelta != delta && _cascadeNegativeDelta) {
       // if the current delta cannot be applied AND cascading is enabled
@@ -295,22 +300,23 @@ class ResizableController with ChangeNotifier {
         // freed space) cannot grow past its max constraint
         final maxGrowth = max(
           0.0,
-          (_sizes[index + 1].max ?? double.infinity) - _pixels[index + 1],
+          (_sizes[index + 1].max ?? double.infinity) - pixels[index + 1],
         );
         final cascadeDelta = -min(delta.abs(), maxGrowth);
 
         // The selected child may still have room to shrink toward its min,
         // so it gives up space before any sibling to its left does.
         final changes = _distributeDeltaLeft(
+          pixels: pixels,
           index: index,
           delta: cascadeDelta,
         );
 
         for (var i = 0; i < changes.length; i++) {
-          _pixels[index - i] += changes[i];
+          pixels[index - i] += changes[i];
         }
 
-        _pixels[index + 1] -= changes.sum();
+        pixels[index + 1] -= changes.sum();
       } else {
         // and the divider is being dragged to the right
 
@@ -318,26 +324,27 @@ class ResizableController with ChangeNotifier {
         // freed space) cannot grow past its max constraint
         final maxGrowth = max(
           0.0,
-          (_sizes[index].max ?? double.infinity) - _pixels[index],
+          (_sizes[index].max ?? double.infinity) - pixels[index],
         );
         final cascadeDelta = min(delta, maxGrowth);
 
         final changes = _distributeDeltaRight(
+          pixels: pixels,
           index: index,
           delta: cascadeDelta,
         );
 
         for (var i = 0; i < changes.length; i++) {
-          _pixels[index + i + 1] += changes[i];
+          pixels[index + i + 1] += changes[i];
         }
 
-        _pixels[index] -= changes.sum();
+        pixels[index] -= changes.sum();
       }
     } else {
       // otherwise, apply the adjusted delta to the selected index and its
       // immediate rightward sibling
-      _pixels[index] += adjustedDelta;
-      _pixels[index + 1] -= adjustedDelta;
+      pixels[index] += adjustedDelta;
+      pixels[index + 1] -= adjustedDelta;
     }
   }
 
@@ -456,6 +463,7 @@ class ResizableController with ChangeNotifier {
   }
 
   List<double> _distributeDeltaRight({
+    required List<double> pixels,
     required int index,
     required double delta,
   }) {
@@ -463,7 +471,7 @@ class ResizableController with ChangeNotifier {
 
     final allowableChanges = [
       for (final index in indices) ...[
-        _getAllowableChange(delta: -delta, index: index, sizes: _pixels),
+        _getAllowableChange(delta: -delta, index: index, sizes: pixels),
       ],
     ];
 
@@ -482,6 +490,7 @@ class ResizableController with ChangeNotifier {
   }
 
   List<double> _distributeDeltaLeft({
+    required List<double> pixels,
     required int index,
     required double delta,
   }) {
@@ -489,7 +498,7 @@ class ResizableController with ChangeNotifier {
 
     final allowableChanges = [
       for (final index in indices) ...[
-        _getAllowableChange(delta: delta, index: index, sizes: _pixels),
+        _getAllowableChange(delta: delta, index: index, sizes: pixels),
       ],
     ];
 
@@ -649,6 +658,7 @@ class ResizableController with ChangeNotifier {
   }
 
   double _getAdjustedReducingDelta({
+    required List<double> pixels,
     required int index,
     required double delta,
   }) {
@@ -668,6 +678,7 @@ class ResizableController with ChangeNotifier {
   }
 
   double _getAdjustedIncreasingDelta({
+    required List<double> pixels,
     required int index,
     required double delta,
   }) {
@@ -700,10 +711,9 @@ final class ResizableControllerManager {
   /// The position of the divider after child [index], as a fraction of the
   /// total child size, once [delta] is applied with all constraints.
   double dividerPositionAfter({required int index, required double delta}) {
-    final adjusted = _controller._pixelsAfterAdjusting(
-      index: index,
-      delta: delta,
-    );
+    final adjusted = delta == 0
+        ? _controller._pixels
+        : _controller._pixelsAfterAdjusting(index: index, delta: delta);
     final total = adjusted.sum();
     if (total <= 0) {
       return 0;
