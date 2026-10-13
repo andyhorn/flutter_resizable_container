@@ -190,6 +190,8 @@ class _CustomDividerExampleScreenState
                     crossAxisAlignment: crossAxisAlignment,
                     mainAxisAlignment: mainAxisAlignment,
                     length: ResizableSize.ratio(length),
+                    semanticLabel: 'Resize left and right panels',
+                    keyboardStep: 20,
                     onHoverEnter: () => setState(() => hovered = true),
                     onHoverExit: () => setState(() => hovered = false),
                     onTapDown: () => setState(() => hovered = true),
