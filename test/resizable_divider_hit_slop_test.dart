@@ -2,11 +2,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_handle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _surface = Size(600, 400);
 const _slop = 20.0;
+const _mouseDeviceId = 1;
 
 Widget _harness({
   Axis direction = Axis.horizontal,
@@ -165,32 +166,36 @@ void main() {
       });
 
       testWidgets('respects a cross-axis length and alignment', (tester) async {
+        const length = 100.0;
         await _pump(
           tester,
           _harness(
             divider: const ResizableDivider(
               thickness: 4,
               hitSlop: _slop,
-              length: ResizableSize.pixels(100),
+              length: ResizableSize.pixels(length),
               crossAxisAlignment: CrossAxisAlignment.start,
             ),
           ),
         );
         final pane = tester.getRect(find.byKey(const Key('pane0')));
         final x = pane.right + _slop - 2;
+        final belowDivider = pane.top + length * 1.5;
+        final withinDivider = pane.top + length / 2;
         final before = pane.width;
 
-        await _dragFrom(tester, Offset(x, pane.top + 150), const Offset(40, 0));
+        await _dragFrom(tester, Offset(x, belowDivider), const Offset(40, 0));
         expect(tester.getSize(find.byKey(const Key('pane0'))).width, before);
 
-        await _dragFrom(tester, Offset(x, pane.top + 50), const Offset(40, 0));
+        await _dragFrom(tester, Offset(x, withinDivider), const Offset(40, 0));
         expect(
           tester.getSize(find.byKey(const Key('pane0'))).width,
           greaterThan(before),
         );
       });
 
-      testWidgets('keeps working while a hide animation runs', (tester) async {
+      testWidgets('resizes from the slop zone while a hide animation runs',
+          (tester) async {
         final controller = ResizableController();
         addTearDown(controller.dispose);
         await tester.binding.setSurfaceSize(_surface);
@@ -232,11 +237,19 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 40));
 
-        final dividers = find.byType(ResizableContainerDivider);
+        final dividers = find.byType(ResizableDividerHandle);
         final first = tester.getRect(dividers.first);
         final pane0 = tester.getRect(find.byKey(const Key('pane0')));
         expect(first.left, moreOrLessEquals(pane0.right - _slop));
-        await tester.pumpAndSettle();
+        final targetWidth = controller.pixels[0];
+
+        await _dragFrom(
+          tester,
+          Offset(first.left + 2, pane0.center.dy),
+          const Offset(40, 0),
+        );
+
+        expect(controller.pixels[0], greaterThan(targetWidth));
       });
     });
 
@@ -246,7 +259,7 @@ void main() {
         addTearDown(controller.dispose);
         await _pump(tester, _harness(controller: controller));
         expect(
-          tester.getSize(find.byType(ResizableContainerDivider)).width,
+          tester.getSize(find.byType(ResizableDividerHandle)).width,
           4 + 2 * _slop,
         );
 
@@ -254,7 +267,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(
-          tester.getSize(find.byType(ResizableContainerDivider)).width,
+          tester.getSize(find.byType(ResizableDividerHandle)).width,
           0,
         );
       });
@@ -288,7 +301,7 @@ void main() {
         expect(entered, 1);
         expect(
           RendererBinding.instance.mouseTracker.debugDeviceActiveCursor(
-            1,
+            _mouseDeviceId,
           ),
           SystemMouseCursors.resizeLeftRight,
         );
@@ -320,6 +333,143 @@ void main() {
         await tester.pump();
 
         expect(entered, 0);
+      });
+    });
+
+    group('taps', () {
+      testWidgets('are claimed in the slop zone instead of reaching the pane', (
+        tester,
+      ) async {
+        var paneTaps = 0;
+        await _pump(
+          tester,
+          _harness(
+            first: GestureDetector(
+              key: const Key('pane0'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () => paneTaps++,
+              child: const ColoredBox(color: Colors.red),
+            ),
+          ),
+        );
+        final pane = tester.getRect(find.byKey(const Key('pane0')));
+
+        await tester.tapAt(Offset(pane.right - _slop + 2, pane.center.dy));
+        expect(paneTaps, 0);
+
+        await tester.tapAt(Offset(pane.right - _slop - 5, pane.center.dy));
+        expect(paneTaps, 1);
+      });
+
+      testWidgets('go to the later divider where adjacent slop overlaps', (
+        tester,
+      ) async {
+        final tapped = <int>[];
+        ResizableChild pane(int index, ResizableSize size) {
+          return ResizableChild(
+            size: size,
+            divider: ResizableDivider(
+              thickness: 4,
+              hitSlop: _slop,
+              onTapDown: () => tapped.add(index),
+            ),
+            child: const SizedBox(),
+          );
+        }
+
+        await _pump(
+          tester,
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                direction: Axis.horizontal,
+                children: [
+                  pane(0, const ResizableSize.pixels(100)),
+                  pane(1, const ResizableSize.pixels(10)),
+                  const ResizableChild(child: SizedBox()),
+                ],
+              ),
+            ),
+          ),
+        );
+        final dividers = find.byType(ResizableDividerHandle);
+        final first = tester.getRect(dividers.at(0));
+        final second = tester.getRect(dividers.at(1));
+        final overlap = first.intersect(second);
+        expect(overlap.width, greaterThan(0));
+
+        await tester.tapAt(overlap.center);
+        expect(tapped, [1]);
+
+        await tester.tapAt(Offset(first.left + 2, overlap.center.dy));
+        expect(tapped, [1, 0]);
+      });
+    });
+
+    group('container bounds', () {
+      const inset = 100.0;
+
+      Widget edgeHarness({
+        required VoidCallback onOutsideTap,
+        required VoidCallback onDividerTap,
+      }) {
+        return MaterialApp(
+          home: Scaffold(
+            body: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: inset,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onOutsideTap,
+                  ),
+                ),
+                Expanded(
+                  child: ResizableContainer(
+                    direction: Axis.horizontal,
+                    children: [
+                      ResizableChild(
+                        size: const ResizableSize.pixels(5),
+                        divider: ResizableDivider(
+                          thickness: 4,
+                          hitSlop: _slop,
+                          onTapDown: onDividerTap,
+                        ),
+                        child: const SizedBox(),
+                      ),
+                      const ResizableChild(child: SizedBox()),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
+      testWidgets('clips the slop of a divider at the container edge', (
+        tester,
+      ) async {
+        var outsideTaps = 0;
+        var dividerTaps = 0;
+        await _pump(
+          tester,
+          edgeHarness(
+            onOutsideTap: () => outsideTaps++,
+            onDividerTap: () => dividerTaps++,
+          ),
+        );
+        final container = tester.getRect(find.byType(ResizableContainer));
+        final y = container.center.dy;
+
+        await tester.tapAt(Offset(container.left - 5, y));
+        expect(outsideTaps, 1);
+        expect(dividerTaps, 0);
+
+        await tester.tapAt(Offset(container.left + 2, y));
+        expect(outsideTaps, 1);
+        expect(dividerTaps, 1);
       });
     });
 

@@ -21,6 +21,7 @@ class ResizableDivider extends Equatable {
     this.hitSlop = 0.0,
     this.keyboardStep = 10.0,
     this.semanticLabel,
+    this.focusColor,
   })  : assert(thickness > 0, '[thickness] must be > 0.'),
         assert(hitSlop >= 0, '[hitSlop] must be >= 0.'),
         assert(keyboardStep > 0, '[keyboardStep] must be > 0.'),
@@ -95,7 +96,7 @@ class ResizableDivider extends Equatable {
   /// When `false`, the divider is rendered but cannot be dragged, tapped,
   /// hovered, or focused — its drag, tap, and hover callbacks will not fire,
   /// the resize cursor is not shown, and it exposes no keyboard or semantic
-  /// resize actions. Programmatic resizing via
+  /// resize actions, and it is excluded from semantics. Programmatic resizing via
   /// [ResizableController] is unaffected.
   ///
   /// Defaults to `true`. See also [ResizableContainer.resizable], which
@@ -122,6 +123,9 @@ class ResizableDivider extends Equatable {
   /// increase or decrease action. Holding Shift multiplies it by 5 for key
   /// presses.
   ///
+  /// The announced value is a whole percent, so a step under roughly 1% of the
+  /// container's total size will not change the announced percentage.
+  ///
   /// Keyboard and screen-reader resizes go through the same constraints as
   /// dragging but do not trigger [onDragStart] or [onDragEnd].
   ///
@@ -134,6 +138,11 @@ class ResizableDivider extends Equatable {
   /// is announced as the percentage of the container's total child size that
   /// lies before the divider; that format is not locale-aware.
   final String? semanticLabel;
+
+  /// The color of the keyboard focus ring.
+  ///
+  /// Defaults to the theme's primary color.
+  final Color? focusColor;
 
   @override
   List<Object?> get props => [
@@ -154,5 +163,6 @@ class ResizableDivider extends Equatable {
         hitSlop,
         keyboardStep,
         semanticLabel,
+        focusColor,
       ];
 }

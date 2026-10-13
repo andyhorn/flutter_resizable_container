@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_handle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Widget _harness({
@@ -264,7 +264,7 @@ void main() {
       controller.hide(2);
       await tester.pumpAndSettle();
       await tester.drag(
-        find.byType(ResizableContainerDivider).first,
+        find.byType(ResizableDividerHandle).first,
         const Offset(50, 0),
       );
       await tester.pumpAndSettle();
@@ -317,7 +317,7 @@ void main() {
       controller.hide(2);
       await tester.pumpAndSettle();
       await tester.drag(
-        find.byType(ResizableContainerDivider).first,
+        find.byType(ResizableDividerHandle).first,
         const Offset(50, 0),
       );
       await tester.pumpAndSettle();

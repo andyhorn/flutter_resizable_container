@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_handle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'remount_test_helpers.dart';
 
 void main() {
   group(ResizableContainer, () {
-    Finder dividers() => find.byType(ResizableContainerDivider);
+    Finder dividers() => find.byType(ResizableDividerHandle);
 
     group('animation lifecycle', () {
       testWidgets('hide followed by setSizes without a pump settles at sizes',
@@ -144,7 +144,7 @@ void main() {
 
         for (var i = 0; i < 2; i++) {
           final divider =
-              tester.widget<ResizableContainerDivider>(dividers().at(i));
+              tester.widget<ResizableDividerHandle>(dividers().at(i));
           expect(divider.enabled, isFalse);
         }
       });

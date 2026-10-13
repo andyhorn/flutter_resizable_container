@@ -353,7 +353,7 @@ In this scenario, the first child would be given 2/3 of the total available spac
 
 Use the `ResizableDivider` class to customize the look and feel of the dividers between each of a container's children.
 
-You can customize the `thickness`, `length`, `crossAxisAlignment`, `mainAxisAlignment`, `hitSlop`, and `color` of the divider, as well as display a custom mouse cursor on hover and respond to `onDragStart`, `onDragEnd`, `onHoverEnter`, `onHoverExit`, `onTapDown`, and `onTapUp` events.
+You can customize the `thickness`, `length`, `crossAxisAlignment`, `mainAxisAlignment`, `hitSlop`, `color`, and `focusColor` of the divider, as well as display a custom mouse cursor on hover and respond to `onDragStart`, `onDragEnd`, `onHoverEnter`, `onHoverExit`, `onTapDown`, and `onTapUp` events.
 
 Set `hitSlop` to add an invisible grab area to each side of the divider along the main axis (a 1px divider is far below the 24px minimum touch target; 12 or more is recommended for touch). It does not affect layout and is clipped to the container. Drags and scrolls pass through the slop zone, but a drag along the main axis that starts there goes to the divider and can pre-empt a same-axis scroll in the pane beneath. **Taps that land in the slop zone are claimed by the divider, whether or not `onTapDown`/`onTapUp` are set, so the pane beneath does not receive them.** Where slop from adjacent dividers overlaps, the later divider wins.
 
@@ -393,11 +393,11 @@ By adding a `padding` value, additional (empty) space will be added around/along
 
 Dividers can be focused with Tab. While a divider is focused, the arrow keys along the container's direction (Left/Right for a horizontal container, Up/Down for a vertical one) move it by `keyboardStep` logical pixels (10 by default). Hold Shift to move 5 times as far. The arrow keys move the divider in the direction they point in both left-to-right and right-to-left layouts. Keyboard resizes respect the same size constraints as dragging, but do not trigger `onDragStart` or `onDragEnd`. Tapping or dragging a divider also focuses it, so you can continue with the keyboard.
 
-A focused divider is highlighted with a thicker line in the theme's primary color when the keyboard is in use.
+A focused divider is highlighted with a thicker line when the keyboard is in use. It uses the theme's primary color unless you set `focusColor`.
 
-Screen readers announce each divider as an adjustable slider. Set `semanticLabel` to a localized string to name it; there is no built-in label. Its value is the percentage of the container's total child size that lies before the divider (for example `40%`), and increase and decrease actions move it by `keyboardStep`. The percentage format is not locale-aware.
+Screen readers announce each divider as an adjustable slider. Set `semanticLabel` to a localized string to name it; there is no built-in label. Its value is the percentage of the container's total child size that lies before the divider (for example `40%`), and increase and decrease actions move it by `keyboardStep`. The percentage is rounded to a whole number, so a `keyboardStep` under roughly 1% of the container's total size will not change the announced value, and the format is not locale-aware.
 
-A divider that is disabled with `enabled: false` or `resizable: false` cannot be focused and exposes no actions to assistive technology. A divider next to a hidden child is hidden, and loses focus if it had it.
+A divider that is disabled with `enabled: false` or `resizable: false` cannot be focused and is hidden from assistive technology. A divider next to a hidden child is hidden, and loses focus if it had it.
 
 ```dart
 divider: ResizableDivider(

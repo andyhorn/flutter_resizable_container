@@ -1,12 +1,14 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/divider_painter.dart';
-import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_handle.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_line.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const _dividerLabel = 'ResizableContainerDivider';
+const _dividerLabel = 'ResizableDividerHandle';
 
 Widget _harness({
   required ResizableController controller,
@@ -71,8 +73,11 @@ Future<void> _focusDivider(
   int index, {
   Offset? at,
 }) async {
-  final finder = find.byType(ResizableContainerDivider).at(index);
-  await tester.tapAt(at ?? tester.getCenter(finder));
+  final finder = find.byType(ResizableDividerHandle).at(index);
+  await tester.tapAt(
+    at ?? tester.getCenter(finder),
+    kind: PointerDeviceKind.mouse,
+  );
   await tester.pump();
 }
 
@@ -128,6 +133,16 @@ void main() {
       await _pressArrow(tester, LogicalKeyboardKey.arrowRight, shift: true);
 
       expect(controller.pixels[0], closeTo(initial + 50, 0.001));
+    });
+
+    testWidgets('Shift multiplies the decrease step by 5', (tester) async {
+      await _pump(tester, _harness(controller: controller));
+      await _focusDivider(tester, 0);
+      final initial = controller.pixels[0];
+
+      await _pressArrow(tester, LogicalKeyboardKey.arrowLeft, shift: true);
+
+      expect(controller.pixels[0], closeTo(initial - 50, 0.001));
     });
 
     testWidgets('honors a custom keyboardStep', (tester) async {
@@ -192,13 +207,13 @@ void main() {
       await _focusDivider(tester, 0);
       final initial = controller.pixels[0];
       final dividerX =
-          tester.getCenter(find.byType(ResizableContainerDivider).first);
+          tester.getCenter(find.byType(ResizableDividerHandle).first);
 
       await _pressArrow(tester, LogicalKeyboardKey.arrowRight);
 
       expect(controller.pixels[0], closeTo(initial - 10, 0.001));
       expect(
-        tester.getCenter(find.byType(ResizableContainerDivider).first).dx,
+        tester.getCenter(find.byType(ResizableDividerHandle).first).dx,
         closeTo(dividerX.dx + 10, 0.001),
       );
     });
@@ -222,6 +237,27 @@ void main() {
       await _pressArrow(tester, LogicalKeyboardKey.arrowRight);
       await _pressArrow(tester, LogicalKeyboardKey.arrowLeft);
       expect(controller.pixels[0], afterVertical);
+    });
+
+    testWidgets('vertical containers do not flip the arrows under RTL',
+        (tester) async {
+      await _pump(
+        tester,
+        _harness(
+          controller: controller,
+          direction: Axis.vertical,
+          textDirection: TextDirection.rtl,
+        ),
+      );
+      await _focusDivider(tester, 0);
+      final initial = controller.pixels[0];
+
+      await _pressArrow(tester, LogicalKeyboardKey.arrowDown);
+      expect(controller.pixels[0], closeTo(initial + 10, 0.001));
+
+      await _pressArrow(tester, LogicalKeyboardKey.arrowUp);
+      await _pressArrow(tester, LogicalKeyboardKey.arrowUp);
+      expect(controller.pixels[0], closeTo(initial - 10, 0.001));
     });
 
     testWidgets('cross-axis arrows leave sizes alone and traverse focus',
@@ -248,7 +284,7 @@ void main() {
       await _focusDivider(
         tester,
         0,
-        at: tester.getTopLeft(find.byType(ResizableContainerDivider)) +
+        at: tester.getTopLeft(find.byType(ResizableDividerHandle)) +
             const Offset(0.5, 10),
       );
       final initial = controller.pixels[0];
@@ -300,8 +336,9 @@ void main() {
       await _pump(tester, _harness(controller: controller));
 
       await tester.drag(
-        find.byType(ResizableContainerDivider).first,
+        find.byType(ResizableDividerHandle).first,
         const Offset(20, 0),
+        kind: PointerDeviceKind.mouse,
       );
       await tester.pump();
 
@@ -346,7 +383,6 @@ void main() {
         tester,
         _harness(controller: controller, resizable: false),
       );
-      await tester.pump();
 
       expect(_dividerHasFocus(), isFalse);
     });
@@ -464,14 +500,12 @@ void main() {
         await tester.pump();
 
         expect(_dividerHasFocus(), isFalse);
-        expect(FocusManager.instance.primaryFocus?.debugLabel,
-            isNot(_dividerLabel));
       });
     });
 
     group('indicator', () {
       Finder indicator() => find.descendant(
-            of: find.byType(ResizableContainerDivider),
+            of: find.byType(ResizableDividerHandle),
             matching: find.byWidgetPredicate(
               (widget) =>
                   widget is CustomPaint && widget.painter is DividerPainter,
@@ -494,10 +528,84 @@ void main() {
         final painter =
             tester.widget<CustomPaint>(indicator()).painter! as DividerPainter;
         final primary = Theme.of(
-          tester.element(find.byType(ResizableContainerDivider).first),
+          tester.element(find.byType(ResizableDividerHandle).first),
         ).colorScheme.primary;
         expect(painter.thickness, greaterThan(3));
         expect(painter.color, primary);
+      });
+
+      testWidgets('uses focusColor when set', (tester) async {
+        const color = Color(0xFF00AA55);
+        await _pump(
+          tester,
+          _harness(
+            controller: controller,
+            divider: const ResizableDivider(focusColor: color),
+          ),
+        );
+
+        await _focusDivider(tester, 0);
+
+        final painter =
+            tester.widget<CustomPaint>(indicator()).painter! as DividerPainter;
+        expect(painter.color, color);
+      });
+
+      group('geometry', () {
+        const thickness = 3.0;
+        const padding = 10.0;
+
+        Rect lineRectIn(Rect slot, Axis direction, MainAxisAlignment align) {
+          final extent =
+              direction == Axis.horizontal ? slot.width : slot.height;
+          final offset = switch (align) {
+            MainAxisAlignment.start => 0.0,
+            MainAxisAlignment.end => extent - thickness,
+            _ => (extent - thickness) / 2,
+          };
+          return direction == Axis.horizontal
+              ? Rect.fromLTWH(
+                  slot.left + offset, slot.top, thickness, slot.height)
+              : Rect.fromLTWH(
+                  slot.left, slot.top + offset, slot.width, thickness);
+        }
+
+        for (final direction in Axis.values) {
+          for (final align in [
+            MainAxisAlignment.start,
+            MainAxisAlignment.center,
+            MainAxisAlignment.end,
+          ]) {
+            testWidgets('extends 1px beyond the line for $direction $align',
+                (tester) async {
+              await _pump(
+                tester,
+                _harness(
+                  controller: controller,
+                  direction: direction,
+                  divider: ResizableDivider(
+                    thickness: thickness,
+                    padding: padding,
+                    mainAxisAlignment: align,
+                  ),
+                ),
+              );
+              await _focusDivider(tester, 0);
+
+              final slot =
+                  tester.getRect(find.byType(ResizableDividerLine).first);
+              final line = lineRectIn(slot, direction, align);
+              final ring = tester.getRect(indicator());
+
+              final expected = direction == Axis.horizontal
+                  ? Rect.fromLTRB(
+                      line.left - 1, line.top, line.right + 1, line.bottom)
+                  : Rect.fromLTRB(
+                      line.left, line.top - 1, line.right, line.bottom + 1);
+              expect(ring, expected);
+            });
+          }
+        }
       });
 
       testWidgets('is hit-test transparent', (tester) async {
@@ -539,9 +647,11 @@ void main() {
       ),
       ResizableSize first = const ResizableSize.ratio(0.4),
       bool resizable = true,
+      Axis direction = Axis.horizontal,
     }) {
       return _harness(
         controller: controller,
+        direction: direction,
         resizable: resizable,
         children: [
           ResizableChild(
@@ -653,7 +763,7 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('a disabled divider is a disabled slider without actions',
+    testWidgets('a divider disabled by resizable: false has no slider node',
         (tester) async {
       await tester.binding.setSurfaceSize(const Size(1000, 600));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -661,20 +771,120 @@ void main() {
 
       await _pump(tester, twoPanes(resizable: false));
 
-      final node = tester.getSemantics(find.bySemanticsLabel('Resize panes'));
+      expect(find.semantics.byLabel('Resize panes'), findsNothing);
+      expect(find.semantics.byFlag(SemanticsFlag.isSlider), findsNothing);
+      handle.dispose();
+    });
+
+    testWidgets('an unlabeled divider is still a slider with a value',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final handle = tester.ensureSemantics();
+
+      await _pump(tester, twoPanes(divider: const ResizableDivider()));
+
+      final sliders = find.semantics.byFlag(SemanticsFlag.isSlider).evaluate();
+      expect(sliders, hasLength(1));
+      final slider = sliders.single;
       expect(
-        node,
+        slider,
+        isSemantics(isSlider: true, hasEnabledState: true, isEnabled: true),
+      );
+      expect(slider.label, isEmpty);
+      expect(slider.value, '40%');
+      handle.dispose();
+    });
+
+    testWidgets('exposes the position and actions in a vertical container',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final handle = tester.ensureSemantics();
+
+      await _pump(tester, twoPanes(direction: Axis.vertical));
+      final initial = controller.pixels[0];
+
+      expect(
+        tester.getSemantics(find.bySemanticsLabel('Resize panes')),
         isSemantics(
           isSlider: true,
-          hasEnabledState: true,
-          isEnabled: false,
           label: 'Resize panes',
           value: '40%',
+          increasedValue: '48%',
+          decreasedValue: '32%',
+          hasIncreaseAction: true,
+          hasDecreaseAction: true,
         ),
       );
-      final data = node.getSemanticsData();
-      expect(data.hasAction(SemanticsAction.increase), isFalse);
-      expect(data.hasAction(SemanticsAction.decrease), isFalse);
+
+      tester.semantics.increase(find.semantics.byLabel('Resize panes'));
+      await tester.pump();
+
+      expect(controller.pixels[0], closeTo(initial + 50, 0.001));
+      handle.dispose();
+    });
+
+    testWidgets('a divider with enabled: false has no slider node',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final handle = tester.ensureSemantics();
+
+      await _pump(
+        tester,
+        twoPanes(
+          divider: const ResizableDivider(
+            semanticLabel: 'Resize panes',
+            enabled: false,
+          ),
+        ),
+      );
+
+      expect(find.semantics.byLabel('Resize panes'), findsNothing);
+      expect(find.semantics.byFlag(SemanticsFlag.isSlider), findsNothing);
+      handle.dispose();
+    });
+
+    testWidgets('increase stops at the maximum size', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final handle = tester.ensureSemantics();
+      const max = 420.0;
+
+      await _pump(
+        tester,
+        twoPanes(first: const ResizableSize.ratio(0.4, max: max)),
+      );
+
+      tester.semantics.increase(find.semantics.byLabel('Resize panes'));
+      await tester.pump();
+      expect(controller.pixels[0], closeTo(max, 0.001));
+
+      tester.semantics.increase(find.semantics.byLabel('Resize panes'));
+      await tester.pump();
+      expect(controller.pixels[0], closeTo(max, 0.001));
+      handle.dispose();
+    });
+
+    testWidgets('decrease stops at the minimum size', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final handle = tester.ensureSemantics();
+      const min = 380.0;
+
+      await _pump(
+        tester,
+        twoPanes(first: const ResizableSize.ratio(0.4, min: min)),
+      );
+
+      tester.semantics.decrease(find.semantics.byLabel('Resize panes'));
+      await tester.pump();
+      expect(controller.pixels[0], closeTo(min, 0.001));
+
+      tester.semantics.decrease(find.semantics.byLabel('Resize panes'));
+      await tester.pump();
+      expect(controller.pixels[0], closeTo(min, 0.001));
       handle.dispose();
     });
 
