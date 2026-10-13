@@ -349,6 +349,35 @@ void main() {
           });
         });
 
+        group('when the minimum sizes already fill the new space', () {
+          setUp(() {
+            manager.setChildren(const [
+              ResizableChild(
+                size: ResizableSize.pixels(300, min: 300),
+                child: SizedBox.shrink(),
+              ),
+              ResizableChild(
+                size: ResizableSize.pixels(300, min: 300),
+                child: SizedBox.shrink(),
+              ),
+            ]);
+
+            manager.setAvailableSpace(599);
+            manager.setRenderedSizes([300, 300]);
+          });
+
+          test('reports the change without moving any pixels', () {
+            var notified = false;
+            controller.addListener(() => notified = true);
+
+            final changed = manager.setAvailableSpace(600);
+
+            expect(changed, isTrue);
+            expect(controller.pixels, equals([300, 300]));
+            expect(notified, isFalse);
+          });
+        });
+
         group('when no expand child can change', () {
           setUp(() {
             manager.setChildren(const [
@@ -1467,6 +1496,86 @@ void main() {
           controller.show(1);
           expect(notifies, 2);
         });
+      });
+    });
+
+    group('dividerPositionAfter', () {
+      setUp(() {
+        controller.setChildren(const [
+          ResizableChild(
+            size: ResizableSize.pixels(100, max: 130),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(200),
+            child: SizedBox.shrink(),
+          ),
+          ResizableChild(
+            size: ResizableSize.pixels(100),
+            child: SizedBox.shrink(),
+          ),
+        ]);
+
+        manager.setAvailableSpace(400);
+        manager.setRenderedSizes([100, 200, 100]);
+      });
+
+      test('returns the position with no delta', () {
+        expect(
+          manager.dividerPositionAfter(index: 0, delta: 0),
+          moreOrLessEquals(0.25),
+        );
+        expect(
+          manager.dividerPositionAfter(index: 1, delta: 0),
+          moreOrLessEquals(0.75),
+        );
+      });
+
+      test('applies the delta without changing the controller', () {
+        var notified = false;
+        controller.addListener(() => notified = true);
+
+        expect(
+          manager.dividerPositionAfter(index: 0, delta: 20),
+          moreOrLessEquals(0.30),
+        );
+
+        expect(controller.pixels, equals([100, 200, 100]));
+        expect(notified, isFalse);
+      });
+
+      test('clamps to size constraints', () {
+        expect(
+          manager.dividerPositionAfter(index: 0, delta: 50),
+          moreOrLessEquals(0.325),
+        );
+        expect(
+          manager.dividerPositionAfter(index: 0, delta: -500),
+          moreOrLessEquals(0.0),
+        );
+      });
+
+      test('matches the position after an actual adjustment', () {
+        final predicted = manager.dividerPositionAfter(index: 1, delta: 60);
+
+        manager.adjustChildSize(index: 1, delta: 60);
+
+        expect(
+          controller.pixels[0] + controller.pixels[1],
+          moreOrLessEquals(400 * predicted),
+        );
+      });
+
+      test('is zero before any child has been laid out', () {
+        controller.setChildren(const [
+          ResizableChild(child: SizedBox.shrink()),
+          ResizableChild(child: SizedBox.shrink()),
+        ]);
+
+        expect(
+          manager.dividerPositionAfter(index: 0, delta: 10),
+          moreOrLessEquals(0.0),
+        );
       });
     });
   });

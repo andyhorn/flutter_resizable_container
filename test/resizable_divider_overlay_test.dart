@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_handle.dart';
 import 'package:flutter_resizable_container/src/resizable_divider_overlay.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+// A drag spends its first kDragSlopDefault pixels getting past the touch slop.
+const _dragDistance = 60.0;
 
 Widget _harness({
   required Axis direction,
@@ -40,7 +43,7 @@ Rect _rect(WidgetTester tester, Finder finder) {
 // The divider targets are translucent, so hitTestable() is unreliable for them.
 bool _isHit(WidgetTester tester, Finder divider) {
   final region = tester.renderObject(
-    find.descendant(of: divider, matching: find.byType(MouseRegion)),
+    find.descendant(of: divider, matching: find.byType(MouseRegion)).first,
   );
   final result = tester.hitTestOnBinding(tester.getCenter(divider));
   return result.path.any((entry) => identical(entry.target, region));
@@ -52,7 +55,7 @@ void _expectDividersBetweenPanes(
   required int count,
   TextDirection textDirection = TextDirection.ltr,
 }) {
-  final dividers = find.byType(ResizableContainerDivider);
+  final dividers = find.byType(ResizableDividerHandle);
   expect(dividers, findsNWidgets(count - 1));
 
   for (var i = 0; i < count - 1; i++) {
@@ -116,13 +119,17 @@ void main() {
         await tester.pumpWidget(_harness(direction: Axis.horizontal));
         await tester.pumpAndSettle();
 
-        await tester.drag(
-          find.byType(ResizableContainerDivider).first,
-          const Offset(50, 0),
-          warnIfMissed: false,
+        final before = _rect(tester, find.byKey(const Key('pane0'))).width;
+        await tester.dragFrom(
+          tester.getCenter(find.byType(ResizableDividerHandle).first),
+          const Offset(_dragDistance, 0),
         );
         await tester.pumpAndSettle();
 
+        expect(
+          _rect(tester, find.byKey(const Key('pane0'))).width,
+          moreOrLessEquals(before + _dragDistance - kDragSlopDefault),
+        );
         _expectDividersBetweenPanes(
           tester,
           direction: Axis.horizontal,
@@ -164,8 +171,7 @@ void main() {
           _harness(direction: Axis.horizontal, controller: controller),
         );
         await tester.pumpAndSettle();
-        final before =
-            tester.state(find.byType(ResizableContainerDivider).first);
+        final before = tester.state(find.byType(ResizableDividerHandle).first);
 
         controller.setSizes(const [
           ResizableSize.pixels(100),
@@ -175,7 +181,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(
-          tester.state(find.byType(ResizableContainerDivider).first),
+          tester.state(find.byType(ResizableDividerHandle).first),
           same(before),
         );
       });
@@ -202,7 +208,7 @@ void main() {
 
         for (var i = 0; i < 4; i++) {
           await tester.pump(const Duration(milliseconds: 40));
-          final dividers = find.byType(ResizableContainerDivider);
+          final dividers = find.byType(ResizableDividerHandle);
           expect(dividers, findsNWidgets(2));
           expect(
             _rect(tester, dividers.first).left,
@@ -232,7 +238,7 @@ void main() {
         controller.hide(0);
         await tester.pumpAndSettle();
 
-        final dividers = find.byType(ResizableContainerDivider);
+        final dividers = find.byType(ResizableDividerHandle);
         expect(dividers, findsNWidgets(2));
         expect(_isHit(tester, dividers.at(0)), isFalse);
         expect(_isHit(tester, dividers.at(1)), isTrue);
@@ -321,16 +327,19 @@ void main() {
         final leftBefore = tester.getSize(find.byKey(const Key('left')));
         final topBefore = tester.getSize(find.byKey(const Key('top')));
         final inner = find.byWidgetPredicate(
-          (w) => w is ResizableContainerDivider && w.direction == Axis.vertical,
+          (w) => w is ResizableDividerHandle && w.direction == Axis.vertical,
         );
 
-        await tester.drag(inner, const Offset(0, 60), warnIfMissed: false);
+        await tester.dragFrom(
+          tester.getCenter(inner),
+          const Offset(0, _dragDistance),
+        );
         await tester.pumpAndSettle();
 
         expect(tester.getSize(find.byKey(const Key('left'))), leftBefore);
         expect(
           tester.getSize(find.byKey(const Key('top'))).height,
-          moreOrLessEquals(topBefore.height + 40),
+          moreOrLessEquals(topBefore.height + _dragDistance - kDragSlopDefault),
         );
       });
     });
@@ -364,7 +373,7 @@ void main() {
         final before = painters.map((p) => p.paints).toList();
 
         final gesture = await tester.startGesture(
-          tester.getCenter(find.byType(ResizableContainerDivider).at(1)),
+          tester.getCenter(find.byType(ResizableDividerHandle).at(1)),
         );
         await gesture.moveBy(const Offset(kDragSlopDefault + 1, 0));
         await tester.pump();

@@ -63,8 +63,10 @@ class ResizableContainer extends StatefulWidget {
   /// Whether dividers in this container respond to user input.
   ///
   /// When `false`, every divider is locked — drag, tap, and hover callbacks
-  /// will not fire and the resize cursor is not shown. Individual dividers
-  /// can also be locked via [ResizableDivider.enabled]; a divider is
+  /// will not fire, the resize cursor is not shown, and the dividers cannot be
+  /// focused or resized through the keyboard or semantic actions, and they are
+  /// excluded from semantics. Individual
+  /// dividers can also be locked via [ResizableDivider.enabled]; a divider is
   /// interactive only when both this flag and its own `enabled` flag are
   /// `true`. Programmatic resizing via [ResizableController] is unaffected.
   ///
@@ -313,10 +315,6 @@ class _ResizableContainerState extends State<ResizableContainer>
             // Stale while a layout pass is pending, which is why the overlay
             // ignores pointers until it completes.
             final overlaySizes = fixedSizes ?? _deriveFullSizesFromController();
-            final dividerKeys = [
-              for (var i = 0; i < widget.children.length - 1; i++)
-                _dividerKey(widget.children, i),
-            ];
 
             return Stack(
               fit: StackFit.passthrough,
@@ -336,12 +334,12 @@ class _ResizableContainerState extends State<ResizableContainer>
                     ignoring: layoutPending,
                     child: ResizableDividerOverlay(
                       direction: widget.direction,
-                      dividers: widget.children.dividers,
-                      dividerKeys: dividerKeys,
+                      children: widget.children,
                       sizes: overlaySizes,
                       hiddenIndices: hiddenIndices,
                       resizable: widget.resizable,
                       onResizeUpdate: _onDividerDrag,
+                      positionAfter: _dividerPositionAfter,
                     ),
                   ),
                 ),
@@ -470,10 +468,20 @@ class _ResizableContainerState extends State<ResizableContainer>
     // The pending capture callback would overwrite a drag made now.
     if (_animation.phase == HideAnimationPhase.capturing) return;
 
+    // Pointers are ignored while a layout is pending, but keyboard and
+    // semantic input would otherwise resize against stale pixels.
+    final layoutPending =
+        _animation.phase == HideAnimationPhase.idle && controller.needsLayout;
+    if (layoutPending) return;
+
     // A re-measure would overwrite the drag once a later animation settles.
     _remeasureShrinkOnIdle = false;
     _animation.cancel();
     manager.adjustChildSize(index: dividerIndex, delta: delta);
+  }
+
+  double _dividerPositionAfter(int dividerIndex, double delta) {
+    return manager.dividerPositionAfter(index: dividerIndex, delta: delta);
   }
 
   double _getAvailableSpace(BoxConstraints constraints) {
@@ -485,11 +493,6 @@ class _ResizableContainerState extends State<ResizableContainer>
 
     return totalSpace - dividerSpace;
   }
-}
-
-Key? _dividerKey(List<ResizableChild> children, int index) {
-  final paneKey = children[index].key;
-  return paneKey == null ? null : ValueKey(('divider', paneKey));
 }
 
 class _PaneSlot extends StatelessWidget {
@@ -543,7 +546,7 @@ class _ContainerLayout extends StatelessWidget {
 
       children.add(
         ResizableDividerLine(
-          key: _dividerKey(resizableChildren, i),
+          key: dividerKey(resizableChildren, i),
           config: child.divider,
           direction: direction,
         ),

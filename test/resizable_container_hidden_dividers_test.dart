@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_handle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _surfaceMain = 600.0;
@@ -241,7 +241,7 @@ void main() {
       final before = _extent(tester, 'A', Axis.horizontal);
 
       await tester.drag(
-        find.byType(ResizableContainerDivider).first,
+        find.byType(ResizableDividerHandle).first,
         const Offset(50, 0),
       );
       await tester.pumpAndSettle();

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_handle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -649,7 +649,7 @@ void main() {
       final resizableContainer = tester.widget(find.byType(ResizableContainer));
       expect(resizableContainer, isNotNull);
 
-      final handle = find.byType(ResizableContainerDivider).first;
+      final handle = find.byType(ResizableDividerHandle).first;
       expect(handle, isNotNull);
 
       await tester.drag(handle, const Offset(100, 0));
@@ -741,7 +741,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.drag(
-        find.byType(ResizableContainerDivider),
+        find.byType(ResizableDividerHandle),
         const Offset(-600, 0),
       );
       await tester.pump();
@@ -782,7 +782,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.drag(
-        find.byType(ResizableContainerDivider),
+        find.byType(ResizableDividerHandle),
         const Offset(600, 0),
       );
       await tester.pump();
@@ -826,7 +826,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.drag(
-        find.byType(ResizableContainerDivider),
+        find.byType(ResizableDividerHandle),
         const Offset(-600, 0),
       );
       await tester.pump();
@@ -1407,7 +1407,7 @@ void main() {
       expect(centerA.dx, greaterThan(centerB.dx));
 
       await tester.drag(
-        find.byType(ResizableContainerDivider),
+        find.byType(ResizableDividerHandle),
         const Offset(100, 0),
       );
 
@@ -1458,7 +1458,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      final divider = find.byType(ResizableContainerDivider);
+      final divider = find.byType(ResizableDividerHandle);
       expect(divider, findsOneWidget);
 
       await tester.drag(divider, Offset(1 + kDragSlopDefault, 0));
@@ -1501,7 +1501,7 @@ void main() {
 
       final heightBefore = tester.getSize(find.byKey(Key('BoxA'))).height;
 
-      final divider = find.byType(ResizableContainerDivider);
+      final divider = find.byType(ResizableDividerHandle);
       await tester.drag(divider, Offset(0, 50 + kDragSlopDefault));
       await tester.pumpAndSettle();
 
@@ -1629,7 +1629,7 @@ void main() {
 
         await tester.pumpAndSettle();
 
-        final handle = find.byType(ResizableContainerDivider).first;
+        final handle = find.byType(ResizableDividerHandle).first;
         expect(handle, isNotNull);
 
         await tester.drag(handle, const Offset(kDragSlopDefault + 55, 0));
@@ -1682,7 +1682,7 @@ void main() {
       }
 
       void expectDividersCollapsed(WidgetTester tester) {
-        final dividers = find.byType(ResizableContainerDivider);
+        final dividers = find.byType(ResizableDividerHandle);
         expect(dividers, findsNWidgets(2));
         for (var i = 0; i < 2; i++) {
           expect(tester.getSize(dividers.at(i)).width, 0);
@@ -1721,7 +1721,7 @@ void main() {
           await tester.pumpAndSettle();
 
           await tester.drag(
-            find.byType(ResizableContainerDivider).last,
+            find.byType(ResizableDividerHandle).last,
             const Offset(kDragSlopDefault + 30, 0),
           );
           await tester.pumpAndSettle();
@@ -1825,7 +1825,7 @@ void main() {
 
           // Both dividers adjacent to the collapsing child are still
           // rendered during the in-flight collapse.
-          expect(find.byType(ResizableContainerDivider), findsNWidgets(2));
+          expect(find.byType(ResizableDividerHandle), findsNWidgets(2));
         },
       );
 
@@ -2266,7 +2266,7 @@ void main() {
           await tester.pump(const Duration(milliseconds: 50));
 
           await tester.drag(
-            find.byType(ResizableContainerDivider).last,
+            find.byType(ResizableDividerHandle).last,
             const Offset(kDragSlopDefault + 20, 0),
           );
           await tester.pump();
@@ -2312,7 +2312,7 @@ void main() {
           final before = List.of(controller.pixels);
 
           final gesture = await tester.startGesture(
-            tester.getCenter(find.byType(ResizableContainerDivider).first),
+            tester.getCenter(find.byType(ResizableDividerHandle).first),
           );
           await gesture.moveBy(const Offset(40, 0));
           await gesture.moveBy(const Offset(10, 0));
@@ -2745,7 +2745,7 @@ void main() {
             _DirectionSwapApp(controller: first, direction: Axis.horizontal));
         await tester.pumpAndSettle();
         await tester.drag(
-          find.byType(ResizableContainerDivider),
+          find.byType(ResizableDividerHandle),
           const Offset(200, 0),
         );
         await tester.pumpAndSettle();
@@ -3099,6 +3099,111 @@ void main() {
         expect(controller.ratios, isNot(ratiosBefore));
       });
 
+      testWidgets('resize absorbed by minimum sizes notifies once',
+          (tester) async {
+        await tester.binding.setSurfaceSize(const Size(600, 400));
+        addTearDown(() async => await tester.binding.setSurfaceSize(null));
+        final controller = ResizableController();
+        addTearDown(controller.dispose);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ResizableContainer(
+                controller: controller,
+                direction: Axis.horizontal,
+                children: const [
+                  ResizableChild(
+                    size: ResizableSize.pixels(300, min: 300),
+                    child: SizedBox.expand(key: Key('A')),
+                  ),
+                  ResizableChild(
+                    size: ResizableSize.pixels(300, min: 300),
+                    child: SizedBox.expand(key: Key('B')),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final pixelsBefore = List.of(controller.pixels);
+
+        var notifies = 0;
+        controller.addListener(() => notifies++);
+
+        await tester.binding.setSurfaceSize(const Size(601, 400));
+        await tester.pumpAndSettle();
+
+        expect(notifies, 1);
+        expect(controller.pixels, pixelsBefore);
+      });
+
+      group('post-frame notification guards', () {
+        // Lays the container out at the new surface size without drawing a
+        // frame, so the notification it queues is still pending.
+        Future<void> resizeWithoutFrame(WidgetTester tester, Size size) async {
+          await tester.binding.setSurfaceSize(size);
+          tester.binding.rootPipelineOwner.flushLayout();
+        }
+
+        testWidgets('does not notify after the container is disposed',
+            (tester) async {
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          addTearDown(() async => await tester.binding.setSurfaceSize(null));
+          final controller = ResizableController();
+          addTearDown(controller.dispose);
+
+          await tester.pumpWidget(
+            _buildNotifyApp(controller, const ResizableSize.expand()),
+          );
+          await tester.pumpAndSettle();
+
+          var notifies = 0;
+          controller.addListener(() => notifies++);
+
+          await resizeWithoutFrame(tester, const Size(1000, 400));
+          await tester.pumpWidget(const SizedBox());
+
+          expect(notifies, 0);
+          expect(tester.takeException(), isNull);
+        });
+
+        testWidgets('does not notify a controller swapped in meanwhile',
+            (tester) async {
+          await tester.binding.setSurfaceSize(const Size(1000, 400));
+          addTearDown(() async => await tester.binding.setSurfaceSize(null));
+          final resized = ResizableController();
+          addTearDown(resized.dispose);
+          final swappedIn = ResizableController();
+          addTearDown(swappedIn.dispose);
+
+          await tester.pumpWidget(
+            _buildNotifyApp(swappedIn, const ResizableSize.expand()),
+          );
+          await tester.pumpAndSettle();
+          await tester.binding.setSurfaceSize(const Size(600, 400));
+          await tester.pumpWidget(
+            _buildNotifyApp(resized, const ResizableSize.expand()),
+          );
+          await tester.pumpAndSettle();
+
+          var resizedNotifies = 0;
+          var swappedInNotifies = 0;
+          resized.addListener(() => resizedNotifies++);
+          swappedIn.addListener(() => swappedInNotifies++);
+
+          await resizeWithoutFrame(tester, const Size(1000, 400));
+          await tester.pumpWidget(
+            _buildNotifyApp(swappedIn, const ResizableSize.expand()),
+          );
+          await tester.pumpAndSettle();
+
+          expect(resizedNotifies, 0);
+          expect(swappedInNotifies, 0);
+        });
+      });
+
       testWidgets(
         'listener that calls setState does not throw when children change',
         (tester) async {
@@ -3170,7 +3275,7 @@ void main() {
           await tester.pumpAndSettle();
 
           final beforeSizes = List<double>.of(controller.pixels);
-          final dividers = find.byType(ResizableContainerDivider);
+          final dividers = find.byType(ResizableDividerHandle);
           expect(dividers, findsNWidgets(2));
 
           await tester.drag(dividers.first, const Offset(80, 0));
@@ -3264,7 +3369,7 @@ void main() {
       }
 
       Future<void> dragFirstDivider(WidgetTester tester) async {
-        final divider = find.byType(ResizableContainerDivider).first;
+        final divider = find.byType(ResizableDividerHandle).first;
         final gesture = await tester.startGesture(tester.getCenter(divider));
         await gesture.moveBy(const Offset(kDragSlopDefault + 1, 0));
         await tester.pump();

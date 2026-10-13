@@ -18,6 +18,7 @@ extension DividerLayoutExt on ResizableDivider {
     };
   }
 
+  /// The size of the divider's visible line, including its padding.
   Size sizeFor(Axis direction, BoxConstraints constraints) {
     return switch (direction) {
       Axis.horizontal => Size(
@@ -31,6 +32,7 @@ extension DividerLayoutExt on ResizableDivider {
     };
   }
 
+  /// [sizeFor] widened by `2 * hitSlop` along the main axis only.
   Size hitAreaFor(Axis direction, BoxConstraints constraints) {
     final size = sizeFor(direction, constraints);
     return switch (direction) {

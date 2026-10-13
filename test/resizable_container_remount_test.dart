@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_handle.dart';
 import 'package:flutter_resizable_container/src/resizable_divider_line.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -10,7 +10,7 @@ import 'remount_test_helpers.dart';
 
 void main() {
   group(ResizableContainer, () {
-    Finder dividers() => find.byType(ResizableContainerDivider);
+    Finder dividers() => find.byType(ResizableDividerHandle);
 
     group('pane state', () {
       for (final keyed in [true, false]) {
@@ -228,6 +228,16 @@ void main() {
           return gesture;
         }
 
+        Future<void> hoverAndLeave(
+          WidgetTester tester,
+          TestGesture gesture,
+        ) async {
+          await gesture.moveTo(tester.getCenter(dividers().at(0)));
+          await tester.pump();
+          await gesture.moveTo(const Offset(1, 1));
+          await tester.pump();
+        }
+
         testWidgets('fires onHoverExit once and clears the hover',
             (tester) async {
           await useSurface(tester, const Size(600, 400));
@@ -245,11 +255,12 @@ void main() {
           await gesture.moveTo(const Offset(1, 1));
           controller.show(1);
           await tester.pumpAndSettle();
-
-          final state = tester.state(dividers().at(0)) as dynamic;
-          expect(state.isHovered, isFalse);
-          expect(state.isDragging, isFalse);
           expect(hoverExits, 1);
+
+          await hoverAndLeave(tester, gesture);
+
+          expect(hoverExits, 2);
+          expect(dragEnds, 0);
         });
 
         testWidgets('fires onDragEnd once and clears the drag', (tester) async {
@@ -271,10 +282,11 @@ void main() {
 
           controller.show(1);
           await tester.pumpAndSettle();
+          final hoverExitsBeforeLeaving = hoverExits;
+          await hoverAndLeave(tester, gesture);
 
-          final state = tester.state(dividers().at(0)) as dynamic;
-          expect(state.isDragging, isFalse);
-          expect(state.isHovered, isFalse);
+          expect(dragEnds, 1);
+          expect(hoverExits, hoverExitsBeforeLeaving + 1);
         });
       });
     });
@@ -353,7 +365,6 @@ void main() {
         await tester.tapAt(dividerCenter);
         await tester.pump();
         expect(tapDowns, 1);
-
         semantics.dispose();
       });
     });

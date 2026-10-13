@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/resizable_container_divider.dart';
+import 'package:flutter_resizable_container/src/resizable_divider_handle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -56,7 +56,7 @@ void main() {
         await tester.pump();
         await gesture.moveTo(
           tester.getCenter(
-            find.byType(ResizableContainerDivider),
+            find.byType(ResizableDividerHandle),
           ),
         );
         await tester.pumpAndSettle();
@@ -149,7 +149,7 @@ void main() {
         await tester.pump();
         await gesture.moveTo(
           tester.getCenter(
-            find.byType(ResizableContainerDivider),
+            find.byType(ResizableDividerHandle),
           ),
         );
         await tester.pumpAndSettle();
@@ -189,7 +189,7 @@ void main() {
 
         await tester.pumpAndSettle();
 
-        final dividerFinder = find.byType(ResizableContainerDivider);
+        final dividerFinder = find.byType(ResizableDividerHandle);
         expect(dividerFinder, findsOneWidget);
 
         // Simulate tap on the divider
@@ -286,7 +286,7 @@ void main() {
         await tester.pumpAndSettle();
 
         final beforeSizes = List<double>.of(controller.pixels);
-        final divider = find.byType(ResizableContainerDivider);
+        final divider = find.byType(ResizableDividerHandle);
 
         await tester.drag(divider, const Offset(50, 0));
         await tester.pumpAndSettle();
@@ -328,7 +328,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final divider = find.byType(ResizableContainerDivider);
+        final divider = find.byType(ResizableDividerHandle);
 
         final gesture =
             await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -382,7 +382,7 @@ void main() {
 
         await tester.pumpAndSettle();
 
-        final dividerFinder = find.byType(ResizableContainerDivider);
+        final dividerFinder = find.byType(ResizableDividerHandle);
         expect(dividerFinder, findsOneWidget);
 
         // Simulate tap down and tap up gesture
@@ -423,7 +423,7 @@ void main() {
 
         await tester.pumpAndSettle();
 
-        final dividerFinder = find.byType(ResizableContainerDivider);
+        final dividerFinder = find.byType(ResizableDividerHandle);
         expect(dividerFinder, findsOneWidget);
 
         // Simulate tap gesture and cancel it
@@ -452,11 +452,12 @@ void main() {
                 child: SizedBox(
                   width: 40,
                   height: 200,
-                  child: ResizableContainerDivider(
+                  child: ResizableDividerHandle(
                     direction: Axis.horizontal,
                     config: config,
                     enabled: enabled,
                     onResizeUpdate: (_) {},
+                    positionAfter: (_) => 0,
                   ),
                 ),
               ),
@@ -481,7 +482,7 @@ void main() {
         addTearDown(gesture.removePointer);
         await tester.pump();
         await gesture.moveTo(
-          tester.getCenter(find.byType(ResizableContainerDivider)),
+          tester.getCenter(find.byType(ResizableDividerHandle)),
         );
         await tester.pump();
 
@@ -561,7 +562,7 @@ void main() {
           final before = List<double>.of(controller.pixels);
 
           await tester.drag(
-            find.byType(ResizableContainerDivider),
+            find.byType(ResizableDividerHandle),
             const Offset(0, -50),
           );
           await tester.pumpAndSettle();
@@ -583,7 +584,7 @@ void main() {
           final before = List<double>.of(controller.pixels);
 
           await tester.drag(
-            find.byType(ResizableContainerDivider),
+            find.byType(ResizableDividerHandle),
             const Offset(-50, 0),
           );
           await tester.pumpAndSettle();
@@ -646,7 +647,7 @@ void main() {
           final before = List<double>.of(controller.pixels);
 
           await tester.drag(
-            find.byType(ResizableContainerDivider),
+            find.byType(ResizableDividerHandle),
             const Offset(-50, 0),
           );
           await tester.pumpAndSettle();
@@ -667,7 +668,7 @@ void main() {
           final before = List<double>.of(controller.pixels);
 
           await tester.drag(
-            find.byType(ResizableContainerDivider),
+            find.byType(ResizableDividerHandle),
             const Offset(-50, 0),
           );
           await tester.pumpAndSettle();
@@ -697,7 +698,7 @@ void main() {
           final before = List<double>.of(controller.pixels);
 
           await tester.drag(
-            find.byType(ResizableContainerDivider),
+            find.byType(ResizableDividerHandle),
             const Offset(50, 0),
           );
           await tester.pumpAndSettle();
