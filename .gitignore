@@ -31,3 +31,5 @@ build/
 
 # FVM Version Cache
 .fvm/
+# Coverage output
+coverage/
